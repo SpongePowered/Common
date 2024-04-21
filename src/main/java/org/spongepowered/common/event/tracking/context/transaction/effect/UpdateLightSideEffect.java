@@ -29,11 +29,11 @@ import net.minecraft.util.profiling.Profiler;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.lighting.LightEngine;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.spongepowered.common.event.tracking.context.transaction.pipeline.BlockPipeline;
 import org.spongepowered.common.event.tracking.context.transaction.pipeline.PipelineCursor;
-import org.spongepowered.common.world.SpongeBlockChangeFlag;
 
-public final class UpdateLightSideEffect implements ProcessingSideEffect {
+public final class UpdateLightSideEffect implements ProcessingSideEffect<BlockPipeline, PipelineCursor, BlockChangeArgs, BlockState> {
 
     private static final class Holder {
         static final UpdateLightSideEffect INSTANCE = new UpdateLightSideEffect();
@@ -47,12 +47,13 @@ public final class UpdateLightSideEffect implements ProcessingSideEffect {
     }
 
     @Override
-    public EffectResult processSideEffect(
+    public EffectResult<@Nullable BlockState> processSideEffect(
         final BlockPipeline pipeline, final PipelineCursor oldState,
-        final BlockState newState, final SpongeBlockChangeFlag flag, final int limit
+        final BlockChangeArgs args
     ) {
+        final var flag = args.flag();
         if (!flag.updateLighting()) {
-            return EffectResult.NULL_PASS;
+            return EffectResult.nullPass();
         }
         final ServerLevel serverWorld = pipeline.getServerWorld();
         final BlockState currentState = pipeline.getAffectedChunk().getBlockState(oldState.pos());
@@ -90,7 +91,7 @@ public final class UpdateLightSideEffect implements ProcessingSideEffect {
             // this.profiler.endSection();
             filler.pop();
         }
-        return EffectResult.NULL_PASS;
+        return EffectResult.nullPass();
     }
 
 }

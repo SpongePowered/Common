@@ -26,14 +26,14 @@ package org.spongepowered.common.event.tracking.context.transaction.effect;
 
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.spongepowered.common.accessor.world.level.chunk.ChunkAccessAccessor;
 import org.spongepowered.common.event.tracking.context.transaction.pipeline.BlockPipeline;
 import org.spongepowered.common.event.tracking.context.transaction.pipeline.PipelineCursor;
-import org.spongepowered.common.world.SpongeBlockChangeFlag;
 
 import java.util.Map;
 
-public final class UpdateHeightMapEffect implements ProcessingSideEffect {
+public final class UpdateHeightMapEffect implements ProcessingSideEffect<BlockPipeline, PipelineCursor, BlockChangeArgs, BlockState> {
 
     private static final class Holder {
         static final UpdateHeightMapEffect INSTANCE = new UpdateHeightMapEffect();
@@ -46,9 +46,10 @@ public final class UpdateHeightMapEffect implements ProcessingSideEffect {
     }
 
     @Override
-    public EffectResult processSideEffect(final BlockPipeline pipeline, final PipelineCursor oldState, final BlockState newState,
-        final SpongeBlockChangeFlag flag, final int limit
+    public EffectResult<@Nullable BlockState> processSideEffect(
+        final BlockPipeline pipeline, final PipelineCursor oldState, final BlockChangeArgs args
     ) {
+        final var newState = args.newState();
         final Map<Heightmap.Types, Heightmap> heightMap = ((ChunkAccessAccessor) pipeline.getAffectedChunk()).accessor$heightmaps();
         if (heightMap == null) {
             throw new IllegalStateException("Heightmap dereferenced!");
@@ -60,6 +61,6 @@ public final class UpdateHeightMapEffect implements ProcessingSideEffect {
         heightMap.get(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES).update(x, y, z, newState);
         heightMap.get(Heightmap.Types.OCEAN_FLOOR).update(x, y, z, newState);
         heightMap.get(Heightmap.Types.WORLD_SURFACE).update(x, y, z, newState);
-        return EffectResult.NULL_PASS;
+        return EffectResult.nullPass();
     }
 }

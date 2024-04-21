@@ -25,11 +25,11 @@
 package org.spongepowered.common.event.tracking.context.transaction.effect;
 
 import net.minecraft.world.level.block.state.BlockState;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.spongepowered.common.event.tracking.context.transaction.pipeline.BlockPipeline;
 import org.spongepowered.common.event.tracking.context.transaction.pipeline.PipelineCursor;
-import org.spongepowered.common.world.SpongeBlockChangeFlag;
 
-public final class PrepareBlockDrops implements ProcessingSideEffect {
+public final class PrepareBlockDrops implements ProcessingSideEffect<BlockPipeline, PipelineCursor, BlockChangeArgs, BlockState> {
 
     private static final class Holder {
         static final PrepareBlockDrops INSTANCE = new PrepareBlockDrops();
@@ -41,10 +41,10 @@ public final class PrepareBlockDrops implements ProcessingSideEffect {
     PrepareBlockDrops() {}
 
     @Override
-    public EffectResult processSideEffect(final BlockPipeline pipeline, final PipelineCursor oldState,
-        final BlockState newState, final SpongeBlockChangeFlag flag, final int limit
+    public EffectResult<@Nullable BlockState> processSideEffect(
+        final BlockPipeline pipeline, final PipelineCursor oldState, final BlockChangeArgs args
     ) {
-        return EffectResult.NULL_PASS;
+        return EffectResult.nullPass();
     }
 
 }

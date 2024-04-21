@@ -331,8 +331,7 @@ public final class VolumeTransformationTest {
                     .sub(VolumePositionTranslators.BLOCK_OFFSET);
                 final Vector3i invertedBlockPos = invertedTransformedPos.toInt();
                 final Vector3i expectedPos;
-                Assertions.assertTrue(
-                    type instanceof StubState,
+                Assertions.assertInstanceOf(StubState.class, type,
                     () -> String.format("expected state to be a stub state for pos: [%f, %f, %f] but got %s", x, y, z,
                         type
                     )

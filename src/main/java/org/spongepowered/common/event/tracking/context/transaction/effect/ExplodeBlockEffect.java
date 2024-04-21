@@ -28,14 +28,14 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.state.BlockState;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.spongepowered.common.event.tracking.PhaseContext;
 import org.spongepowered.common.event.tracking.PhaseTracker;
 import org.spongepowered.common.event.tracking.context.transaction.pipeline.BlockPipeline;
 import org.spongepowered.common.event.tracking.context.transaction.pipeline.PipelineCursor;
 import org.spongepowered.common.event.tracking.phase.general.ExplosionContext;
-import org.spongepowered.common.world.SpongeBlockChangeFlag;
 
-public final class ExplodeBlockEffect implements ProcessingSideEffect {
+public final class ExplodeBlockEffect implements ProcessingSideEffect<BlockPipeline, PipelineCursor, BlockChangeArgs, BlockState> {
 
     private static final class Holder {
         static final ExplodeBlockEffect INSTANCE = new ExplodeBlockEffect();
@@ -47,20 +47,18 @@ public final class ExplodeBlockEffect implements ProcessingSideEffect {
 
     ExplodeBlockEffect() {}
 
-    @SuppressWarnings({"unchecked", "rawtypes"})
     @Override
-    public EffectResult processSideEffect(
-        final BlockPipeline pipeline, final PipelineCursor oldState, final BlockState newState, final SpongeBlockChangeFlag flag,
-        final int limit
+    public EffectResult<@Nullable BlockState> processSideEffect(
+        final BlockPipeline pipeline, final PipelineCursor oldState, final BlockChangeArgs args
     ) {
         final PhaseContext<@NonNull ?> phaseContext = PhaseTracker.getInstance().getPhaseContext();
 
         final ServerLevel world = pipeline.getServerWorld();
         final BlockPos pos = oldState.pos();
-        if (phaseContext instanceof ExplosionContext) {
-            oldState.state().getBlock().wasExploded(world, pos, ((ExplosionContext) phaseContext).getExplosion());
+        if (phaseContext instanceof ExplosionContext ec) {
+            oldState.state().getBlock().wasExploded(world, pos, ec.getExplosion());
         }
 
-        return EffectResult.NULL_PASS;
+        return EffectResult.nullPass();
     }
 }

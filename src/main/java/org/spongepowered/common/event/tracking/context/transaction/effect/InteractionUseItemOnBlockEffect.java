@@ -24,34 +24,36 @@
  */
 package org.spongepowered.common.event.tracking.context.transaction.effect;
 
-import net.minecraft.world.level.block.state.BlockState;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import net.minecraft.world.ItemInteractionResult;
 import org.spongepowered.common.event.tracking.context.transaction.EffectTransactor;
-import org.spongepowered.common.event.tracking.context.transaction.ResultingTransactionBySideEffect;
-import org.spongepowered.common.event.tracking.context.transaction.TransactionalCaptureSupplier;
-import org.spongepowered.common.event.tracking.context.transaction.pipeline.BlockPipeline;
-import org.spongepowered.common.event.tracking.context.transaction.pipeline.PipelineCursor;
+import org.spongepowered.common.event.tracking.context.transaction.inventory.PlayerInventoryTransaction;
+import org.spongepowered.common.event.tracking.context.transaction.pipeline.UseItemOnBlockPipeline;
 
-public final class BroadcastInventoryChangesEffect implements ProcessingSideEffect<BlockPipeline, PipelineCursor, BlockChangeArgs, BlockState> {
+public final class InteractionUseItemOnBlockEffect implements ProcessingSideEffect<UseItemOnBlockPipeline, ItemInteractionResult, InteractionArgs, ItemInteractionResult> {
 
     private static final class Holder {
-        static final BroadcastInventoryChangesEffect INSTANCE = new BroadcastInventoryChangesEffect();
+        static final InteractionUseItemOnBlockEffect INSTANCE = new InteractionUseItemOnBlockEffect();
     }
-    public static BroadcastInventoryChangesEffect getInstance() {
+
+    public static InteractionUseItemOnBlockEffect getInstance() {
         return Holder.INSTANCE;
     }
-    public static EffectTransactor transact(final TransactionalCaptureSupplier transactor) {
-        return transactor.pushEffect(new ResultingTransactionBySideEffect<>(BroadcastInventoryChangesEffect.getInstance()));
-    }
-
-    BroadcastInventoryChangesEffect() {}
 
     @Override
-    public EffectResult<@Nullable BlockState> processSideEffect(
-        final BlockPipeline pipeline, final PipelineCursor oldState, final BlockChangeArgs args
+    public EffectResult<ItemInteractionResult> processSideEffect(
+        UseItemOnBlockPipeline pipeline, ItemInteractionResult oldState, InteractionArgs args
     ) {
-        return EffectResult.nullReturn();
+        final var player = args.player();
+        final var hand = args.hand();
+        final var world = args.world();
+        final var blockRaytraceResult = args.blockRaytraceResult();
+        final var blockstate = args.blockstate();
+        final ItemInteractionResult result = blockstate.useItemOn(args.copiedStack(), world, player, hand, blockRaytraceResult);
+        pipeline.transactor().logPlayerInventoryChange(args.player(), PlayerInventoryTransaction.EventCreator.STANDARD);
+        try (EffectTransactor ignored = BroadcastInventoryChangesEffect.transact(pipeline.transactor())) {
+            args.player().containerMenu.broadcastChanges();
+        }
+        return new EffectResult<>(result, true);
     }
-
 
 }

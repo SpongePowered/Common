@@ -37,6 +37,7 @@ import org.spongepowered.common.event.tracking.PhaseContext;
 import org.spongepowered.common.event.tracking.context.transaction.EffectTransactor;
 import org.spongepowered.common.event.tracking.context.transaction.ResultingTransactionBySideEffect;
 import org.spongepowered.common.event.tracking.context.transaction.block.ChangeBlock;
+import org.spongepowered.common.event.tracking.context.transaction.effect.BlockChangeArgs;
 import org.spongepowered.common.event.tracking.context.transaction.effect.EffectResult;
 import org.spongepowered.common.event.tracking.context.transaction.effect.ProcessingSideEffect;
 import org.spongepowered.common.world.SpongeBlockChangeFlag;
@@ -118,12 +119,11 @@ public final class ChunkPipeline implements BlockPipeline {
 
         for (final ResultingTransactionBySideEffect effect : this.chunkEffects) {
             try (final EffectTransactor ignored = context.getTransactor().pushEffect(effect)) {
-                final EffectResult result = effect.effect.processSideEffect(
+                final var args = new BlockChangeArgs(proposedState, flag, limit);
+                final EffectResult<@Nullable BlockState> result = effect.effect.processSideEffect(
                     this,
                     formerState,
-                    proposedState,
-                    flag,
-                    limit
+                    args
                 );
                 if (result.hasResult) {
                     return result.resultingState;

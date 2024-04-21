@@ -68,6 +68,11 @@ abstract class InventoryBasedTransaction extends GameTransaction<ChangeInventory
     }
 
     @Override
+    protected boolean hasUnknownChainRequiringCancellation() {
+        return true;
+    }
+
+    @Override
     public Optional<BiConsumer<PhaseContext<@NonNull ?>, CauseStackManager.StackFrame>> getFrameMutator(
         @Nullable final GameTransaction<@NonNull ?> parent
     ) {

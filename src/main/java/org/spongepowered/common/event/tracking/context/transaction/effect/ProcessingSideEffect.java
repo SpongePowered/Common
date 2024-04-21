@@ -24,16 +24,13 @@
  */
 package org.spongepowered.common.event.tracking.context.transaction.effect;
 
-import net.minecraft.world.level.block.state.BlockState;
-import org.spongepowered.common.event.tracking.context.transaction.pipeline.BlockPipeline;
-import org.spongepowered.common.event.tracking.context.transaction.pipeline.PipelineCursor;
-import org.spongepowered.common.world.SpongeBlockChangeFlag;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 @FunctionalInterface
-public interface ProcessingSideEffect {
+public interface ProcessingSideEffect<T, C, A extends ProcessingSideEffect.Args, @Nullable R> {
 
-    EffectResult processSideEffect(BlockPipeline pipeline, PipelineCursor oldState, BlockState newState, SpongeBlockChangeFlag flag,
-        int limit
-    );
+    EffectResult<R> processSideEffect(T pipeline, C oldState, A args);
+
+    sealed interface Args permits BlockChangeArgs, InteractionArgs, UseItemArgs {}
 
 }

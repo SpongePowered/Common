@@ -24,31 +24,28 @@
  */
 package org.spongepowered.common.event.tracking.context.transaction.effect;
 
-import net.minecraft.world.level.block.BaseFireBlock;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.state.BlockState;
-import org.checkerframework.checker.nullness.qual.Nullable;
-import org.spongepowered.common.event.tracking.context.transaction.pipeline.BlockPipeline;
-import org.spongepowered.common.event.tracking.context.transaction.pipeline.PipelineCursor;
+import net.minecraft.world.InteractionResult;
+import org.spongepowered.common.event.tracking.context.transaction.EffectTransactor;
+import org.spongepowered.common.event.tracking.context.transaction.inventory.PlayerInventoryTransaction;
+import org.spongepowered.common.event.tracking.context.transaction.pipeline.UseItemOnBlockPipeline;
 
-public final class WorldDestroyBlockLevelEffect implements ProcessingSideEffect<BlockPipeline, PipelineCursor, BlockChangeArgs, BlockState> {
+public final class PlayerContainerRefreshEffect implements ProcessingSideEffect<UseItemOnBlockPipeline, InteractionResult, InteractionArgs, InteractionResult> {
 
     private static final class Holder {
-        static final WorldDestroyBlockLevelEffect INSTANCE = new WorldDestroyBlockLevelEffect();
+        static final PlayerContainerRefreshEffect INSTANCE = new PlayerContainerRefreshEffect();
     }
 
-    public static WorldDestroyBlockLevelEffect getInstance() {
-        return WorldDestroyBlockLevelEffect.Holder.INSTANCE;
+    public static PlayerContainerRefreshEffect getInstance() {
+        return Holder.INSTANCE;
     }
-
-    WorldDestroyBlockLevelEffect() {}
 
     @Override
-    public EffectResult<@Nullable BlockState> processSideEffect(
-        final BlockPipeline pipeline, final PipelineCursor oldState, final BlockChangeArgs args
+    public EffectResult<InteractionResult> processSideEffect(
+        UseItemOnBlockPipeline pipeline, InteractionResult oldState, InteractionArgs args
     ) {
-        if (!(oldState.state().getBlock() instanceof BaseFireBlock)) {
-            pipeline.getServerWorld().levelEvent(2001, oldState.pos(), Block.getId(oldState.state()));
+        pipeline.transactor().logPlayerInventoryChange(args.player(), PlayerInventoryTransaction.EventCreator.STANDARD);
+        try (EffectTransactor ignored = BroadcastInventoryChangesEffect.transact(pipeline.transactor())) {
+            args.player().containerMenu.broadcastChanges();
         }
         return EffectResult.nullPass();
     }

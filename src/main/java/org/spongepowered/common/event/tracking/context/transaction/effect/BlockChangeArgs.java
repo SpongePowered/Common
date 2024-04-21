@@ -24,32 +24,13 @@
  */
 package org.spongepowered.common.event.tracking.context.transaction.effect;
 
-import net.minecraft.world.level.block.BaseFireBlock;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
-import org.checkerframework.checker.nullness.qual.Nullable;
-import org.spongepowered.common.event.tracking.context.transaction.pipeline.BlockPipeline;
-import org.spongepowered.common.event.tracking.context.transaction.pipeline.PipelineCursor;
+import org.spongepowered.common.world.SpongeBlockChangeFlag;
 
-public final class WorldDestroyBlockLevelEffect implements ProcessingSideEffect<BlockPipeline, PipelineCursor, BlockChangeArgs, BlockState> {
+public record BlockChangeArgs(
+    BlockState newState,
+    SpongeBlockChangeFlag flag,
+    int limit
+) implements ProcessingSideEffect.Args {
 
-    private static final class Holder {
-        static final WorldDestroyBlockLevelEffect INSTANCE = new WorldDestroyBlockLevelEffect();
-    }
-
-    public static WorldDestroyBlockLevelEffect getInstance() {
-        return WorldDestroyBlockLevelEffect.Holder.INSTANCE;
-    }
-
-    WorldDestroyBlockLevelEffect() {}
-
-    @Override
-    public EffectResult<@Nullable BlockState> processSideEffect(
-        final BlockPipeline pipeline, final PipelineCursor oldState, final BlockChangeArgs args
-    ) {
-        if (!(oldState.state().getBlock() instanceof BaseFireBlock)) {
-            pipeline.getServerWorld().levelEvent(2001, oldState.pos(), Block.getId(oldState.state()));
-        }
-        return EffectResult.nullPass();
-    }
 }

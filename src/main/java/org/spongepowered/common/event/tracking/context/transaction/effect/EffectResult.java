@@ -25,30 +25,35 @@
 package org.spongepowered.common.event.tracking.context.transaction.effect;
 
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.block.state.BlockState;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.Collections;
 import java.util.List;
 
-public final class EffectResult {
+public final class EffectResult<@Nullable R> {
 
-    public static final EffectResult NULL_RETURN = new EffectResult(null, true);
-    public static final EffectResult NULL_PASS = new EffectResult(null, false);
+    public static <@Nullable T> EffectResult<T> nullReturn() {
+        return new EffectResult<>(null, true);
+    }
 
-    public final @Nullable BlockState resultingState;
+    public static <@Nullable T> EffectResult<T> nullPass() {
+        return new EffectResult<>(null, false);
+    }
+
+    public final @Nullable R resultingState;
     public final List<ItemStack> drops;
     public final boolean hasResult;
 
-    public EffectResult(final @Nullable BlockState resultingState, final boolean hasResult) {
+    public EffectResult(final @Nullable R resultingState, final boolean hasResult) {
         this.resultingState = resultingState;
         this.hasResult = hasResult;
         this.drops = Collections.emptyList();
     }
 
-    public EffectResult(final @Nullable BlockState resultingState, final List<ItemStack> drops, final boolean hasResult) {
+    public EffectResult(final @Nullable R resultingState, final List<ItemStack> drops, final boolean hasResult) {
         this.resultingState = resultingState;
         this.drops = drops;
         this.hasResult = hasResult;
     }
+
 }

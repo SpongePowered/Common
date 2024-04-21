@@ -35,8 +35,10 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.BlockEventData;
 import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.ExplosionDamageCalculator;
@@ -48,6 +50,7 @@ import net.minecraft.world.level.block.piston.PistonBaseBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.material.FluidState;
+import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -105,6 +108,9 @@ import org.spongepowered.common.event.tracking.context.transaction.effect.WorldD
 import org.spongepowered.common.event.tracking.context.transaction.pipeline.ChunkPipeline;
 import org.spongepowered.common.event.tracking.context.transaction.pipeline.PipelineCursor;
 import org.spongepowered.common.event.tracking.context.transaction.pipeline.TileEntityPipeline;
+import org.spongepowered.common.event.tracking.context.transaction.pipeline.UseBlockPipeline;
+import org.spongepowered.common.event.tracking.context.transaction.pipeline.UseItemOnBlockPipeline;
+import org.spongepowered.common.event.tracking.context.transaction.pipeline.UseItemPipeline;
 import org.spongepowered.common.event.tracking.context.transaction.pipeline.WorldPipeline;
 import org.spongepowered.common.event.tracking.phase.general.GeneralPhase;
 import org.spongepowered.common.event.tracking.phase.tick.TickPhase;
@@ -446,11 +452,11 @@ public abstract class ServerLevelMixin_Tracker extends LevelMixin_Tracker implem
         // Then build and use the BlockPipeline
         final ChunkPipeline chunkPipeline = mixinChunk.bridge$createChunkPipeline(pos, newState, currentState, spongeFlag, limit);
         final WorldPipeline.Builder worldPipelineBuilder = WorldPipeline.builder(chunkPipeline);
-        worldPipelineBuilder.addEffect((pipeline, oldState, newState1, flag1, cursorLimit) -> {
+        worldPipelineBuilder.addEffect((pipeline, oldState, args) -> {
             if (oldState == null) {
-                return EffectResult.NULL_RETURN;
+                return EffectResult.nullReturn();
             }
-            return EffectResult.NULL_PASS;
+            return EffectResult.nullPass();
         })
             .addEffect(UpdateLightSideEffect.getInstance())
             .addEffect(CheckBlockPostPlacementIsSameEffect.getInstance())
@@ -574,6 +580,79 @@ public abstract class ServerLevelMixin_Tracker extends LevelMixin_Tracker implem
         }
         builder.flag(updateFlag);
         return builder.build();
+    }
+
+    @Override
+    public UseItemOnBlockPipeline bridge$startInteractionUseOnChange(net.minecraft.world.level.Level worldIn, ServerPlayer playerIn, InteractionHand handIn, BlockHitResult blockRaytraceResultIn, BlockState blockstate, ItemStack copiedStack) {
+        if (this.shadow$isDebug()) { // isClientSide is always false since this is WorldServer
+            return null;
+        }
+        if (this.bridge$isFake()) {
+            return null;
+        }
+
+        final var instance = PhaseTracker.getInstance();
+        if (instance.getSidedThread() != PhaseTracker.SERVER.getSidedThread() && instance != PhaseTracker.SERVER) {
+            throw new UnsupportedOperationException("Cannot perform a tracked Block Change on a ServerWorld while not on the main thread!");
+        }
+        final var pipeline = new UseItemOnBlockPipeline(
+            (ServerLevel) worldIn,
+            playerIn,
+            handIn,
+            blockRaytraceResultIn,
+            blockstate,
+            copiedStack,
+            instance.getPhaseContext().getTransactor()
+        );
+        return pipeline;
+    }
+
+    @Override
+    public UseBlockPipeline bridge$startInteractionChange(net.minecraft.world.level.Level worldIn, ServerPlayer playerIn, InteractionHand handIn, BlockHitResult blockRaytraceResultIn, BlockState blockstate, ItemStack copiedStack) {
+        if (this.shadow$isDebug()) { // isClientSide is always false since this is WorldServer
+            return null;
+        }
+        if (this.bridge$isFake()) {
+            return null;
+        }
+
+        final var instance = PhaseTracker.getInstance();
+        if (instance.getSidedThread() != PhaseTracker.SERVER.getSidedThread() && instance != PhaseTracker.SERVER) {
+            throw new UnsupportedOperationException("Cannot perform a tracked Block Change on a ServerWorld while not on the main thread!");
+        }
+        final var pipeline = new UseBlockPipeline(
+            (ServerLevel) worldIn,
+            playerIn,
+            handIn,
+            blockRaytraceResultIn,
+            blockstate,
+            copiedStack,
+            instance.getPhaseContext().getTransactor()
+        );
+        return pipeline;
+    }
+    @Override
+    public UseItemPipeline bridge$startItemInteractionChange(net.minecraft.world.level.Level worldIn, ServerPlayer playerIn, InteractionHand handIn, ItemStack copiedStack, BlockHitResult blockRaytraceResult, boolean creative) {
+        if (this.shadow$isDebug()) { // isClientSide is always false since this is WorldServer
+            return null;
+        }
+        if (this.bridge$isFake()) {
+            return null;
+        }
+
+        final var instance = PhaseTracker.getInstance();
+        if (instance.getSidedThread() != PhaseTracker.SERVER.getSidedThread() && instance != PhaseTracker.SERVER) {
+            throw new UnsupportedOperationException("Cannot perform a tracked Block Change on a ServerWorld while not on the main thread!");
+        }
+        return new UseItemPipeline(
+            (ServerLevel) worldIn,
+            playerIn,
+            handIn,
+            copiedStack,
+            blockRaytraceResult,
+            creative,
+            instance.getPhaseContext().getTransactor()
+        );
     }
 
     /**

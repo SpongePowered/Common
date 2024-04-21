@@ -29,13 +29,13 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.spongepowered.common.event.tracking.context.transaction.pipeline.BlockPipeline;
 import org.spongepowered.common.event.tracking.context.transaction.pipeline.PipelineCursor;
-import org.spongepowered.common.world.SpongeBlockChangeFlag;
 
 import java.util.List;
 
-public final class SpawnDestructBlocksEffect implements ProcessingSideEffect {
+public final class SpawnDestructBlocksEffect implements ProcessingSideEffect<BlockPipeline, PipelineCursor, BlockChangeArgs, BlockState> {
 
     private static final class Holder {
         static final SpawnDestructBlocksEffect INSTANCE = new SpawnDestructBlocksEffect();
@@ -47,11 +47,9 @@ public final class SpawnDestructBlocksEffect implements ProcessingSideEffect {
 
     SpawnDestructBlocksEffect() {}
 
-    @SuppressWarnings({"unchecked", "rawtypes"})
     @Override
-    public EffectResult processSideEffect(
-        final BlockPipeline pipeline, final PipelineCursor oldState, final BlockState newState, final SpongeBlockChangeFlag flag,
-        final int limit
+    public EffectResult<@Nullable BlockState> processSideEffect(
+        final BlockPipeline pipeline, final PipelineCursor oldState, final BlockChangeArgs args
     ) {
         final ServerLevel world = pipeline.getServerWorld();
         final BlockPos pos = oldState.pos();
@@ -60,6 +58,6 @@ public final class SpawnDestructBlocksEffect implements ProcessingSideEffect {
 
         drops.forEach(drop -> Block.popResource(world, pos, drop));
 
-        return EffectResult.NULL_PASS;
+        return EffectResult.nullPass();
     }
 }
