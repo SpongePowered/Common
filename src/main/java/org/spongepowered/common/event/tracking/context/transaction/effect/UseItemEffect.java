@@ -25,15 +25,17 @@
 package org.spongepowered.common.event.tracking.context.transaction.effect;
 
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.item.context.UseOnContext;
 import org.spongepowered.common.event.tracking.context.transaction.EffectTransactor;
 import org.spongepowered.common.event.tracking.context.transaction.inventory.PlayerInventoryTransaction;
 import org.spongepowered.common.event.tracking.context.transaction.pipeline.UseItemPipeline;
 
-public class UseItemEffect implements ProcessingSideEffect<UseItemPipeline, InteractionResult, UseItemArgs, InteractionResult> {
+public class UseItemEffect implements ProcessingSideEffect.Simple<UseItemPipeline, UseItemArgs, InteractionResult> {
 
     private static final class Holder {
         static final UseItemEffect INSTANCE = new UseItemEffect();
+    }
+
+    private UseItemEffect() {
     }
 
     public static UseItemEffect getInstance() {
@@ -44,16 +46,8 @@ public class UseItemEffect implements ProcessingSideEffect<UseItemPipeline, Inte
     public EffectResult<InteractionResult> processSideEffect(
         UseItemPipeline pipeline, InteractionResult oldState, UseItemArgs args
     ) {
-        final var stack = args.copiedStack();
-        final InteractionResult result;
-        final var context = new UseOnContext(args.player(), args.hand(), args.result());
-        if (args.creative()) {
-            int $$14 = stack.getCount();
-            result = stack.useOn(context);
-            stack.setCount($$14);
-        } else {
-            result = stack.useOn(context);
-        }
+        final var gameMode = args.gameMode();
+        final InteractionResult result = gameMode.useItem(args.player(), args.world(), args.copiedStack(), args.hand());
         pipeline.transactor().logPlayerInventoryChange(args.player(), PlayerInventoryTransaction.EventCreator.STANDARD);
         try (EffectTransactor ignored = BroadcastInventoryChangesEffect.transact(pipeline.transactor())) {
             args.player().containerMenu.broadcastChanges();

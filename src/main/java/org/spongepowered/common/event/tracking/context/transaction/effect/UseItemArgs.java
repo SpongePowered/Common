@@ -25,17 +25,16 @@
 package org.spongepowered.common.event.tracking.context.transaction.effect;
 
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.level.ServerPlayerGameMode;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.phys.BlockHitResult;
 
 public record UseItemArgs(
     Level world,
     ServerPlayer player,
     InteractionHand hand,
-    BlockHitResult result,
     ItemStack copiedStack,
-    boolean creative
+    ServerPlayerGameMode gameMode
 ) implements ProcessingSideEffect.Args {
 }

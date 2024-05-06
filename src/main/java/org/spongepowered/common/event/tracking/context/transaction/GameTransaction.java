@@ -46,6 +46,7 @@ import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.StringJoiner;
 import java.util.function.BiConsumer;
+import java.util.stream.Stream;
 
 @DefaultQualifier(NonNull.class)
 public abstract class GameTransaction<E extends Event & Cancellable> implements TransactionFlow, StatefulTransaction {
@@ -186,6 +187,18 @@ public abstract class GameTransaction<E extends Event & Cancellable> implements 
     }
 
     protected void captureState() {
+
+    }
+
+    public void associateSideEffectEvents(E e, Stream<Event> elements) {
+
+    }
+
+    public void pushCause(CauseStackManager.StackFrame frame, E e) {
+        frame.pushCause(e);
+    }
+
+    public void finalizeSideEffects(E e) {
 
     }
 

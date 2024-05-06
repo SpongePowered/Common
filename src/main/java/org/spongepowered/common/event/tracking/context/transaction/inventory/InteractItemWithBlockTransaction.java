@@ -26,38 +26,51 @@ package org.spongepowered.common.event.tracking.context.transaction.inventory;
 
 import com.google.common.collect.ImmutableList;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.item.ItemStack;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.spongepowered.api.block.BlockSnapshot;
 import org.spongepowered.api.event.Cause;
 import org.spongepowered.api.event.CauseStackManager;
 import org.spongepowered.api.event.Event;
 import org.spongepowered.api.event.SpongeEventFactory;
-import org.spongepowered.api.event.item.inventory.InteractItemEvent;
-import org.spongepowered.api.item.inventory.ItemStackSnapshot;
+import org.spongepowered.api.event.block.InteractBlockEvent;
+import org.spongepowered.api.util.Direction;
+import org.spongepowered.api.util.Tristate;
 import org.spongepowered.common.event.tracking.PhaseContext;
 import org.spongepowered.common.event.tracking.context.transaction.GameTransaction;
 import org.spongepowered.common.event.tracking.context.transaction.type.TransactionTypes;
-import org.spongepowered.common.item.util.ItemStackUtil;
 import org.spongepowered.common.util.PrettyPrinter;
+import org.spongepowered.math.vector.Vector3d;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 
-public class InteractItemTransaction extends CompositeTransaction<InteractItemEvent.Secondary.Post> {
+public class InteractItemWithBlockTransaction extends CompositeTransaction<InteractBlockEvent.Secondary.Post> {
 
+    private final Vector3d hitVec;
+    private final BlockSnapshot snapshot;
+    private final Direction direction;
     private final ServerPlayer player;
-    private final ItemStackSnapshot stack;
+    private final Tristate originalBlockResult, blockResult, originalItemResult, itemResult;
 
-    public InteractItemTransaction(
-        final ServerPlayer playerIn, final ItemStack stackIn) {
-        super(TransactionTypes.INTERACT_ITEM_SECONDARY.get());
+    public InteractItemWithBlockTransaction(
+        final ServerPlayer playerIn, final Vector3d hitVec, final BlockSnapshot snapshot,
+        final Direction direction,
+        final Tristate originalBlockResult, final Tristate useBlockResult,
+        final Tristate originalUseItemResult, final Tristate useItemResult) {
+        super(TransactionTypes.INTERACT_BLOCK_SECONDARY.get());
         this.player = playerIn;
-        this.stack = ItemStackUtil.snapshotOf(stackIn);
-
+        this.hitVec = hitVec;
+        this.snapshot = snapshot;
+        this.direction = direction;
+        this.originalBlockResult = originalBlockResult;
+        this.blockResult = useBlockResult;
+        this.originalItemResult = originalUseItemResult;
+        this.itemResult = useItemResult;
     }
+
 
     @Override
     public Optional<BiConsumer<PhaseContext<@NonNull ?>, CauseStackManager.StackFrame>> getFrameMutator(
@@ -74,22 +87,25 @@ public class InteractItemTransaction extends CompositeTransaction<InteractItemEv
     }
 
     @Override
-    public Optional<InteractItemEvent.Secondary.Post> generateEvent(
+    public Optional<InteractBlockEvent.Secondary.Post> generateEvent(
         final PhaseContext<@NonNull ?> context,
         final @Nullable GameTransaction<@NonNull ?> parent,
-        final ImmutableList<GameTransaction<InteractItemEvent.Secondary.Post>> gameTransactions,
+        final ImmutableList<GameTransaction<InteractBlockEvent.Secondary.Post>> gameTransactions,
         final Cause currentCause
     ) {
-        final var root = SpongeEventFactory.createInteractItemEventSecondary(currentCause, this.stack);
+        final var root = SpongeEventFactory.createInteractBlockEventSecondary(currentCause,
+            this.originalBlockResult, this.blockResult,
+            this.originalItemResult, this.itemResult,
+            this.snapshot, this.hitVec,
+            this.direction
+        );
         final List<Event> list = new ArrayList<>();
-        final var composite = SpongeEventFactory.createInteractItemEventSecondaryPost(currentCause, root, list);
+        final InteractBlockEvent.Secondary.Post composite = SpongeEventFactory.createInteractBlockEventSecondaryPost(currentCause, root, list);
         return Optional.of(composite);
     }
 
-
-
     @Override
-    public void restore(PhaseContext<@NonNull ?> context, InteractItemEvent.Secondary.Post event) {
+    public void restore(PhaseContext<@NonNull ?> context, InteractBlockEvent.Secondary.Post event) {
 
     }
 

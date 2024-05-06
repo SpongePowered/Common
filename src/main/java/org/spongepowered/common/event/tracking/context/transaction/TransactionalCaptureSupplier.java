@@ -311,13 +311,16 @@ public final class TransactionalCaptureSupplier implements ICaptureSupplier, Tra
                 if (transaction.sideEffects == null || transaction.sideEffects.isEmpty()) {
                     continue;
                 }
-                generatedEvent.ifPresent(frame::pushCause);
+                generatedEvent.ifPresent(e -> transaction.pushCause(frame, e));
                 for (final ResultingTransactionBySideEffect sideEffect : transaction.sideEffects) {
                     if (sideEffect.head == null) {
                         continue;
                     }
-                    builder.addAll(TransactionalCaptureSupplier.batchTransactions(sideEffect.head, pointer, context, transactionPostEventBuilder));
+                    final var elements = TransactionalCaptureSupplier.batchTransactions(sideEffect.head, pointer, context, transactionPostEventBuilder);
+                    generatedEvent.ifPresent(e -> transaction.associateSideEffectEvents(e, elements.stream().map(EventByTransaction::event)));
+                    builder.addAll(elements);
                 }
+                generatedEvent.ifPresent(transaction::finalizeSideEffects);
             }
         }
     }

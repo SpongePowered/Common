@@ -29,6 +29,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.spongepowered.api.entity.ai.goal.GoalExecutor;
 import org.spongepowered.api.entity.ai.goal.GoalType;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -41,6 +42,8 @@ import java.util.function.Supplier;
 
 @Mixin(Goal.class)
 public abstract class GoalMixin implements GoalBridge {
+
+    @Shadow protected abstract int shadow$adjustedTickDelay(int $$0);
 
     private Supplier<GoalType> impl$type;
     private GoalExecutor<?> impl$owner;

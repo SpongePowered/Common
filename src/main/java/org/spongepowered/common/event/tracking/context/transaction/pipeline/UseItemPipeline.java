@@ -29,7 +29,6 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.phys.BlockHitResult;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.spongepowered.common.event.tracking.PhaseContext;
 import org.spongepowered.common.event.tracking.context.transaction.EffectTransactor;
@@ -48,26 +47,19 @@ public class UseItemPipeline {
     private final ServerPlayer player;
     private final InteractionHand hand;
     private final ItemStack copiedStack;
-    private final BlockHitResult blockRaytraceResult;
-    private final boolean creative;
     private final List<ResultingTransactionBySideEffect<UseItemPipeline, InteractionResult, UseItemArgs, InteractionResult>> effects;
     private final TransactionalCaptureSupplier transactor;
 
-
     public UseItemPipeline(ServerLevel worldIn,
-                            ServerPlayer playerIn,
-                            InteractionHand handIn,
-                            ItemStack copiedStack,
-                            BlockHitResult blockRaytraceResult,
-                            boolean creative,
-                            final TransactionalCaptureSupplier transactor) {
+                           ServerPlayer playerIn,
+                           InteractionHand handIn,
+                           ItemStack copiedStack,
+                           final TransactionalCaptureSupplier transactor) {
 
         this.worldIn = worldIn;
         this.player = playerIn;
         this.hand = handIn;
         this.copiedStack = copiedStack;
-        this.blockRaytraceResult = blockRaytraceResult;
-        this.creative = creative;
         this.effects = List.of(
             new ResultingTransactionBySideEffect<>(UseItemEffect.getInstance())
         );
@@ -78,7 +70,7 @@ public class UseItemPipeline {
         var interaction = InteractionResult.PASS;
         for (final var effect : this.effects) {
             try (final EffectTransactor ignored = context.getTransactor().pushEffect(effect)) {
-                final var args = new UseItemArgs(this.worldIn, this.player, this.hand, this.blockRaytraceResult, this.copiedStack, this.creative);
+                final var args = new UseItemArgs(this.worldIn, this.player, this.hand,this.copiedStack, this.player.gameMode);
                 final EffectResult<InteractionResult> result = effect.effect.processSideEffect(
                     this,
                     interaction,

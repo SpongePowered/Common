@@ -37,7 +37,7 @@ import org.spongepowered.common.event.tracking.context.transaction.EffectTransac
 import org.spongepowered.common.event.tracking.context.transaction.ResultingTransactionBySideEffect;
 import org.spongepowered.common.event.tracking.context.transaction.TransactionalCaptureSupplier;
 import org.spongepowered.common.event.tracking.context.transaction.effect.EffectResult;
-import org.spongepowered.common.event.tracking.context.transaction.effect.InteractionArgs;
+import org.spongepowered.common.event.tracking.context.transaction.effect.InteractionAtArgs;
 import org.spongepowered.common.event.tracking.context.transaction.effect.InteractionItemEffect;
 
 import java.util.List;
@@ -51,7 +51,7 @@ public class UseBlockPipeline {
     private final BlockHitResult blockRaytraceResult;
     private final BlockState blockstate;
     private final ItemStack copiedStack;
-    private final List<ResultingTransactionBySideEffect<UseBlockPipeline, InteractionResult, InteractionArgs, InteractionResult>> effects;
+    private final List<ResultingTransactionBySideEffect<UseBlockPipeline, InteractionResult, InteractionAtArgs, InteractionResult>> effects;
     private final TransactionalCaptureSupplier transactor;
 
 
@@ -79,7 +79,7 @@ public class UseBlockPipeline {
         var interaction = InteractionResult.PASS;
         for (final var effect : this.effects) {
             try (final EffectTransactor ignored = context.getTransactor().pushEffect(effect)) {
-                final InteractionArgs args = new InteractionArgs(this.worldIn, this.player, this.hand, this.blockRaytraceResult, this.blockstate, this.copiedStack);
+                final InteractionAtArgs args = new InteractionAtArgs(this.worldIn, this.player, this.hand, this.blockRaytraceResult, this.blockstate, this.copiedStack);
                 final EffectResult<InteractionResult> result = effect.effect.processSideEffect(
                     this,
                     interaction,

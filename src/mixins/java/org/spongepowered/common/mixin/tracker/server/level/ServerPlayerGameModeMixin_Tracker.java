@@ -41,7 +41,6 @@ import net.minecraft.world.phys.BlockHitResult;
 import org.spongepowered.api.block.BlockSnapshot;
 import org.spongepowered.api.event.CauseStackManager;
 import org.spongepowered.api.event.EventContextKeys;
-import org.spongepowered.api.event.block.InteractBlockEvent;
 import org.spongepowered.api.event.item.inventory.InteractItemEvent;
 import org.spongepowered.api.util.Tristate;
 import org.spongepowered.api.world.server.ServerLocation;
@@ -80,7 +79,7 @@ public abstract class ServerPlayerGameModeMixin_Tracker {
     public void impl$callInteractItemSecondary(final ServerPlayer player, final Level level, final ItemStack stack, final InteractionHand hand,
         final CallbackInfoReturnable<InteractionResult> cir
     ) {
-        final InteractItemEvent.Secondary event = SpongeCommonEventFactory.callInteractItemEventSecondary(player, stack, hand);
+        final InteractItemEvent.Secondary.Pre event = SpongeCommonEventFactory.callInteractItemEventSecondary(player, stack, hand);
         if (event.isCancelled()) {
             player.inventoryMenu.sendAllDataToRemote();
             cir.setReturnValue(InteractionResult.FAIL);
@@ -98,12 +97,16 @@ public abstract class ServerPlayerGameModeMixin_Tracker {
         // Sponge start
         final BlockSnapshot snapshot = ((ServerWorld) (worldIn)).createSnapshot(VecHelper.toVector3i(blockpos));
         final Vector3d hitVec = Vector3d.from(blockRaytraceResultIn.getBlockPos().getX(), blockRaytraceResultIn.getBlockPos().getY(), blockRaytraceResultIn.getBlockPos().getZ());
-        final org.spongepowered.api.util.Direction direction = DirectionFacingProvider.INSTANCE.getKey(blockRaytraceResultIn.getDirection()).get();
+        final var direction = DirectionFacingProvider.INSTANCE.getKey(blockRaytraceResultIn.getDirection()).get();
         final PhaseContext<?> phaseContext = PhaseTracker.getInstance().getPhaseContext();
-        phaseContext.getTransactor().logSecondaryInteractionTransaction(playerIn, stackIn, hitVec, snapshot, direction, handIn);
-        final InteractBlockEvent.Secondary.Pre event = SpongeCommonEventFactory.callInteractBlockEventSecondary(playerIn, stackIn, hitVec, snapshot, direction, handIn);
+        final var event = SpongeCommonEventFactory.callInteractBlockEventSecondary(playerIn, stackIn, hitVec, snapshot, direction, handIn);
         final Tristate useItem = event.useItemResult();
         final Tristate useBlock = event.useBlockResult();
+        phaseContext.getTransactor().logSecondaryInteractionTransaction(playerIn,
+            hitVec,
+            snapshot,
+            direction,
+            event);
         ((ServerPlayerGameModeBridge) this).bridge$setInteractBlockRightClickCancelled(event.isCancelled());
         if (event.isCancelled()) {
             player.inventoryMenu.sendAllDataToRemote();

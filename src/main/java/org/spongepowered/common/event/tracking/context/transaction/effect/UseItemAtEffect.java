@@ -25,28 +25,43 @@
 package org.spongepowered.common.event.tracking.context.transaction.effect;
 
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.item.context.UseOnContext;
 import org.spongepowered.common.event.tracking.context.transaction.EffectTransactor;
 import org.spongepowered.common.event.tracking.context.transaction.inventory.PlayerInventoryTransaction;
-import org.spongepowered.common.event.tracking.context.transaction.pipeline.UseItemOnBlockPipeline;
+import org.spongepowered.common.event.tracking.context.transaction.pipeline.UseItemAtPipeline;
 
-public final class PlayerContainerRefreshEffect implements ProcessingSideEffect<UseItemOnBlockPipeline, InteractionResult, InteractionArgs, InteractionResult> {
+public class UseItemAtEffect implements ProcessingSideEffect.Simple<UseItemAtPipeline, UseItemAtArgs, InteractionResult> {
 
     private static final class Holder {
-        static final PlayerContainerRefreshEffect INSTANCE = new PlayerContainerRefreshEffect();
+        static final UseItemAtEffect INSTANCE = new UseItemAtEffect();
     }
 
-    public static PlayerContainerRefreshEffect getInstance() {
-        return Holder.INSTANCE;
+    private UseItemAtEffect() {
+    }
+
+    public static UseItemAtEffect getInstance() {
+        return UseItemAtEffect.Holder.INSTANCE;
     }
 
     @Override
     public EffectResult<InteractionResult> processSideEffect(
-        UseItemOnBlockPipeline pipeline, InteractionResult oldState, InteractionArgs args
+        UseItemAtPipeline pipeline, InteractionResult oldState, UseItemAtArgs args
     ) {
+        final var stack = args.copiedStack();
+        final InteractionResult result;
+        final var context = new UseOnContext(args.player(), args.hand(), args.result());
+        if (args.creative()) {
+            int count = stack.getCount();
+            result = stack.useOn(context);
+            stack.setCount(count);
+        } else {
+            result = stack.useOn(context);
+        }
         pipeline.transactor().logPlayerInventoryChange(args.player(), PlayerInventoryTransaction.EventCreator.STANDARD);
         try (EffectTransactor ignored = BroadcastInventoryChangesEffect.transact(pipeline.transactor())) {
             args.player().containerMenu.broadcastChanges();
         }
-        return EffectResult.nullPass();
+        return new EffectResult<>(result, true);
     }
+
 }

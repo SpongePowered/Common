@@ -27,7 +27,6 @@ package org.spongepowered.common.event.tracking.context.transaction;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -46,6 +45,7 @@ import net.minecraft.world.ticks.ScheduledTick;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.spongepowered.api.block.BlockSnapshot;
+import org.spongepowered.api.event.block.InteractBlockEvent;
 import org.spongepowered.api.event.cause.entity.SpawnType;
 import org.spongepowered.api.item.inventory.Inventory;
 import org.spongepowered.api.item.inventory.ItemStackSnapshot;
@@ -74,6 +74,7 @@ import org.spongepowered.common.event.tracking.context.transaction.block.Replace
 import org.spongepowered.common.event.tracking.context.transaction.block.ScheduleUpdateTransaction;
 import org.spongepowered.common.event.tracking.context.transaction.effect.BlockAddedEffect;
 import org.spongepowered.common.event.tracking.context.transaction.effect.EntityPerformingDropsEffect;
+import org.spongepowered.common.event.tracking.context.transaction.effect.InteractionItemEffect;
 import org.spongepowered.common.event.tracking.context.transaction.effect.InventoryEffect;
 import org.spongepowered.common.event.tracking.context.transaction.effect.PrepareBlockDrops;
 import org.spongepowered.common.event.tracking.context.transaction.effect.ProcessingSideEffect;
@@ -86,6 +87,7 @@ import org.spongepowered.common.event.tracking.context.transaction.inventory.Cra
 import org.spongepowered.common.event.tracking.context.transaction.inventory.DropFromPlayerInventoryTransaction;
 import org.spongepowered.common.event.tracking.context.transaction.inventory.ExplicitInventoryOmittedTransaction;
 import org.spongepowered.common.event.tracking.context.transaction.inventory.InteractItemTransaction;
+import org.spongepowered.common.event.tracking.context.transaction.inventory.InteractItemWithBlockTransaction;
 import org.spongepowered.common.event.tracking.context.transaction.inventory.InventoryTransaction;
 import org.spongepowered.common.event.tracking.context.transaction.inventory.OpenMenuTransaction;
 import org.spongepowered.common.event.tracking.context.transaction.inventory.PlaceRecipeTransaction;
@@ -421,10 +423,26 @@ interface TransactionSink {
     }
 
     default void logSecondaryInteractionTransaction(
-        final ServerPlayer playerIn, final ItemStack stackIn, final Vector3d hitVec,
-        final BlockSnapshot snapshot, final Direction direction, final InteractionHand handIn) {
-        final InteractItemTransaction transaction = new InteractItemTransaction(playerIn, stackIn, hitVec, snapshot, direction, handIn);
+        final ServerPlayer playerIn, final Vector3d hitVec,
+        final BlockSnapshot snapshot, final Direction direction, InteractBlockEvent.Secondary.Pre event) {
+        final InteractItemWithBlockTransaction transaction = new InteractItemWithBlockTransaction(playerIn,
+            hitVec,
+            snapshot,
+            direction,
+            event.originalUseBlockResult(),
+            event.useBlockResult(),
+            event.originalUseItemResult(),
+            event.useItemResult()
+            );
         this.logTransaction(transaction);
+    }
+
+    default EffectTransactor logSecondaryInteractItemTransaction(
+        final ServerPlayer playerIn, final ItemStack stackIn
+    ) {
+        final InteractItemTransaction transaction = new InteractItemTransaction(playerIn, stackIn);
+        this.logTransaction(transaction);
+        return this.pushEffect(new ResultingTransactionBySideEffect<>(InteractionItemEffect.getInstance()));
     }
 
 }

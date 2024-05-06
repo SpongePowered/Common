@@ -29,7 +29,7 @@ import org.spongepowered.common.event.tracking.context.transaction.EffectTransac
 import org.spongepowered.common.event.tracking.context.transaction.inventory.PlayerInventoryTransaction;
 import org.spongepowered.common.event.tracking.context.transaction.pipeline.UseItemOnBlockPipeline;
 
-public final class InteractionUseItemOnBlockEffect implements ProcessingSideEffect<UseItemOnBlockPipeline, ItemInteractionResult, InteractionArgs, ItemInteractionResult> {
+public final class InteractionUseItemOnBlockEffect implements ProcessingSideEffect<UseItemOnBlockPipeline, ItemInteractionResult, InteractionAtArgs, ItemInteractionResult> {
 
     private static final class Holder {
         static final InteractionUseItemOnBlockEffect INSTANCE = new InteractionUseItemOnBlockEffect();
@@ -41,7 +41,7 @@ public final class InteractionUseItemOnBlockEffect implements ProcessingSideEffe
 
     @Override
     public EffectResult<ItemInteractionResult> processSideEffect(
-        UseItemOnBlockPipeline pipeline, ItemInteractionResult oldState, InteractionArgs args
+        UseItemOnBlockPipeline pipeline, ItemInteractionResult oldState, InteractionAtArgs args
     ) {
         final var player = args.player();
         final var hand = args.hand();

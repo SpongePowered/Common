@@ -29,8 +29,12 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 @FunctionalInterface
 public interface ProcessingSideEffect<T, C, A extends ProcessingSideEffect.Args, @Nullable R> {
 
+    interface Simple<T, A extends ProcessingSideEffect.Args, @Nullable R> extends ProcessingSideEffect<T, R, A, R> {
+
+    }
+
     EffectResult<R> processSideEffect(T pipeline, C oldState, A args);
 
-    sealed interface Args permits BlockChangeArgs, InteractionArgs, UseItemArgs {}
+    sealed interface Args permits BlockChangeArgs, InteractionAtArgs, UseItemOnArgs, UseItemAtArgs, UseItemArgs {}
 
 }

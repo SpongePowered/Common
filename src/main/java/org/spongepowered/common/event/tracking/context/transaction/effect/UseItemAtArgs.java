@@ -22,31 +22,20 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.spongepowered.common.event.tracking.context.transaction;
+package org.spongepowered.common.event.tracking.context.transaction.effect;
 
-import com.google.common.collect.ImmutableList;
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
-import org.checkerframework.framework.qual.DefaultQualifier;
-import org.spongepowered.api.event.Cancellable;
-import org.spongepowered.api.event.Event;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.BlockHitResult;
 
-@DefaultQualifier(NonNull.class)
-public record EventByTransaction<T extends Event & Cancellable>(
-    T event,
-    ImmutableList<GameTransaction<T>> transactions,
-    @Nullable GameTransaction<@NonNull ?> parent,
-    GameTransaction<T> decider
-) {
-
-    public void markCancelled() {
-        this.decider().markCancelled();
-        for (GameTransaction<T> transaction : this.transactions()) {
-            transaction.markCancelled();
-        }
-    }
-
-    public boolean isParentOrDeciderCancelled() {
-        return this.decider().cancelled || (this.parent() != null && this.parent().cancelled);
-    }
+public record UseItemAtArgs(
+    Level world,
+    ServerPlayer player,
+    InteractionHand hand,
+    BlockHitResult result,
+    ItemStack copiedStack,
+    boolean creative
+) implements ProcessingSideEffect.Args {
 }

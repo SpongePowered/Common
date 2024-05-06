@@ -31,7 +31,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 
-public record InteractionArgs(
+public record InteractionAtArgs(
     Level world,
     ServerPlayer player,
     InteractionHand hand,
