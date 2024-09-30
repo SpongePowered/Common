@@ -59,9 +59,8 @@ public abstract class CompositeTransaction<E extends CompositeEvent> extends Gam
     public boolean markCancelledTransactions(
         final E event,
         final ImmutableList<? extends GameTransaction<E>> gameTransactions) {
-        event.children().stream().filter(e -> e instanceof Cancellable)
-            .map(e -> (Cancellable) e)
-            .forEach(e -> e.setCancelled(event.isCancelled()));
+        event.setCancelled(true);
+        gameTransactions.forEach(GameTransaction::markCancelled);
         return false;
     }
 
