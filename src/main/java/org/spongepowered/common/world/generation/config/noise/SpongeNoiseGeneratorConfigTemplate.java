@@ -69,7 +69,7 @@ public record SpongeNoiseGeneratorConfigTemplate(ResourceKey key, NoiseGenerator
 
     @Override
     public DataContainer toContainer() {
-        final JsonElement serialized = SpongeNoiseGeneratorConfigTemplate.encode(this, SpongeCommon.server().registryAccess());
+        final JsonElement serialized = SpongeNoiseGeneratorConfigTemplate.encode(this, SpongeCommon.vanillaRegistryAccess());
         try {
             return DataFormats.JSON.get().read(serialized.toString());
         } catch (IOException e) {
@@ -210,7 +210,7 @@ public record SpongeNoiseGeneratorConfigTemplate(ResourceKey key, NoiseGenerator
         @Override
         public Builder fromDataPack(final DataView datapack) throws IOException {
             final JsonElement json = JsonParser.parseString(DataFormats.JSON.get().write(datapack));
-            final NoiseGeneratorSettings decoded = SpongeNoiseGeneratorConfigTemplate.decode(json, SpongeCommon.server().registryAccess());
+            final NoiseGeneratorSettings decoded = SpongeNoiseGeneratorConfigTemplate.decode(json, SpongeCommon.vanillaRegistryAccess());
             return this.fromValue((NoiseGeneratorConfig) (Object) decoded);
         }
 

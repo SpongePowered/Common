@@ -62,7 +62,7 @@ public record SpongeChatTypeTemplate(ResourceKey key, ChatType representedType, 
 
     @Override
     public DataContainer toContainer() {
-        final JsonElement serialized = SpongeChatTypeTemplate.encode(this, SpongeCommon.server().registryAccess());
+        final JsonElement serialized = SpongeChatTypeTemplate.encode(this, SpongeCommon.vanillaRegistryAccess());
         try {
             return DataFormats.JSON.get().read(serialized.toString());
         } catch (IOException e) {
@@ -173,7 +173,7 @@ public record SpongeChatTypeTemplate(ResourceKey key, ChatType representedType, 
         @Override
         public Builder fromDataPack(final DataView pack) throws IOException {
             final JsonElement json = JsonParser.parseString(DataFormats.JSON.get().write(pack));
-            final ChatType chatType = SpongeChatTypeTemplate.decode(json, SpongeCommon.server().registryAccess());
+            final ChatType chatType = SpongeChatTypeTemplate.decode(json, SpongeCommon.vanillaRegistryAccess());
             this.fromValue((org.spongepowered.api.adventure.ChatType) (Object) chatType);
             return this;
         }

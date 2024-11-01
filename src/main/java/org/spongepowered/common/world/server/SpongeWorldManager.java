@@ -682,7 +682,7 @@ public abstract class SpongeWorldManager implements WorldManager {
 
             final LevelStorageSource.LevelStorageAccess storageSource = ((MinecraftServerAccessor) this.server).accessor$storageSource();
             final PrimaryLevelData levelData = (PrimaryLevelData) this.server.getWorldData();
-            storageSource.saveDataTag(SpongeCommon.server().registryAccess(), levelData, null);
+            storageSource.saveDataTag(SpongeCommon.vanillaRegistryAccess(), levelData, null);
 
             return true;
         }, SpongeCommon.server());

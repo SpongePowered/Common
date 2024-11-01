@@ -63,7 +63,7 @@ public record SpongePlacedFeatureTemplate(ResourceKey key, net.minecraft.world.l
 
     @Override
     public DataContainer toContainer() {
-        final JsonElement serialized = SpongePlacedFeatureTemplate.encode(this, SpongeCommon.server().registryAccess());
+        final JsonElement serialized = SpongePlacedFeatureTemplate.encode(this, SpongeCommon.vanillaRegistryAccess());
         try {
             final DataContainer container = DataFormats.JSON.get().read(serialized.toString());
             container.set(Queries.CONTENT_VERSION, this.contentVersion());
@@ -154,7 +154,7 @@ public record SpongePlacedFeatureTemplate(ResourceKey key, net.minecraft.world.l
         @Override
         public Builder fromDataPack(final DataView pack) throws IOException {
             final JsonElement json = JsonParser.parseString(DataFormats.JSON.get().write(pack));
-            final net.minecraft.world.level.levelgen.placement.PlacedFeature feature = SpongePlacedFeatureTemplate.decode(json, SpongeCommon.server().registryAccess());
+            final net.minecraft.world.level.levelgen.placement.PlacedFeature feature = SpongePlacedFeatureTemplate.decode(json, SpongeCommon.vanillaRegistryAccess());
             this.fromValue((PlacedFeature) (Object) feature);
             return this;
         }

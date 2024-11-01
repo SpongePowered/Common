@@ -49,7 +49,7 @@ public interface StructureTypeMixin_API<S extends net.minecraft.world.level.leve
 
         try {
             final JsonElement json = JsonParser.parseString(DataFormats.JSON.get().write(config));
-            final RegistryOps<JsonElement> ops = RegistryOps.create(JsonOps.INSTANCE, SpongeCommon.server().registryAccess());
+            final RegistryOps<JsonElement> ops = RegistryOps.create(JsonOps.INSTANCE, SpongeCommon.vanillaRegistryAccess());
             return (Structure) (Object) this.codec().codec().parse(ops, json).getOrThrow();
 
         } catch (IOException e) {

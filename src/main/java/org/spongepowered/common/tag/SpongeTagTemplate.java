@@ -54,7 +54,7 @@ public record SpongeTagTemplate<T extends Taggable<T>>(
 
     @Override
     public DataContainer toContainer() {
-        final JsonObject jsonObject = SpongeTagTemplate.encode(this, SpongeCommon.server().registryAccess());
+        final JsonObject jsonObject = SpongeTagTemplate.encode(this, SpongeCommon.vanillaRegistryAccess());
         try {
             final DataContainer container = DataFormats.JSON.get().read(jsonObject.getAsString());
             container.set(DataQuery.of("replace"), this.replace);

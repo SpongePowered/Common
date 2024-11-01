@@ -53,7 +53,7 @@ public class JsonDataPackSerializer<T extends DataPackEntry<T>> extends DataPack
 
     @Override
     public void serializeObject(final SpongeDataPack<JsonElement, T> pack, final Path packDir, final T packEntry) throws IOException {
-        final JsonElement serialized = this.encoder.encode(packEntry, SpongeCommon.server().registryAccess());
+        final JsonElement serialized = this.encoder.encode(packEntry, SpongeCommon.vanillaRegistryAccess());
         final Path file = this.packEntryFile(pack.type(), packEntry.key(), packDir);
         final JsonElement finalJson = this.transformSerialized(file, packEntry, serialized);
         Files.createDirectories(file.getParent());
@@ -82,7 +82,7 @@ public class JsonDataPackSerializer<T extends DataPackEntry<T>> extends DataPack
 
             if (this.decoder != null) {
                 // TODO this is actually blocking
-                return this.decoder.decode(pack, key, element, SpongeCommon.server().registryAccess());
+                return this.decoder.decode(pack, key, element, SpongeCommon.vanillaRegistryAccess());
             }
         }
         return null;

@@ -282,7 +282,7 @@ public final class SpongeItemStack  {
         SpongeItemStack.cleanupOldCustomData(mcStack);
         // Serialize all DataComponents...
 
-        var ops = RegistryOps.create(NbtOps.INSTANCE, SpongeCommon.server().registryAccess());
+        var ops = RegistryOps.create(NbtOps.INSTANCE, SpongeCommon.vanillaRegistryAccess());
         var componentsTag = DataComponentPatch.CODEC.encodeStart(ops, mcStack.getComponentsPatch());
         var components = NBTTranslator.INSTANCE.translate((CompoundTag) componentsTag.getOrThrow());
         container.set(Constants.ItemStack.COMPONENTS, components);
@@ -352,7 +352,7 @@ public final class SpongeItemStack  {
 
     public static DataComponentPatch patchFromData(final DataView container) {
         return container.getView(Constants.ItemStack.COMPONENTS).map(NBTTranslator.INSTANCE::translate).flatMap(compound -> {
-            var dynamic = new Dynamic<>(RegistryOps.create(NbtOps.INSTANCE, SpongeCommon.server().registryAccess()), compound);
+            var dynamic = new Dynamic<>(RegistryOps.create(NbtOps.INSTANCE, SpongeCommon.vanillaRegistryAccess()), compound);
             return DataComponentPatch.CODEC.decode(dynamic).result().map(Pair::getFirst);
         }).orElse(DataComponentPatch.EMPTY);
     }

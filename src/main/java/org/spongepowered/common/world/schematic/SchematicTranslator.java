@@ -327,7 +327,7 @@ public class SchematicTranslator implements DataTranslator<Schematic> {
             .orElseThrow(() -> new InvalidDataException("Missing BiomePalette as required by the schematic spec"));
 
         final Set<DataQuery> biomeKeys = biomeMap.keys(false);
-        final Registry<Biome> biomeRegistry = VolumeStreamUtils.nativeToSpongeRegistry(SpongeCommon.server().registryAccess().lookupOrThrow(Registries.BIOME));
+        final Registry<Biome> biomeRegistry = VolumeStreamUtils.nativeToSpongeRegistry(SpongeCommon.vanillaRegistry(Registries.BIOME));
         biomePalette = new MutableBimapPalette<>(
             PaletteTypes.BIOME_PALETTE.get(),
             biomeRegistry,
@@ -454,7 +454,7 @@ public class SchematicTranslator implements DataTranslator<Schematic> {
 
 
             final Registry<BlockType> blockRegistry = VolumeStreamUtils.nativeToSpongeRegistry(
-                    SpongeCommon.server().registryAccess().lookupOrThrow(Registries.BLOCK));
+                    SpongeCommon.vanillaRegistry(Registries.BLOCK));
 
             SchematicTranslator.writePaletteToView(
                 blockData, palette, blockRegistry, Constants.Sponge.Schematic.BLOCK_PALETTE, BlockState::type,
@@ -506,7 +506,7 @@ public class SchematicTranslator implements DataTranslator<Schematic> {
                 // Should never reach here.
             }
 
-            final Registry<Biome> biomeRegistry = VolumeStreamUtils.nativeToSpongeRegistry(SpongeCommon.server().registryAccess().lookupOrThrow(Registries.BIOME));
+            final Registry<Biome> biomeRegistry = VolumeStreamUtils.nativeToSpongeRegistry(SpongeCommon.vanillaRegistry(Registries.BIOME));
 
             SchematicTranslator.writePaletteToView(
                 biomeContainer, biomePalette, biomeRegistry, Constants.Sponge.Schematic.BIOME_PALETTE,

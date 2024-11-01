@@ -118,7 +118,7 @@ public abstract class StructureMixin_API implements org.spongepowered.api.world.
 
     @Override
     public DataView toContainer() {
-        final RegistryOps<JsonElement> ops = RegistryOps.create(JsonOps.INSTANCE, SpongeCommon.server().registryAccess());
+        final RegistryOps<JsonElement> ops = RegistryOps.create(JsonOps.INSTANCE, SpongeCommon.vanillaRegistryAccess());
         final JsonElement serialized = this.api$codec().encodeStart(ops, (Structure) (Object) this).getOrThrow();
         try {
             return DataFormats.JSON.get().read(serialized.toString());

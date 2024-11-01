@@ -66,7 +66,7 @@ public record SpongeStructureSetTemplate(ResourceKey key, StructureSet represent
 
     @Override
     public DataContainer toContainer() {
-        final JsonElement serialized = SpongeStructureSetTemplate.encode(this, SpongeCommon.server().registryAccess());
+        final JsonElement serialized = SpongeStructureSetTemplate.encode(this, SpongeCommon.vanillaRegistryAccess());
         try {
             return DataFormats.JSON.get().read(serialized.toString());
         } catch (IOException e) {
@@ -114,7 +114,7 @@ public record SpongeStructureSetTemplate(ResourceKey key, StructureSet represent
         @Override
         public Builder fromDataPack(final DataView pack) throws IOException {
             final JsonElement json = JsonParser.parseString(DataFormats.JSON.get().write(pack));
-            final StructureSet decoded = SpongeStructureSetTemplate.decode(json, SpongeCommon.server().registryAccess());
+            final StructureSet decoded = SpongeStructureSetTemplate.decode(json, SpongeCommon.vanillaRegistryAccess());
             this.structureSelectionEntries = decoded.structures();
             this.placement = decoded.placement();
             return this;

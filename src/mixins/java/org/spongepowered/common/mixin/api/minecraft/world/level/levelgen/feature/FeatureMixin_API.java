@@ -53,7 +53,7 @@ public abstract class FeatureMixin_API<FC extends FeatureConfiguration> implemen
     public Feature configure(final DataView config) {
         try {
             final JsonElement json = JsonParser.parseString(DataFormats.JSON.get().write(config));
-            final RegistryOps<JsonElement> ops = RegistryOps.create(JsonOps.INSTANCE, SpongeCommon.server().registryAccess());
+            final RegistryOps<JsonElement> ops = RegistryOps.create(JsonOps.INSTANCE, SpongeCommon.vanillaRegistryAccess());
             return (Feature) (Object) this.configuredCodec.codec().parse(ops, json).getOrThrow();
 
         } catch (IOException e) {

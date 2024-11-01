@@ -97,6 +97,6 @@ public final class SpongeChunkGeneratorFactory implements ChunkGenerator.Factory
     @Override
     public ChunkGenerator fromDataPack(DataView pack) throws IOException {
         final JsonElement json = JsonParser.parseString(DataFormats.JSON.get().write(pack));
-        return (ChunkGenerator) SpongeWorldTemplate.decodeStem(json, SpongeCommon.server().registryAccess()).generator();
+        return (ChunkGenerator) SpongeWorldTemplate.decodeStem(json, SpongeCommon.vanillaRegistryAccess()).generator();
     }
 }

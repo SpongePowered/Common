@@ -93,7 +93,7 @@ public final class SpongeRandomEnchantmentListBuilder implements Enchantment.Ran
         if (this.pool == null || this.pool.isEmpty()) {
             Objects.requireNonNull(this.item, "The item cannot be null");
             this.randomSource.setSeed(this.seed + this.option);
-            final var registry = SpongeCommon.server().registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
+            final var registry = SpongeCommon.vanillaRegistry(Registries.ENCHANTMENT);
             var stream = registry.listElements().map($$0x -> (Holder<net.minecraft.world.item.enchantment.Enchantment>)$$0x);
             enchantments = EnchantmentHelper.selectEnchantment(this.randomSource, ItemStackUtil.toNative(this.item), this.level, stream);
         } else {
@@ -139,7 +139,7 @@ public final class SpongeRandomEnchantmentListBuilder implements Enchantment.Ran
     }
 
     public static List<EnchantmentInstance> toNative(final List<Enchantment> list) {
-        final var registry = SpongeCommon.server().registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
+        final var registry = SpongeCommon.vanillaRegistry(Registries.ENCHANTMENT);
         return list.stream().map(ench -> {
                     var mcEnch = registry.wrapAsHolder((net.minecraft.world.item.enchantment.Enchantment) (Object) ench.type());
                     return new EnchantmentInstance(mcEnch, ench.level());

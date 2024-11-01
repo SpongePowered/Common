@@ -50,7 +50,7 @@ public interface StructureProcessorTypeMixin_API<P extends StructureProcessor> e
 
     @Override
     default Processor configure(final DataView dataView) throws IOException {
-        final RegistryOps<JsonElement> ops = RegistryOps.create(JsonOps.INSTANCE, SpongeCommon.server().registryAccess());
+        final RegistryOps<JsonElement> ops = RegistryOps.create(JsonOps.INSTANCE, SpongeCommon.vanillaRegistryAccess());
         final JsonElement json = JsonParser.parseString(DataFormats.JSON.get().write(dataView));
         final P processor = this.shadow$codec().codec().parse(ops, json).getOrThrow();
         return (Processor) processor;

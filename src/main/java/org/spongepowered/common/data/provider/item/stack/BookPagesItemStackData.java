@@ -71,7 +71,7 @@ public final class BookPagesItemStackData {
         if (value.isEmpty()) {
             return BookPagesItemStackData.delete(holder, component);
         }
-        final var registry = SpongeCommon.server().registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
+        final var registry = SpongeCommon.vanillaRegistry(Registries.ENCHANTMENT);
         holder.update(component, ItemEnchantments.EMPTY, ench -> {
             final ItemEnchantments.Mutable mutable = new ItemEnchantments.Mutable(ench);
             mutable.keySet().clear();

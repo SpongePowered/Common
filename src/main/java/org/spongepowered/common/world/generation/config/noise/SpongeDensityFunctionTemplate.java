@@ -59,7 +59,7 @@ public record SpongeDensityFunctionTemplate(ResourceKey key, DensityFunction rep
 
     @Override
     public DataContainer toContainer() {
-        final JsonElement serialized = SpongeDensityFunctionTemplate.encode(this, SpongeCommon.server().registryAccess());
+        final JsonElement serialized = SpongeDensityFunctionTemplate.encode(this, SpongeCommon.vanillaRegistryAccess());
         try {
             return DataFormats.JSON.get().read(serialized.toString());
         } catch (IOException e) {
@@ -104,7 +104,7 @@ public record SpongeDensityFunctionTemplate(ResourceKey key, DensityFunction rep
         @Override
         public Builder fromDataPack(final DataView pack) throws IOException {
             final JsonElement json = JsonParser.parseString(DataFormats.JSON.get().write(pack));
-            this.densityFunction = SpongeDensityFunctionTemplate.decode(json, SpongeCommon.server().registryAccess());
+            this.densityFunction = SpongeDensityFunctionTemplate.decode(json, SpongeCommon.vanillaRegistryAccess());
             return this;
         }
 

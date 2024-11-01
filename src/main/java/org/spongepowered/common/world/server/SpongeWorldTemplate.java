@@ -166,7 +166,7 @@ public record SpongeWorldTemplate(ResourceKey key, LevelStem levelStem, DataPack
 
     @Override
     public DataContainer toContainer() {
-        final JsonElement serialized = SpongeWorldTemplate.encode(this, SpongeCommon.server().registryAccess());
+        final JsonElement serialized = SpongeWorldTemplate.encode(this, SpongeCommon.vanillaRegistryAccess());
         try {
             final DataContainer container = DataFormats.JSON.get().read(serialized.toString());
             container.set(Queries.CONTENT_VERSION, this.contentVersion());
@@ -230,7 +230,7 @@ public record SpongeWorldTemplate(ResourceKey key, LevelStem levelStem, DataPack
         @Override
         public Builder fromDataPack(final DataView pack) throws IOException {
             final JsonElement json = JsonParser.parseString(DataFormats.JSON.get().write(pack));
-            final LevelStem levelStem = SpongeWorldTemplate.decodeStem(json, SpongeCommon.server().registryAccess());
+            final LevelStem levelStem = SpongeWorldTemplate.decodeStem(json, SpongeCommon.vanillaRegistryAccess());
             return this.from(levelStem);
 
         }
@@ -289,7 +289,7 @@ public record SpongeWorldTemplate(ResourceKey key, LevelStem levelStem, DataPack
 
         @NonNull
         private static Holder<DimensionType> dimensionTypeHolder(final WorldType worldType) {
-            final Registry<DimensionType> dimensionTypeRegistry = SpongeCommon.server().registryAccess().lookupOrThrow(Registries.DIMENSION_TYPE);
+            final Registry<DimensionType> dimensionTypeRegistry = SpongeCommon.vanillaRegistry(Registries.DIMENSION_TYPE);
             final ResourceLocation key = dimensionTypeRegistry.getKey((DimensionType) (Object) worldType);
             if (key == null) {
                 return Holder.direct((DimensionType) (Object) worldType);

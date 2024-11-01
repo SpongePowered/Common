@@ -63,7 +63,7 @@ public record SpongeProcessorListTemplate(ResourceKey key, StructureProcessorLis
 
     @Override
     public DataContainer toContainer() {
-        final JsonElement serialized = SpongeProcessorListTemplate.encode(this, SpongeCommon.server().registryAccess());
+        final JsonElement serialized = SpongeProcessorListTemplate.encode(this, SpongeCommon.vanillaRegistryAccess());
         try {
             return DataFormats.JSON.get().read(serialized.toString());
         } catch (IOException e) {
@@ -122,7 +122,7 @@ public record SpongeProcessorListTemplate(ResourceKey key, StructureProcessorLis
         @Override
         public Builder fromDataPack(final DataView datapack) throws IOException {
             final JsonElement json = JsonParser.parseString(DataFormats.JSON.get().write(datapack));
-            final StructureProcessorList decoded = SpongeProcessorListTemplate.decode(json, SpongeCommon.server().registryAccess());
+            final StructureProcessorList decoded = SpongeProcessorListTemplate.decode(json, SpongeCommon.vanillaRegistryAccess());
             this.fromValue((ProcessorList) decoded);
             return this;
         }

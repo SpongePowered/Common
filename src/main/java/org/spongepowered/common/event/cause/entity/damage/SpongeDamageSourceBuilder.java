@@ -63,7 +63,7 @@ public class SpongeDamageSourceBuilder implements DamageSource.Builder {
 
     @Override
     public DamageSource.Builder type(final DamageType damageType) {
-        final var registry = SpongeCommon.server().registryAccess().lookupOrThrow(Registries.DAMAGE_TYPE);
+        final var registry = SpongeCommon.vanillaRegistry(Registries.DAMAGE_TYPE);
         this.damageType = registry.wrapAsHolder((net.minecraft.world.damagesource.DamageType) (Object) damageType);
         return this;
     }

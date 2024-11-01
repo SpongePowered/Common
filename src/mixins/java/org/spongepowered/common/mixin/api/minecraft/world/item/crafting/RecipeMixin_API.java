@@ -75,7 +75,7 @@ public interface RecipeMixin_API<I extends RecipeInput, I2 extends org.spongepow
     @NonNull
     @Override
     default ItemStackSnapshot result(@NonNull final I2 inv) {
-        return ItemStackUtil.snapshotOf(this.shadow$assemble((I) InventoryUtil.toCraftingInputOrThrow(inv), SpongeCommon.server().registryAccess()));
+        return ItemStackUtil.snapshotOf(this.shadow$assemble((I) InventoryUtil.toCraftingInputOrThrow(inv), SpongeCommon.vanillaRegistryAccess()));
     }
 
     @NonNull
