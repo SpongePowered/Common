@@ -33,6 +33,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.common.bridge.world.ticks.LevelTicksBridge;
 import org.spongepowered.common.bridge.world.ticks.ScheduledTickBridge;
 import org.spongepowered.common.event.tracking.PhaseTracker;
 import org.spongepowered.common.event.tracking.phase.generation.GenerationPhase;
@@ -53,7 +54,8 @@ public abstract class LevelTicksMixin_Tracker {
             value = "INVOKE",
             target = "Lnet/minecraft/world/ticks/LevelChunkTicks;schedule(Lnet/minecraft/world/ticks/ScheduledTick;)V")
     )
-    private void tracker$associatePhaseContextWithTickEntry(LevelChunkTicks instance, ScheduledTick<?> scheduledTick) {
+    private void tracker$associatePhaseContextWithTickEntry(final LevelChunkTicks instance, final ScheduledTick<?> scheduledTick) {
+        PhaseTracker.getInstance().getPhaseContext().associateScheduledTickUpdate(((LevelTicksBridge<?>) this).bridge$level(), scheduledTick);
         instance.schedule(scheduledTick);
     }
 

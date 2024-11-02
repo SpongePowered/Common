@@ -25,8 +25,6 @@
 package org.spongepowered.common.event.tracking.phase.generation;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.ticks.ScheduledTick;
 import org.spongepowered.api.event.CauseStackManager;
 import org.spongepowered.common.event.tracking.PhaseTracker;
 
@@ -52,12 +50,6 @@ final class DeferredScheduledUpdatePhaseState extends GeneralGenerationPhaseStat
     @Override
     public BiConsumer<CauseStackManager.StackFrame, Context> getFrameModifier() {
         return this.CHUNK_LOAD_MODIFIER;
-    }
-
-    @Override
-    public void associateScheduledTickUpdate(
-        final Context asContext, ServerLevel level, final ScheduledTick<?> entry
-    ) {
     }
 
     public static final class Context extends GenerationContext<Context> {

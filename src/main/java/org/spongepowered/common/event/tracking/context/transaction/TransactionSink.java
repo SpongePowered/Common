@@ -51,6 +51,7 @@ import org.spongepowered.api.item.inventory.ItemStackSnapshot;
 import org.spongepowered.api.item.inventory.Slot;
 import org.spongepowered.api.item.inventory.crafting.CraftingInventory;
 import org.spongepowered.api.item.inventory.transaction.SlotTransaction;
+import org.spongepowered.api.scheduler.ScheduledUpdate;
 import org.spongepowered.api.world.BlockChangeFlag;
 import org.spongepowered.api.world.BlockChangeFlags;
 import org.spongepowered.common.SpongeCommon;
@@ -178,23 +179,14 @@ interface TransactionSink {
         return this.pushEffect(new ResultingTransactionBySideEffect(PrepareBlockDrops.getInstance()));
     }
 
-    @SuppressWarnings("ConstantConditions")
-    default void logScheduledUpdate(final ServerLevel serverWorld, final ScheduledTick<?> data) {
+    @SuppressWarnings({"ConstantConditions", "unchecked"})
+    default <T> void logScheduledUpdate(final ServerLevel serverWorld, final ScheduledTick<T> data) {
         final WeakReference<ServerLevel> worldRef = new WeakReference<>(serverWorld);
+        final WeakReference<ScheduledTick<T>> dataRef = new WeakReference<>(data);
         final Supplier<ServerLevel> worldSupplier = () -> Objects.requireNonNull(worldRef.get(), "ServerWorld dereferenced");
-        final @Nullable BlockEntity tileEntity = serverWorld.getBlockEntity(data.pos());
-        final BlockState existing = serverWorld.getBlockState(data.pos());
-        final SpongeBlockSnapshot original = TrackingUtil.createPooledSnapshot(
-            existing,
-            data.pos(),
-            BlockChangeFlags.NONE,
-            Constants.World.DEFAULT_BLOCK_CHANGE_LIMIT,
-            tileEntity,
-            worldSupplier,
-            Optional::empty, Optional::empty
-        );
-        original.blockChange = BlockChange.MODIFY;
-        final ScheduleUpdateTransaction transaction = new ScheduleUpdateTransaction(original, data);
+        final Supplier<ScheduledTick<T>> dataSupplier = () -> Objects.requireNonNull(dataRef.get(), "Data dereferenced");
+        final ScheduledUpdate<T> spongeData = (ScheduledUpdate<T>) (Object) data;
+        final ScheduleUpdateTransaction<T> transaction = new ScheduleUpdateTransaction<>(worldSupplier, dataSupplier, data.pos(), data.type(), spongeData.delay(), spongeData.priority());
         this.logTransaction(transaction);
     }
 

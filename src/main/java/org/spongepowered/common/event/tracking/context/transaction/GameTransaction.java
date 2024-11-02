@@ -50,7 +50,7 @@ import java.util.function.BiConsumer;
 @DefaultQualifier(NonNull.class)
 public abstract class GameTransaction<E extends Event & Cancellable> implements TransactionFlow, StatefulTransaction {
 
-    private final TransactionType<? extends E> transactionType;
+    private final TransactionType<? super E> transactionType;
     protected boolean cancelled = false;
 
     // Children Definitions
@@ -61,7 +61,7 @@ public abstract class GameTransaction<E extends Event & Cancellable> implements 
     @Nullable GameTransaction<@NonNull ?> next;
     private boolean recorded = false;
 
-    protected GameTransaction(final TransactionType<? extends E> transactionType) {
+    protected GameTransaction(final TransactionType<? super E> transactionType) {
         this.transactionType = transactionType;
     }
 
@@ -71,7 +71,7 @@ public abstract class GameTransaction<E extends Event & Cancellable> implements 
             .toString();
     }
 
-    public final TransactionType<? extends E> getTransactionType() {
+    public final TransactionType<? super E> getTransactionType() {
         return this.transactionType;
     }
 

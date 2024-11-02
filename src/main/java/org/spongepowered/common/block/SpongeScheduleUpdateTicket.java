@@ -22,39 +22,56 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.spongepowered.common.event.tracking.context.transaction.world;
+package org.spongepowered.common.block;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.spongepowered.api.ResourceKey;
-import org.spongepowered.api.event.Cancellable;
-import org.spongepowered.api.event.Event;
-import org.spongepowered.common.event.tracking.PhaseContext;
-import org.spongepowered.common.event.tracking.context.transaction.GameTransaction;
-import org.spongepowered.common.event.tracking.context.transaction.type.TransactionType;
+import org.spongepowered.api.block.transaction.ScheduleUpdateTicket;
+import org.spongepowered.api.scheduler.TaskPriority;
+import org.spongepowered.api.world.LocatableBlock;
 
-import java.util.Optional;
+import java.time.Duration;
 
-public abstract class WorldBasedTransaction<E extends Event & Cancellable> extends GameTransaction<E> {
+public final class SpongeScheduleUpdateTicket<T> implements ScheduleUpdateTicket<T> {
 
-    protected final ResourceKey worldKey;
+    private final LocatableBlock block;
+    private final T target;
+    private final Duration delay;
+    private final TaskPriority priority;
+    private boolean valid = true;
 
-    protected WorldBasedTransaction(
-        final TransactionType<? super E> transactionType,
-        final ResourceKey worldKey
-    ) {
-        super(transactionType);
-        this.worldKey = worldKey;
+    public SpongeScheduleUpdateTicket(final LocatableBlock block, final T target, final Duration delay, final TaskPriority priority) {
+        this.block = block;
+        this.target = target;
+        this.delay = delay;
+        this.priority = priority;
     }
 
     @Override
-    public final Optional<ResourceKey> worldKey() {
-        return Optional.of(this.worldKey);
+    public LocatableBlock block() {
+        return this.block;
     }
 
     @Override
-    protected boolean shouldBuildEventAndRestartBatch(
-        final GameTransaction<@NonNull ?> pointer, final PhaseContext<@NonNull ?> context
-    ) {
-        return super.shouldBuildEventAndRestartBatch(pointer, context) || !pointer.worldKey().map(this.worldKey::equals).orElse(false);
+    public T target() {
+        return this.target;
+    }
+
+    @Override
+    public Duration delay() {
+        return this.delay;
+    }
+
+    @Override
+    public TaskPriority priority() {
+        return this.priority;
+    }
+
+    @Override
+    public boolean valid() {
+        return this.valid;
+    }
+
+    @Override
+    public void setValid(final boolean valid) {
+        this.valid = valid;
     }
 }

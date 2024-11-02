@@ -30,6 +30,7 @@ import org.spongepowered.api.event.Cancellable;
 import org.spongepowered.api.event.Event;
 import org.spongepowered.api.event.block.ChangeBlockEvent;
 import org.spongepowered.api.event.block.NotifyNeighborBlockEvent;
+import org.spongepowered.api.event.block.ScheduleBlockUpdateEvent;
 import org.spongepowered.api.event.entity.HarvestEntityEvent;
 import org.spongepowered.api.event.entity.SpawnEntityEvent;
 import org.spongepowered.api.event.item.inventory.AffectSlotEvent;
@@ -52,18 +53,21 @@ public final class TransactionTypes {
 
     public static final DefaultedRegistryReference<TransactionType<ChangeBlockEvent.All>> BLOCK = TransactionTypes.key(ResourceKey.sponge("block"));
 
-    public static final DefaultedRegistryReference<TransactionType<HarvestEntityEvent>> ENTITY_DEATH_DROPS = TransactionTypes.key(ResourceKey.sponge("entity_death_drops"));
-
-    public static final DefaultedRegistryReference<TransactionType<NotifyNeighborBlockEvent>> NEIGHBOR_NOTIFICATION = TransactionTypes.key(ResourceKey.sponge("neighbor_notification"));
-
-    public static final DefaultedRegistryReference<TransactionType<SpawnEntityEvent>> SPAWN_ENTITY = TransactionTypes.key(ResourceKey.sponge("spawn_entity"));
-
-    public static final DefaultedRegistryReference<TransactionType<InteractContainerEvent>> INTERACT_CONTAINER_EVENT = TransactionTypes.key(ResourceKey.sponge("interact_container"));
+    public static final DefaultedRegistryReference<TransactionType<ChangeInventoryEvent>> CHANGE_INVENTORY_EVENT = TransactionTypes.key(ResourceKey.sponge("change_inventory"));
 
     public static final DefaultedRegistryReference<TransactionType<ClickContainerEvent>> CLICK_CONTAINER_EVENT = TransactionTypes.key(ResourceKey.sponge("click_container"));
 
-    public static final DefaultedRegistryReference<TransactionType<ChangeInventoryEvent>> CHANGE_INVENTORY_EVENT = TransactionTypes.key(ResourceKey.sponge("change_inventory"));
+    public static final DefaultedRegistryReference<TransactionType<HarvestEntityEvent>> ENTITY_DEATH_DROPS = TransactionTypes.key(ResourceKey.sponge("entity_death_drops"));
+
+    public static final DefaultedRegistryReference<TransactionType<InteractContainerEvent>> INTERACT_CONTAINER_EVENT = TransactionTypes.key(ResourceKey.sponge("interact_container"));
+
+    public static final DefaultedRegistryReference<TransactionType<NotifyNeighborBlockEvent>> NEIGHBOR_NOTIFICATION = TransactionTypes.key(ResourceKey.sponge("neighbor_notification"));
+
+    public static final DefaultedRegistryReference<TransactionType<ScheduleBlockUpdateEvent<?>>> SCHEDULE_BLOCK_UPDATE = TransactionTypes.key(ResourceKey.sponge("schedule_block_update"));
+
     public static final DefaultedRegistryReference<TransactionType<AffectSlotEvent>> SLOT_CHANGE = TransactionTypes.key(ResourceKey.sponge("slot_change"));
+
+    public static final DefaultedRegistryReference<TransactionType<SpawnEntityEvent>> SPAWN_ENTITY = TransactionTypes.key(ResourceKey.sponge("spawn_entity"));
 
     // SORTFIELDS:OFF
 

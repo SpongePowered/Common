@@ -35,7 +35,7 @@ abstract class MenuBasedTransaction<E extends Event & Cancellable> extends GameT
     protected final AbstractContainerMenu menu;
 
     protected MenuBasedTransaction(
-        final TransactionType<? extends E> transactionType,
+        final TransactionType<? super E> transactionType,
         final AbstractContainerMenu menu
     ) {
         super(transactionType);
