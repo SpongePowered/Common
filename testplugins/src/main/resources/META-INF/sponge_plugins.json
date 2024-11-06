@@ -374,6 +374,12 @@
                     "load-order": "AFTER"
                 }
             ]
+        },
+        {
+            "id": "decoratedpotdata",
+            "name": "Decorated Pot Data",
+            "entrypoint": "org.spongepowered.test.data.PotDataTest",
+            "description": "Decorated Pot Data"
         }
     ]
 }

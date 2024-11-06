@@ -57,7 +57,13 @@ public final class HideFlagsItemStackData {
                         .get(h -> h.has(DataComponents.CAN_BREAK) && !h.get(DataComponents.CAN_BREAK).showInTooltip())
                         .set((h, v) -> h.set(DataComponents.CAN_BREAK, HideFlagsItemStackData.newAdventureModePredicate(h, !v)))
                     .create(Keys.HIDE_CAN_PLACE)
-                        .get(h -> h.has(DataComponents.CAN_PLACE_ON) && !h.get(DataComponents.CAN_BREAK).showInTooltip())
+                        .get(h -> {
+                            final var predicate = h.get(DataComponents.CAN_BREAK);
+                            if (predicate == null) {
+                                return false;
+                            }
+                            return !predicate.showInTooltip();
+                        })
                         .set((h, v) -> h.set(DataComponents.CAN_PLACE_ON, HideFlagsItemStackData.newAdventureModePredicate(h, !v)))
                     .create(Keys.HIDE_ENCHANTMENTS)
                         .get(h -> ((ItemEnchantmentsAccessor)h.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY)).accessor$showInTooltip())

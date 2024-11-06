@@ -32,32 +32,21 @@ import org.spongepowered.api.event.Cancellable;
 import org.spongepowered.api.event.Event;
 
 @DefaultQualifier(NonNull.class)
-final class EventByTransaction<T extends Event & Cancellable> {
-
-    final T event;
-    final ImmutableList<GameTransaction<T>> transactions;
-    final GameTransaction<T> decider;
-    final @Nullable GameTransaction<@NonNull ?> parent;
-
-    EventByTransaction(final T event,
-        final ImmutableList<GameTransaction<T>> transactions,
-        final @Nullable GameTransaction<@NonNull ?> parent,
-        final GameTransaction<T> decider
-    ) {
-        this.parent = parent;
-        this.event = event;
-        this.transactions = transactions;
-        this.decider = decider;
-    }
+record EventByTransaction<T extends Event & Cancellable>(
+    T event,
+    ImmutableList<GameTransaction<T>> transactions,
+    @Nullable GameTransaction<@NonNull ?> parent,
+    GameTransaction<T> decider
+) {
 
     public void markCancelled() {
-        this.decider.markCancelled();
-        for (GameTransaction<T> transaction : this.transactions) {
+        this.decider().markCancelled();
+        for (GameTransaction<T> transaction : this.transactions()) {
             transaction.markCancelled();
         }
     }
 
     public boolean isParentOrDeciderCancelled() {
-        return this.decider.cancelled || (this.parent != null && this.parent.cancelled);
+        return this.decider().cancelled || (this.parent() != null && this.parent().cancelled);
     }
 }

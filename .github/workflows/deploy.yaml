@@ -5,7 +5,9 @@ name: Build and Deploy
 
 on:
   push:
-    branches: [ 'api-*' ]
+    branches:
+      - 'api-*'
+      - update/*
     tags-ignore: [ '**' ]
 
 env:
@@ -22,13 +24,31 @@ jobs:
   publish:
     needs: integrationTest
     runs-on: ubuntu-22.04
+    # This enables publishing individual projects in parallel
+    strategy:
+      fail-fast: false
+      matrix:
+        project:
+          - vanilla
+          - forge
+          - neoforge
+        include:
+          - project: vanilla
+            gradleProject: SpongeVanilla
+          - project: forge
+            gradleProject: SpongeForge
+          - project: neoforge
+            gradleProject: SpongeNeo
     steps:
       - name: setup
+        if: "!startsWith(github.ref, 'refs/heads/update/') || matrix.project == 'vanilla'"
         id: setup
         uses: SpongePowered/.github/.github/actions/setup-java-env@master
         with:
           runtime_version: 21
+          publishing_branch_regex: ''
       - name: setup / minecraft cache
+        if: "!startsWith(github.ref, 'refs/heads/update/') || matrix.project == 'vanilla'"
         uses: "actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9" # v4.0.2
         with:
           path: |
@@ -37,14 +57,16 @@ jobs:
           key: "${{ runner.os }}-minecraft-${{ env.CACHE_REV }}-${{ hashFiles('**/*.gradle*') }}"
           restore-keys: |
             ${{ runner.os }}-minecraft-${{ env.CACHE_REV }}-
-        # We don't need to run tests again, so we just publish
+          # We don't need to run tests again, so we just publish
       - name: setup / workspace
+        if: "!startsWith(github.ref, 'refs/heads/update/') || matrix.project == 'vanilla'"
         run: |
           echo "GIT_COMMIT=${GITHUB_SHA}" >> $GITHUB_ENV
           echo "GIT_BRANCH=${GITHUB_REF##*/}" >> $GITHUB_ENV
           echo "BUILD_NUMBER=${GITHUB_RUN_NUMBER}" >> $GITHUB_ENV
       - name: Publish to Sponge Maven & GitHub Packages
-        run: ./gradlew -s -Pprojects=vanilla,forge,neoforge :publish :SpongeVanilla:publish :SpongeForge:publish :SpongeNeo:publish
+        if: "!startsWith(github.ref, 'refs/heads/update/') || matrix.project == 'vanilla'"
+        run: ./gradlew -s -Pprojects=vanilla,${{ matrix.project }} :${{ matrix.gradleProject }}:publish
         env:
           CI_SYSTEM: Github Actions
           GITHUB_USERNAME: "${{ github.actor }}"

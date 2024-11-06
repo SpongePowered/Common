@@ -22,31 +22,26 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.spongepowered.common.data.provider.block.entity;
+package org.spongepowered.common.item.recipe.smithing;
 
-import org.spongepowered.common.data.provider.DataProviderRegistratorBuilder;
+import net.minecraft.core.Registry;
+import org.spongepowered.api.Sponge;
+import org.spongepowered.api.item.recipe.smithing.ArmorTrim;
+import org.spongepowered.api.item.recipe.smithing.TrimMaterial;
+import org.spongepowered.api.item.recipe.smithing.TrimPattern;
+import org.spongepowered.api.registry.RegistryTypes;
 
-public final class BlockEntityDataProviders extends DataProviderRegistratorBuilder {
+public class SpongeArmorTrimFactory implements ArmorTrim.Factory {
 
     @Override
-    public void registerProviders() {
-        BannerData.register(this.registrator);
-        BeaconData.register(this.registrator);
-        BrewingStandData.register(this.registrator);
-        CommandBlockData.register(this.registrator);
-        ConduitData.register(this.registrator);
-        EndGatewayData.register(this.registrator);
-        AbstractFurnaceData.register(this.registrator);
-        HopperData.register(this.registrator);
-        JukeBoxData.register(this.registrator);
-        LecternData.register(this.registrator);
-        LockableData.register(this.registrator);
-        MobSpawnerData.register(this.registrator);
-        TrialSpawnerDataProvider.register(this.registrator);
-        SignData.register(this.registrator);
-        SkullData.register(this.registrator);
-        StructureBlockData.register(this.registrator);
-        CrafterData.register(this.registrator);
-        DecoratedPotData.register(this.registrator);
+    public ArmorTrim create(TrimMaterial material, TrimPattern pattern) {
+
+        final var trimRegistry = Sponge.server().registry(RegistryTypes.TRIM_MATERIAL);
+        final var patternRegistry = Sponge.server().registry(RegistryTypes.TRIM_PATTERN);
+
+        final var materialHolder = ((Registry<net.minecraft.world.item.armortrim.TrimMaterial>) trimRegistry).wrapAsHolder((net.minecraft.world.item.armortrim.TrimMaterial) (Object) material);
+        final var patternHolder = ((Registry<net.minecraft.world.item.armortrim.TrimPattern>) patternRegistry).wrapAsHolder((net.minecraft.world.item.armortrim.TrimPattern) (Object) pattern);
+        return (ArmorTrim) new net.minecraft.world.item.armortrim.ArmorTrim(materialHolder, patternHolder);
     }
+
 }

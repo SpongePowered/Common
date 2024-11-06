@@ -27,6 +27,7 @@ package org.spongepowered.common.mixin.inventory.impl.world.inventory;
 import net.minecraft.core.NonNullList;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ClickAction;
 import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
@@ -50,6 +51,7 @@ public abstract class AbstractContainerMenuMixin_Menu_Inventory implements MenuB
     @Shadow @Final public NonNullList<Slot> slots;
 
     @Shadow public abstract void shadow$sendAllDataToRemote();
+    @Shadow protected abstract boolean shadow$tryItemClickBehaviourOverride(Player $$0, ClickAction $$1, Slot $$2, ItemStack $$3, ItemStack $$4);
     // @formatter:on
 
     @Nullable private SpongeInventoryMenu impl$menu;
@@ -135,5 +137,14 @@ public abstract class AbstractContainerMenuMixin_Menu_Inventory implements MenuB
     public boolean bridge$isReadonlyMenu(final Slot slot) {
         return this.impl$menu != null && slot.container == this.impl$menu.inventory()
                 && this.impl$menu.isReadOnly(slot.index);
+    }
+
+    @Redirect(method = "doClick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/inventory/AbstractContainerMenu;tryItemClickBehaviourOverride(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/inventory/ClickAction;Lnet/minecraft/world/inventory/Slot;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/item/ItemStack;)Z"))
+    public boolean impl$onTryItemClickBehaviourOverride(final AbstractContainerMenu instance, final Player $$0, final ClickAction $$1, final Slot $$2, final ItemStack $$3, final ItemStack $$4) {
+        if (this.bridge$isReadonlyMenu($$2)) {
+            ((AbstractContainerMenu_InventoryBridge) this).bridge$markDirty();
+            return true;
+        }
+        return this.shadow$tryItemClickBehaviourOverride($$0, $$1, $$2, $$3, $$4);
     }
 }

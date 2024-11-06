@@ -640,6 +640,24 @@ public final class GeneratorMain {
                 RegistryScope.GAME
             ),
             new RegistryEntriesGenerator<>(
+                "item.recipe.smithing",
+                "TrimMaterials",
+                "TRIM_MATERIAL",
+                context.relativeClass("item.recipe.smithing", "TrimMaterial"),
+                Registries.TRIM_MATERIAL,
+                $ ->true,
+                RegistryScope.SERVER
+            ),
+            new RegistryEntriesGenerator<>(
+                "item.recipe.smithing",
+                "TrimPatterns",
+                "TRIM_PATTERN",
+                context.relativeClass("item.recipe.smithing", "TrimPattern"),
+                Registries.TRIM_PATTERN,
+                $ -> true,
+                RegistryScope.SERVER
+            ),
+            new RegistryEntriesGenerator<>(
                 "data.type",
                 "VillagerTypes",
                 "VILLAGER_TYPE",

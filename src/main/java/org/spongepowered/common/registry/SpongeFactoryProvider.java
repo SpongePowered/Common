@@ -52,6 +52,7 @@ import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.item.inventory.ItemStackComparators;
 import org.spongepowered.api.item.inventory.ItemStackSnapshot;
 import org.spongepowered.api.item.recipe.crafting.RecipeInput;
+import org.spongepowered.api.item.recipe.smithing.ArmorTrim;
 import org.spongepowered.api.network.channel.ChannelExceptionHandler;
 import org.spongepowered.api.network.status.Favicon;
 import org.spongepowered.api.profile.GameProfile;
@@ -130,6 +131,7 @@ import org.spongepowered.common.item.SpongeItemStack;
 import org.spongepowered.common.item.SpongeItemStackSnapshot;
 import org.spongepowered.common.item.SpongeToolRuleFactory;
 import org.spongepowered.common.item.recipe.SpongeRecipeInputFactory;
+import org.spongepowered.common.item.recipe.smithing.SpongeArmorTrimFactory;
 import org.spongepowered.common.item.util.SpongeItemStackComparatorFactory;
 import org.spongepowered.common.network.channel.SpongeChannelExceptionHandlerFactory;
 import org.spongepowered.common.network.status.SpongeFavicon;
@@ -290,6 +292,7 @@ public final class SpongeFactoryProvider implements FactoryProvider {
                 .registerFactory(ToolRule.Factory.class, new SpongeToolRuleFactory())
                 .registerFactory(PortalLogic.Factory.class, new SpongePortalLogicFactory())
                 .registerFactory(RecipeInput.Factory.class, new SpongeRecipeInputFactory())
+                .registerFactory(ArmorTrim.Factory.class, new SpongeArmorTrimFactory())
         ;
     }
 }

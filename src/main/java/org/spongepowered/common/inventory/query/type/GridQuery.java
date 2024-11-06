@@ -46,11 +46,14 @@ public class GridQuery extends SpongeQuery {
     @Override
     public Inventory execute(Inventory inventory, InventoryAdapter adapter) {
 
-        if (!(adapter instanceof GridInventoryAdapter)) {
+        final GridInventoryAdapter gridAdapter;
+        if (adapter instanceof GridInventoryAdapter) {
+            gridAdapter = (GridInventoryAdapter) adapter;
+        } else if (adapter.inventoryAdapter$getRootLens() instanceof GridInventoryLens gridInventoryLens) {
+            gridAdapter = (GridInventoryAdapter) gridInventoryLens.getAdapter(adapter.inventoryAdapter$getFabric(), inventory);
+        } else {
             return new EmptyInventoryImpl(inventory);
         }
-
-        GridInventoryAdapter gridAdapter = (GridInventoryAdapter) adapter;
 
         Vector2i max = gridAdapter.dimensions();
         if (max.x() < this.offset.x() + this.size.x() && max.y() < this.offset.y() + this.size.y()) {

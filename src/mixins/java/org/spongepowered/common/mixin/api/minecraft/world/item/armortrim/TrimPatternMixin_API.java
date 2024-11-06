@@ -22,31 +22,11 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.spongepowered.common.data.provider.block.entity;
+package org.spongepowered.common.mixin.api.minecraft.world.item.armortrim;
 
-import org.spongepowered.common.data.provider.DataProviderRegistratorBuilder;
+import net.minecraft.world.item.armortrim.TrimPattern;
+import org.spongepowered.asm.mixin.Mixin;
 
-public final class BlockEntityDataProviders extends DataProviderRegistratorBuilder {
-
-    @Override
-    public void registerProviders() {
-        BannerData.register(this.registrator);
-        BeaconData.register(this.registrator);
-        BrewingStandData.register(this.registrator);
-        CommandBlockData.register(this.registrator);
-        ConduitData.register(this.registrator);
-        EndGatewayData.register(this.registrator);
-        AbstractFurnaceData.register(this.registrator);
-        HopperData.register(this.registrator);
-        JukeBoxData.register(this.registrator);
-        LecternData.register(this.registrator);
-        LockableData.register(this.registrator);
-        MobSpawnerData.register(this.registrator);
-        TrialSpawnerDataProvider.register(this.registrator);
-        SignData.register(this.registrator);
-        SkullData.register(this.registrator);
-        StructureBlockData.register(this.registrator);
-        CrafterData.register(this.registrator);
-        DecoratedPotData.register(this.registrator);
-    }
+@Mixin(TrimPattern.class)
+public class TrimPatternMixin_API implements org.spongepowered.api.item.recipe.smithing.TrimPattern {
 }

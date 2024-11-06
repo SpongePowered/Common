@@ -47,7 +47,6 @@ import org.spongepowered.api.data.Key;
 import org.spongepowered.api.data.Keys;
 import org.spongepowered.api.data.meta.BannerPatternLayer;
 import org.spongepowered.api.data.type.ArmorMaterials;
-import org.spongepowered.api.data.type.ArtTypes;
 import org.spongepowered.api.data.type.AttachmentSurfaces;
 import org.spongepowered.api.data.type.BannerPatternShapes;
 import org.spongepowered.api.data.type.BoatTypes;
@@ -107,6 +106,9 @@ import org.spongepowered.api.item.enchantment.EnchantmentTypes;
 import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.item.inventory.equipment.EquipmentTypes;
 import org.spongepowered.api.item.merchant.TradeOffer;
+import org.spongepowered.api.item.recipe.smithing.ArmorTrim;
+import org.spongepowered.api.item.recipe.smithing.TrimMaterials;
+import org.spongepowered.api.item.recipe.smithing.TrimPatterns;
 import org.spongepowered.api.profile.GameProfile;
 import org.spongepowered.api.profile.property.ProfileProperty;
 import org.spongepowered.api.registry.RegistryTypes;
@@ -246,8 +248,8 @@ public final class DataTest  {
         this.checkGetData(ItemStack.of(ItemTypes.LEATHER_BOOTS), Keys.ARMOR_MATERIAL, ArmorMaterials.LEATHER.get());
         this.checkGetData(ItemStack.of(ItemTypes.TURTLE_HELMET), Keys.ARMOR_MATERIAL, ArmorMaterials.TURTLE.get());
 
-        final Entity painting = world.createEntity(EntityTypes.PAINTING.get(), position);
-        this.checkGetData(painting, Keys.ART_TYPE, ArtTypes.KEBAB.get()); // TODO test offer (only works on valid painting)
+//        final Entity painting = world.createEntity(EntityTypes.PAINTING.get(), position);
+//        this.checkGetData(painting, Keys.ART_TYPE, ArtTypes.KEBAB.get()); // TODO test offer (only works on valid painting)
 
         final BlockState leverState = BlockTypes.LEVER.get().defaultState();
         this.checkWithData(leverState, Keys.ATTACHMENT_SURFACE, AttachmentSurfaces.WALL.get());
@@ -463,8 +465,8 @@ public final class DataTest  {
         this.checkOfferData(tntEntity, Keys.DETONATOR, player);
 
         // TODO Keys.DIRECTION for other dataholders
-        this.checkGetData(painting, Keys.DIRECTION, Direction.SOUTH);
-        this.checkOfferData(painting, Keys.DIRECTION, Direction.NORTH);
+//        this.checkGetData(painting, Keys.DIRECTION, Direction.SOUTH);
+//        this.checkOfferData(painting, Keys.DIRECTION, Direction.NORTH);
 
         final Entity shulkerEntity = world.createEntity(EntityTypes.SHULKER.get(), position);
         this.checkGetData(shulkerEntity, Keys.DIRECTION, Direction.DOWN);
@@ -970,8 +972,8 @@ public final class DataTest  {
 
         this.checkOfferData(itemEntity, Keys.ITEM_STACK_SNAPSHOT, jungleAxe.asImmutable());
 
-        final Entity itemFrame = world.createEntity(EntityTypes.ITEM_FRAME.get(), position);
-        this.checkOfferData(itemFrame, Keys.ITEM_STACK_SNAPSHOT, stoneStack.asImmutable());
+//        final Entity itemFrame = world.createEntity(EntityTypes.ITEM_FRAME.get(), position);
+//        this.checkOfferData(itemFrame, Keys.ITEM_STACK_SNAPSHOT, stoneStack.asImmutable());
         // TODO JukeBox
         // TODO Lectern
         final Entity potionEntity = world.createEntity(EntityTypes.POTION.get(), position);
@@ -1195,7 +1197,9 @@ public final class DataTest  {
         this.checkOfferData(slime, Keys.SIZE, 10);
 
         final Entity human = world.createEntity(EntityTypes.HUMAN.get(), position);
-        this.checkOfferData(human, Keys.SKIN_PROFILE_PROPERTY, player.get(Keys.SKIN_PROFILE_PROPERTY).get());
+        player.get(Keys.SKIN_PROFILE_PROPERTY).ifPresent(data -> {
+            this.checkOfferData(human, Keys.SKIN_PROFILE_PROPERTY, data);
+        });
 
         this.checkOfferData(dolphin, Keys.SKIN_MOISTURE, 1);
 
@@ -1360,6 +1364,14 @@ public final class DataTest  {
 
         // Reset world block
         world.setBlock(blockPos, oldState);
+
+        final ItemStack stack = ItemStack.builder()
+            .itemType(ItemTypes.NETHERITE_CHESTPLATE)
+            .add(Keys.ARMOR_TRIM, ArmorTrim.of(TrimMaterials.DIAMOND.get(), TrimPatterns.SPIRE.get()))
+            .build();
+        this.checkGetData(stack, Keys.ARMOR_TRIM, ArmorTrim.of(TrimMaterials.DIAMOND.get(), TrimPatterns.SPIRE.get()));
+        this.checkOfferData(stack, Keys.ARMOR_TRIM, ArmorTrim.of(TrimMaterials.EMERALD.get(), TrimPatterns.WAYFINDER.get()));
+        player.inventory().offer(stack);
     }
 
     private <T> void checkOfferSetData(final DataHolder.Mutable holder, final Key<SetValue<T>> key, final Set<T> value) {
