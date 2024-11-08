@@ -7,7 +7,7 @@ pluginManagement {
         }
         maven("https://maven.architectury.dev/")
     }
-    val vanillaGradleVersion = "0.2.1-20241006.183638-89"
+    val vanillaGradleVersion = "0.2.1-20241107.194040-91"
     plugins {
         id("org.spongepowered.gradle.vanilla") version vanillaGradleVersion
         id("implementation-structure")

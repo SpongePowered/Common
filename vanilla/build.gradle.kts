@@ -35,8 +35,6 @@ val gameManagedLibrariesConfig: NamedDomainObjectProvider<Configuration> = confi
 val bootShadedLibrariesConfig: NamedDomainObjectProvider<Configuration> = configurations.register("bootShadedLibraries")
 val gameShadedLibrariesConfig: NamedDomainObjectProvider<Configuration> = configurations.register("gameShadedLibraries")
 
-val runTaskOnlyConfig: NamedDomainObjectProvider<Configuration> = configurations.register("runTaskOnly")
-
 // ModLauncher layers
 val bootLayerConfig: NamedDomainObjectProvider<Configuration> = configurations.register("bootLayer") {
     extendsFrom(initLibrariesConfig.get())
@@ -125,93 +123,6 @@ val superclassConfigs = spongeImpl.getNamedConfigurations("superClassChanges")
 val mixinConfigs = spongeImpl.mixinConfigurations
 
 minecraft {
-    runs {
-        // Full development environment
-        server("runServer") {
-            args("--nogui", "--launchTarget", "sponge_server_dev")
-        }
-        client("runClient") {
-            args("--launchTarget", "sponge_client_dev")
-        }
-
-        // Lightweight integration tests
-        server("integrationTestServer") {
-            args("--launchTarget", "sponge_server_it")
-        }
-        client("integrationTestClient") {
-            args("--launchTarget", "sponge_client_it")
-        }
-
-        configureEach {
-            targetVersion(apiJavaTarget.toInt())
-            workingDirectory(project.file("run/"))
-            if (org.spongepowered.gradle.vanilla.internal.util.IdeConfigurer.isIdeaImport()) { // todo(zml): promote to API... eventually
-                // IntelliJ does not properly report its compatibility
-                jvmArgs("-Dterminal.ansi=true", "-Djansi.mode=force")
-            }
-            jvmArgs(
-                "-Dlog4j.configurationFile=log4j2_dev.xml",
-                "-Dmixin.dumpTargetOnFailure=true",
-                "-Dmixin.debug.verbose=true",
-                "-Dmixin.debug.countInjections=true",
-                "-Dmixin.debug.strict=true",
-                "-Dmixin.debug.strict.unique=false"
-            )
-
-            // ModLauncher
-            // jvmArgs("-Dbsl.debug=true") // Uncomment to debug bootstrap classpath
-            mainClass("net.minecraftforge.bootstrap.ForgeBootstrap")
-
-            allArgumentProviders += CommandLineArgumentProvider {
-                mixinConfigs.asSequence()
-                        .flatMap { sequenceOf("--mixin.config", it) }
-                        .toList()
-            }
-            allArgumentProviders += CommandLineArgumentProvider {
-                superclassConfigs.asSequence()
-                    .flatMap { sequenceOf("--superclass_change.config", it) }
-                    .toList()
-            }
-        }
-
-        all {
-            tasks.named(this.name, JavaExec::class) {
-                // Put modules in boot layer
-                classpath = files(
-                    vanillaAppLaunch.output,
-                    vanillaAppLaunch.runtimeClasspath,
-                    runTaskOnlyConfig
-                )
-
-                // Merge applaunch sourcesets in a single module
-                val applaunchOutputs = files(applaunch.get().output, vanillaAppLaunch.output)
-                dependsOn(applaunchOutputs)
-                environment("MOD_CLASSES", applaunchOutputs.joinToString(";") { "applaunch%%$it" })
-
-                // Configure resources
-                val gameResources = mutableListOf<FileCollection>()
-                gameResources.addAll(gameManagedLibrariesConfig.get().files.map { files(it) })
-
-                gameResources.add(files(
-                    main.get().output, vanillaMain.output,
-                    mixins.get().output, vanillaMixins.output,
-                    accessors.get().output, vanillaAccessors.output,
-                    launch.get().output, vanillaLaunch.output,
-                    gameShadedLibrariesConfig.get()
-                ))
-
-                dependsOn(gameResources)
-                jvmArgs("-Dsponge.gameResources=" + gameResources.joinToString(";") { it.joinToString("&") })
-
-                testPluginsProject?.also {
-                    val plugins: FileCollection = it.sourceSets.getByName("main").output
-                    dependsOn(plugins)
-                    environment("SPONGE_PLUGINS", plugins.joinToString("&"))
-                }
-            }
-        }
-    }
-
     main.get().resources
             .filter { it.name.endsWith(".accesswidener") }
             .files
@@ -344,13 +255,99 @@ dependencies {
     val gameShadedLibraries = gameShadedLibrariesConfig.name
     gameShadedLibraries("org.spongepowered:spongeapi:$apiVersion") { isTransitive = false }
 
-    afterEvaluate {
-        spongeImpl.copyModulesExcludingProvided(gameLibrariesConfig.get(), bootLayerConfig.get(), gameManagedLibrariesConfig.get())
-    }
+    spongeImpl.copyModulesExcludingProvided(gameLibrariesConfig.get(), bootLayerConfig.get(), gameManagedLibrariesConfig.get())
 
-    val runTaskOnly = runTaskOnlyConfig.name
     // Allow boot layer manipulation such as merging applaunch sourcesets
-    runTaskOnly("net.minecraftforge:bootstrap-dev:2.1.1")
+    vanillaAppLaunch.runtimeOnlyConfigurationName("net.minecraftforge:bootstrap-dev:2.1.1")
+}
+
+minecraft {
+    runs {
+        // Full development environment
+        server("runServer") {
+            args("--nogui", "--launchTarget", "sponge_server_dev")
+        }
+        client("runClient") {
+            args("--launchTarget", "sponge_client_dev")
+        }
+
+        // Lightweight integration tests
+        server("integrationTestServer") {
+            args("--launchTarget", "sponge_server_it")
+        }
+        client("integrationTestClient") {
+            args("--launchTarget", "sponge_client_it")
+        }
+
+        configureEach {
+            targetVersion(apiJavaTarget.toInt())
+            workingDirectory(project.file("run/"))
+
+            if (org.spongepowered.gradle.vanilla.internal.util.IdeConfigurer.isIdeaImport()) { // todo(zml): promote to API... eventually
+                // IntelliJ does not properly report its compatibility
+                jvmArgs("-Dterminal.ansi=true", "-Djansi.mode=force")
+            }
+
+            jvmArgs(
+                "-Dlog4j.configurationFile=log4j2_dev.xml",
+                "-Dmixin.dumpTargetOnFailure=true",
+                "-Dmixin.debug.verbose=true",
+                "-Dmixin.debug.countInjections=true",
+                "-Dmixin.debug.strict=true",
+                "-Dmixin.debug.strict.unique=false"
+            )
+
+            allArgumentProviders += CommandLineArgumentProvider {
+                mixinConfigs.asSequence()
+                    .flatMap { sequenceOf("--mixin.config", it) }
+                    .toList()
+            }
+            allArgumentProviders += CommandLineArgumentProvider {
+                superclassConfigs.asSequence()
+                    .flatMap { sequenceOf("--superclass_change.config", it) }
+                    .toList()
+            }
+
+            // ModLauncher
+            // jvmArgs("-Dbsl.debug=true") // Uncomment to debug bootstrap classpath
+            mainClass("net.minecraftforge.bootstrap.ForgeBootstrap")
+
+            // Put modules in boot layer
+            sourceSet = vanillaAppLaunch
+
+            // Merge applaunch sourcesets in a single module
+            val applaunchOutputs = files(applaunch.get().output, vanillaAppLaunch.output)
+            environment("MOD_CLASSES", applaunchOutputs.joinToString(";") { "applaunch%%$it" })
+
+            // Configure resources
+            val gameResources = mutableListOf<FileCollection>()
+            gameResources.addAll(gameManagedLibrariesConfig.get().files.map { files(it) })
+
+            gameResources.add(files(
+                main.get().output, vanillaMain.output,
+                mixins.get().output, vanillaMixins.output,
+                accessors.get().output, vanillaAccessors.output,
+                launch.get().output, vanillaLaunch.output,
+                gameShadedLibrariesConfig.get()
+            ))
+
+            jvmArgs("-Dsponge.gameResources=" + gameResources.joinToString(";") { it.joinToString("&") })
+
+            val runTask = tasks.named(this.name) {
+                dependsOn(applaunchOutputs)
+                dependsOn(gameResources)
+            }
+
+            testPluginsProject?.also {
+                val plugins: FileCollection = it.sourceSets.getByName("main").output
+                environment("SPONGE_PLUGINS", plugins.joinToString("&"))
+
+                runTask.configure {
+                    dependsOn(plugins)
+                }
+            }
+        }
+    }
 }
 
 val vanillaManifest = java.manifest {

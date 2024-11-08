@@ -47,7 +47,7 @@ public abstract class PacketUtilsMixin_Tracker {
             at = @At(value = "INVOKE", target = "Lnet/minecraft/util/thread/BlockableEventLoop;executeIfPossible(Ljava/lang/Runnable;)V"))
     private static <T extends PacketListener> void tracker$redirectProcessPacket(BlockableEventLoop threadTaskExecutor, Runnable runnable,
             Packet<T> packet, T packetListener, BlockableEventLoop<?> blockableEventLoop) {
-        threadTaskExecutor.execute(() -> {
+        threadTaskExecutor.executeIfPossible(() -> {
             if (packetListener.isAcceptingMessages()) {
                 PacketPhaseUtil.onProcessPacket(packet, packetListener);
             } else {
