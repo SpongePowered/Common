@@ -57,6 +57,7 @@ import net.minecraft.world.entity.raid.Raid;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.Rarity;
+import net.minecraft.world.item.ToolMaterial;
 import net.minecraft.world.item.component.FireworkExplosion;
 import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.GameType;
@@ -93,6 +94,8 @@ import net.minecraft.world.scores.Team;
 import net.minecraft.world.scores.criteria.ObjectiveCriteria;
 import net.minecraft.world.ticks.TickPriority;
 import org.spongepowered.api.ResourceKey;
+import org.spongepowered.api.data.type.ItemTier;
+import org.spongepowered.api.data.type.ItemTiers;
 import org.spongepowered.api.item.FireworkShape;
 import org.spongepowered.api.item.FireworkShapes;
 import org.spongepowered.api.registry.Registry;
@@ -153,6 +156,7 @@ public final class VanillaRegistryLoader {
 //
 //        this.naming(RegistryTypes.ARMOR_MATERIAL, materials.keySet().toArray(new ArmorMaterial[]{}), materials);
         this.knownName(RegistryTypes.GAME_RULE, GameRulesAccessor.accessor$GAME_RULE_TYPES().keySet(), rule -> CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, rule.getId()));
+        this.holder.createRegistry(RegistryTypes.ITEM_TIER, VanillaRegistryLoader.itemTier());
     }
 
     private void loadEnumRegistries() {
@@ -180,8 +184,6 @@ public final class VanillaRegistryLoader {
         this.automaticName(RegistryTypes.HAND_TYPE, InteractionHand.values());
         this.automaticName(RegistryTypes.INSTRUMENT_TYPE, NoteBlockInstrument.values());
         this.automaticName(RegistryTypes.ITEM_RARITY, Rarity.values());
-        // TODO - Figure out if we should make a registry - Snapshot 24w34a
-//        this.automaticName(RegistryTypes.ITEM_TIER, ToolMaterial.values());
         this.automaticName(RegistryTypes.JIGSAW_BLOCK_ORIENTATION, FrontAndTop.values());
         this.automaticName(RegistryTypes.MOOSHROOM_TYPE, MushroomCow.Variant.values());
         this.automaticName(RegistryTypes.OBJECTIVE_DISPLAY_MODE, ObjectiveCriteria.RenderType.values());
@@ -257,6 +259,16 @@ public final class VanillaRegistryLoader {
         });
     }
 
+    private static RegistryLoader<ItemTier> itemTier() {
+        return RegistryLoader.of(l -> {
+            l.add(ItemTiers.DIAMOND, k -> (ItemTier) (Object) ToolMaterial.DIAMOND);
+            l.add(ItemTiers.GOLD, k -> (ItemTier) (Object) ToolMaterial.GOLD);
+            l.add(ItemTiers.IRON, k -> (ItemTier) (Object) ToolMaterial.IRON);
+            l.add(ItemTiers.NETHERITE, k -> (ItemTier) (Object) ToolMaterial.NETHERITE);
+            l.add(ItemTiers.STONE, k -> (ItemTier) (Object) ToolMaterial.STONE);
+            l.add(ItemTiers.WOOD, k -> (ItemTier) (Object) ToolMaterial.WOOD);
+        });
+    }
 
     // The following methods are named for clarity above.
 
