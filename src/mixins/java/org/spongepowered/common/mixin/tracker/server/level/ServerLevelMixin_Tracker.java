@@ -322,7 +322,11 @@ public abstract class ServerLevelMixin_Tracker extends LevelMixin_Tracker implem
 
         final var explosionBuilder = org.spongepowered.api.world.explosion.Explosion.builder().from((org.spongepowered.api.world.explosion.Explosion) mcExplosion);
 
-        Explosive apiExplosive = (Explosive) entity;
+        if (!(entity instanceof final Explosive apiExplosive)) {
+            mcExplosion.explode();
+            this.tracker$apiExplosion = explosionBuilder.build();
+            return;
+        }
         final PhaseTracker phaseTracker = PhaseTracker.getWorldInstance((ServerLevel) (Object) this);
         final var detonateEvent = SpongeEventFactory.createDetonateExplosiveEvent(phaseTracker.currentCause(),
                 explosionBuilder, apiExplosive, (org.spongepowered.api.world.explosion.Explosion) instance);

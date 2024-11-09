@@ -67,6 +67,10 @@ public abstract class ServerExplosionMixin_Tracker {
         at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/state/BlockState;onExplosionHit(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/Explosion;Ljava/util/function/BiConsumer;)V"))
     private void tracker$onExplosionHit(final BlockState instance, final ServerLevel serverLevel,
         final BlockPos blockPos, final Explosion explosion, final BiConsumer biConsumer) {
+        if (explosion.getBlockInteraction() == Explosion.BlockInteraction.TRIGGER_BLOCK) {
+            instance.onExplosionHit(serverLevel, blockPos, explosion, biConsumer);
+            return;
+        }
         // this.level.getBlockState($$2).onExplosionHit(this.level, $$2, this, ($$1x, $$2x) -> addOrAppendStack($$1, $$1x, $$2x));
 
         // TODO addOrAppendStack? ItemStack pre merging
