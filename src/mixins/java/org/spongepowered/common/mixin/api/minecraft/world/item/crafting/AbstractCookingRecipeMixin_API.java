@@ -67,9 +67,4 @@ public abstract class AbstractCookingRecipeMixin_API extends SingleItemRecipeMix
     public Ticks cookingTime() {
         return SpongeTicks.ticksOrInfinite(this.shadow$cookingTime());
     }
-
-    @Override
-    public float experience() {
-        return this.shadow$experience();
-    }
 }
