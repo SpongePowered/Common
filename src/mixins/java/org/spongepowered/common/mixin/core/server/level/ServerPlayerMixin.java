@@ -441,7 +441,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements SubjectBr
      * @return The {@link Entity} that is either this one, or replaces this one
      */
     @Override
-    public @Nullable Entity bridge$changeDimension(final TeleportTransition originalTransition) {
+    public net.minecraft.server.level.@Nullable ServerPlayer bridge$changeDimension(final TeleportTransition originalTransition) {
         if (this.shadow$isRemoved()) {
             return null;
         }
@@ -940,7 +940,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements SubjectBr
      * @reason We route all teleportation through sponge's bridge for handling events
      */
     @Overwrite
-    public @Nullable Entity teleport(final TeleportTransition transition) {
+    public net.minecraft.server.level.@Nullable ServerPlayer teleport(final TeleportTransition transition) {
         return this.bridge$changeDimension(transition);
     }
 
