@@ -56,6 +56,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
+import java.util.stream.Collectors;
 
 @Mixin(net.minecraft.world.level.ServerExplosion.class)
 public abstract class ServerExplosionMixin implements ExplosionBridge {
@@ -133,7 +134,7 @@ public abstract class ServerExplosionMixin implements ExplosionBridge {
                 return Collections.emptyList(); // no entities affected
             }
             if (this.shadow$interactsWithBlocks()) {
-                this.impl$affectedBlocks = event.affectedLocations().stream().map(VecHelper::toBlockPos).toList();
+                this.impl$affectedBlocks = event.affectedLocations().stream().map(VecHelper::toBlockPos).collect(Collectors.toList());
             }
             if (this.impl$shouldDamageEntities) {
                 return event.entities().stream().map(Entity.class::cast).toList();
