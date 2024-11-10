@@ -98,7 +98,8 @@ public class SpongeIngredient extends Ingredient {
                 return DataResult.success(new SpongeRawIngredient(spongeIngredient.type, stacks, Optional.empty()));
             }
             case SpongePredicateItemList.TYPE_PREDICATE -> {
-                return DataResult.success(new SpongeRawIngredient(spongeIngredient.type, List.of(), Optional.ofNullable(spongeIngredient.predicateId)));
+                final var stacks = Arrays.asList(spongeIngredient.itemList.stacks);
+                return DataResult.success(new SpongeRawIngredient(spongeIngredient.type, stacks, Optional.ofNullable(spongeIngredient.predicateId)));
             }
         }
         throw new NotImplementedException("Serializing SpongeIngredient is not implemented yet.");
