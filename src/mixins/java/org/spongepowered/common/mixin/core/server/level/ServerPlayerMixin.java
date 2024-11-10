@@ -129,6 +129,7 @@ import org.spongepowered.common.accessor.network.ConnectionAccessor;
 import org.spongepowered.common.accessor.server.level.ChunkMapAccessor;
 import org.spongepowered.common.accessor.server.level.ChunkMap_TrackedEntityAccessor;
 import org.spongepowered.common.accessor.server.network.ServerCommonPacketListenerImplAccessor;
+import org.spongepowered.common.accessor.world.level.portal.TeleportTransitionAccessor;
 import org.spongepowered.common.adventure.SpongeAdventure;
 import org.spongepowered.common.bridge.data.DataCompoundHolder;
 import org.spongepowered.common.bridge.permissions.SubjectBridge;
@@ -195,6 +196,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements SubjectBr
     private boolean impl$sleepingIgnored;
     private boolean impl$noGameModeEvent;
     @Nullable private WorldBorder impl$worldBorder;
+    private ServerLevel impl$respawnLevel;
 
     @Override
     public net.minecraft.network.chat.@Nullable Component bridge$getConnectionMessageToSend() {
@@ -944,12 +946,24 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements SubjectBr
 
     @Redirect(method = "findRespawnPositionAndUseSpawnBlock", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerPlayer;getRespawnDimension()Lnet/minecraft/resources/ResourceKey;"))
     private ResourceKey<Level> impl$callRespawnPlayerSelectWorld(final net.minecraft.server.level.ServerPlayer player) {
-        final var playerRespawnDestination = this.server.getLevel(player.getRespawnDimension());
+        var playerRespawnDestination = this.server.getLevel(player.getRespawnDimension());
+        if (playerRespawnDestination == null) {
+            SpongeCommon.logger().warn("The player '{}' respawn location was located in a world that isn't loaded or doesn't exist. This is not safe so "
+                + "the player will be moved to the spawn of the default world.", player.getGameProfile().getName());
+            playerRespawnDestination = player.server.overworld();
+        }
 
         final RespawnPlayerEvent.SelectWorld event = SpongeEventFactory.createRespawnPlayerEventSelectWorld(PhaseTracker.getCauseStackManager().currentCause(),
                 (ServerWorld) playerRespawnDestination, (ServerWorld) player.serverLevel(), (ServerWorld) playerRespawnDestination, (ServerPlayer) player);
         SpongeCommon.post(event);
 
+        this.impl$respawnLevel = (ServerLevel) event.destinationWorld();
         return ((ServerLevel) event.destinationWorld()).dimension();
+    }
+
+    @Inject(method = "findRespawnPositionAndUseSpawnBlock", at = @At("RETURN"))
+    private void impl$onFindRespawnPositionAndUseSpawnBlock(final CallbackInfoReturnable<TeleportTransition> cir) {
+        ((TeleportTransitionAccessor) (Object) cir.getReturnValue()).accessor$newLevel(this.impl$respawnLevel);
+        this.impl$respawnLevel = null;
     }
 }
