@@ -117,14 +117,6 @@ public abstract class ChunkMapMixin implements ChunkMapBridge {
             )
     )
     private void impl$onSetUnloaded(final ServerLevel level, final LevelChunk chunk) {
-        final Vector3i chunkPos = VecHelper.toVector3i(chunk.getPos());
-
-        if (ShouldFire.CHUNK_EVENT_UNLOAD_PRE) {
-            final ChunkEvent.Unload event = SpongeEventFactory.createChunkEventUnloadPre(PhaseTracker.getInstance().currentCause(),
-                (WorldChunk) chunk, chunkPos, (ResourceKey) (Object) this.level.dimension().location());
-            SpongeCommon.post(event);
-        }
-
         level.unload(chunk);
 
         for (final Direction dir : Constants.Chunk.CARDINAL_DIRECTIONS) {
@@ -135,12 +127,6 @@ public abstract class ChunkMapMixin implements ChunkMapBridge {
                 ((LevelChunkBridge) chunk).bridge$setNeighborChunk(index, null);
                 ((LevelChunkBridge) neighbor).bridge$setNeighborChunk(oppositeIndex, null);
             }
-        }
-
-        if (ShouldFire.CHUNK_EVENT_UNLOAD_POST) {
-            final ChunkEvent.Unload event = SpongeEventFactory.createChunkEventUnloadPost(PhaseTracker.getInstance().currentCause(), chunkPos,
-                (ResourceKey) (Object) this.level.dimension().location());
-            SpongeCommon.post(event);
         }
     }
 
