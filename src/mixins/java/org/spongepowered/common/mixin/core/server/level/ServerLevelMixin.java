@@ -39,6 +39,7 @@ import net.minecraft.server.level.progress.ChunkProgressListener;
 import net.minecraft.server.players.PlayerList;
 import net.minecraft.util.ProgressListener;
 import net.minecraft.world.RandomSequences;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.ai.village.poi.PoiManager;
 import net.minecraft.world.entity.ai.village.poi.PoiType;
 import net.minecraft.world.entity.player.Player;
@@ -52,6 +53,7 @@ import net.minecraft.world.level.block.entity.TickingBlockEntity;
 import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.level.dimension.LevelStem;
 import net.minecraft.world.level.dimension.end.EndDragonFight;
+import net.minecraft.world.level.entity.PersistentEntitySectionManager;
 import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.storage.LevelStorageSource;
@@ -128,6 +130,7 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerLevel
 
     // @formatter:off
     @Shadow @Final private ServerLevelData serverLevelData;
+    @Shadow @Final private PersistentEntitySectionManager<Entity> entityManager;
     @Shadow @Final private LevelTicks<Block> blockTicks;
     @Shadow @Final private LevelTicks<Fluid> fluidTicks;
     @Shadow private int emptyTime;
@@ -141,6 +144,8 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerLevel
 
     // @formatter:on
 
+
+    @Shadow protected abstract Optional<BlockPos> findLightningRod(BlockPos $$0);
 
     private final long[] impl$recentTickTimes = new long[100];
 
@@ -372,6 +377,12 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerLevel
 
             if (behavior == SerializationBehavior.AUTOMATIC || (isManualSave && behavior == SerializationBehavior.MANUAL)) {
                 chunkProvider.save(flush);
+            }
+
+            if (flush) {
+                this.entityManager.saveAll();
+            } else {
+                this.entityManager.autoSave();
             }
 
             Sponge.eventManager().post(SpongeEventFactory.createSaveWorldEventPost(currentCause, ((ServerWorld) this)));
