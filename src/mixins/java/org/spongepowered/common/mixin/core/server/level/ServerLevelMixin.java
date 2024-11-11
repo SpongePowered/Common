@@ -145,8 +145,6 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerLevel
     // @formatter:on
 
 
-    @Shadow protected abstract Optional<BlockPos> findLightningRod(BlockPos $$0);
-
     private final long[] impl$recentTickTimes = new long[100];
 
     private LevelStorageSource.LevelStorageAccess impl$levelSave;
