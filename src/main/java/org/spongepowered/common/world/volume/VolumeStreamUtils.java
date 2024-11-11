@@ -219,14 +219,14 @@ public final class VolumeStreamUtils {
     ) {
         if (chunk.getLevel() instanceof ServerLevel) {
             return ((PersistentEntitySectionManagerAccessor<Entity>) ((ServerLevelAccessor) chunk.getLevel()).accessor$getEntityManager()).accessor$sectionStorage()
-                .getExistingSectionsInChunk(SectionPos.of(chunk.getPos(), 0).asLong())
+                .getExistingSectionsInChunk(chunk.getPos().toLong())
                 .flatMap(EntitySection::getEntities)
                 .filter(entity -> VecHelper.inBounds(entity.blockPosition(), min, max))
                 .map(entity -> new AbstractMap.SimpleEntry<>(entity.blockPosition(), entity));
         } else if (Sponge.isClientAvailable() && chunk.getLevel() instanceof ClientLevel) {
             return ((TransientEntitySectionManagerAccessor<Entity>) ((ClientLevelAccessor) chunk.getLevel()).accessor$getEntityStorage())
                 .accessor$sectionStorage()
-                .getExistingSectionsInChunk(SectionPos.of(chunk.getPos(), 0).asLong())
+                .getExistingSectionsInChunk(chunk.getPos().toLong())
                 .flatMap(EntitySection::getEntities)
                 .filter(entity -> VecHelper.inBounds(entity.blockPosition(), min, max))
                 .map(entity -> new AbstractMap.SimpleEntry<>(entity.blockPosition(), entity));

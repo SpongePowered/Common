@@ -39,6 +39,9 @@ import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.LevelChunkSection;
 import net.minecraft.world.level.chunk.UpgradeData;
+import net.minecraft.world.level.entity.EntitySection;
+import net.minecraft.world.level.entity.EntitySectionStorage;
+import net.minecraft.world.level.entity.PersistentEntitySectionManager;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.blending.BlendingData;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -71,7 +74,9 @@ import org.spongepowered.asm.mixin.Interface;
 import org.spongepowered.asm.mixin.Intrinsic;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.common.accessor.server.level.ServerLevelAccessor;
 import org.spongepowered.common.accessor.world.level.LevelAccessor;
+import org.spongepowered.common.accessor.world.level.entity.PersistentEntitySectionManagerAccessor;
 import org.spongepowered.common.bridge.world.level.LevelBridge;
 import org.spongepowered.common.bridge.world.level.chunk.LevelChunkBridge;
 import org.spongepowered.common.data.holder.SpongeServerLocationBaseDataHolder;
@@ -100,7 +105,6 @@ import java.util.UUID;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 @Mixin(net.minecraft.world.level.chunk.LevelChunk.class)
 @Implements(@Interface(iface = WorldChunk.class, prefix = "worldChunk$", remap = Interface.Remap.NONE))
@@ -418,12 +422,12 @@ public abstract class LevelChunkMixin_API extends ChunkAccess implements WorldCh
                 .filter(x -> x.chunkPosition().equals(this.chunkPos));
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"rawtypes", "unchecked"})
     @Override
     public Collection<? extends Entity> entities() {
-        return (Collection<? extends Entity>) (Object) StreamSupport.stream(
-                ((LevelAccessor) this.level).invoker$getEntities().getAll().spliterator(), false)
-                    .collect(Collectors.toList());
+        final PersistentEntitySectionManager<net.minecraft.world.entity.Entity> entityManager = ((ServerLevelAccessor) this.level).accessor$getEntityManager();
+        final EntitySectionStorage<net.minecraft.world.entity.Entity> entitySectionStorage = ((PersistentEntitySectionManagerAccessor<net.minecraft.world.entity.Entity>) entityManager).accessor$sectionStorage();
+        return (Collection) entitySectionStorage.getExistingSectionsInChunk(this.chunkPos.toLong()).flatMap(EntitySection::getEntities).toList();
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})

@@ -25,7 +25,6 @@
 package org.spongepowered.common.mixin.plugin.entityactivation;
 
 import com.google.common.collect.ImmutableMap;
-import net.minecraft.core.SectionPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -262,7 +261,7 @@ public final class EntityActivationRange {
     private static void activateChunkEntities(final ServerPlayer player, final LevelChunk chunk) {
         final PersistentEntitySectionManager<Entity> entityManager = ((ServerLevelAccessor) chunk.getLevel()).accessor$getEntityManager();
         final EntitySectionStorage<Entity> entitySectionStorage = ((PersistentEntitySectionManagerAccessor<Entity>) entityManager).accessor$sectionStorage();
-        entitySectionStorage.getExistingSectionsInChunk(SectionPos.of(chunk.getPos(), 0).asLong()).flatMap(EntitySection::getEntities).forEach(entity -> {
+        entitySectionStorage.getExistingSectionsInChunk(chunk.getPos().toLong()).flatMap(EntitySection::getEntities).forEach(entity -> {
             if (!entity.chunkPosition().equals(chunk.getPos())) {
                 return;
             }
