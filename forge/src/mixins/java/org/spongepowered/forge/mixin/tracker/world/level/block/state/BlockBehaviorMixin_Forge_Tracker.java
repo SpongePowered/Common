@@ -42,7 +42,7 @@ public abstract class BlockBehaviorMixin_Forge_Tracker {
         method = "getLootTable",
         at = @At(
             value = "FIELD",
-            target = "Lnet/minecraft/world/level/block/state/BlockBehaviour;lootTableSupplier:Ljava/util/function/Supplier;",
+            target = "Lnet/minecraft/world/level/block/state/BlockBehaviour;drops:Ljava/util/Optional;",
             remap = false
         )
     )

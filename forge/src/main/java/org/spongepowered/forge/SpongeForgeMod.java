@@ -25,6 +25,8 @@
 package org.spongepowered.forge;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraftforge.common.MinecraftForge;
@@ -64,10 +66,10 @@ public final class SpongeForgeMod {
 
     private final Logger logger = LogManager.getLogger("spongeforge");
 
-    public SpongeForgeMod() {
+    public SpongeForgeMod(FMLJavaModLoadingContext ctx) {
         // WorldPersistenceHooks.addHook(SpongeLevelDataPersistence.INSTANCE); // TODO SF 1.19.4
 
-        final IEventBus modBus = FMLJavaModLoadingContext.get().getModEventBus();
+        final IEventBus modBus = ctx.getModEventBus();
 
         // modBus: add all FML events with it
         modBus.addListener(this::onCommonSetup);
@@ -144,7 +146,7 @@ public final class SpongeForgeMod {
                     .sized(0.6F, 1.8F)
                     .clientTrackingRange(org.spongepowered.common.util.Constants.Entity.Player.TRACKING_RANGE)
                     .updateInterval(2)
-                    .build("sponge:human")
+                    .build(ResourceKey.create(ForgeRegistries.Keys.ENTITY_TYPES, ResourceLocation.parse("sponge:human")))
             ;
 
             event.register(ForgeRegistries.Keys.ENTITY_TYPES, helper -> helper.register(HumanEntity.KEY, SpongeEntityTypes.HUMAN));

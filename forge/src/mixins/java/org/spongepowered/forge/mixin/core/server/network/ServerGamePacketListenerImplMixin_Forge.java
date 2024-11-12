@@ -25,6 +25,8 @@
 package org.spongepowered.forge.mixin.core.server.network;
 
 import net.minecraft.network.protocol.game.ServerGamePacketListener;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import net.minecraft.world.inventory.RecipeBookMenu;
 import net.minecraft.world.item.crafting.RecipeHolder;
@@ -33,6 +35,7 @@ import org.spongepowered.api.item.inventory.Inventory;
 import org.spongepowered.api.item.inventory.crafting.CraftingInventory;
 import org.spongepowered.api.item.inventory.query.QueryTypes;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.common.SpongeCommon;
@@ -44,23 +47,29 @@ import org.spongepowered.common.event.tracking.context.transaction.Transactional
 @Mixin(ServerGamePacketListenerImpl.class)
 public abstract class ServerGamePacketListenerImplMixin_Forge implements ServerGamePacketListener {
 
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    @Redirect(method = "lambda$handlePlaceRecipe$10",
-        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/inventory/RecipeBookMenu;handlePlacement(ZLnet/minecraft/world/item/crafting/RecipeHolder;Lnet/minecraft/server/level/ServerPlayer;)V"))
-    private void forge$onPlaceRecipe(final RecipeBookMenu recipeBookMenu, final boolean shift, final RecipeHolder recipe, final net.minecraft.server.level.ServerPlayer player) {
-        final PhaseContext<@NonNull ?> context = PhaseTracker.SERVER.getPhaseContext();
+    @Shadow public ServerPlayer player;
+
+    @Redirect(method = "handlePlaceRecipe",
+        at = @At(value = "INVOKE", target = "net/minecraft/world/inventory/RecipeBookMenu.handlePlacement(ZZLnet/minecraft/world/item/crafting/RecipeHolder;Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/player/Inventory;)Lnet/minecraft/world/inventory/RecipeBookMenu$PostPlaceAction;"))
+    private RecipeBookMenu.PostPlaceAction forge$onPlaceRecipe(
+        final RecipeBookMenu recipeBookMenu, final boolean shift, final boolean isCreative, final RecipeHolder<?> recipe,
+        final ServerLevel serverLevel, final net.minecraft.world.entity.player.Inventory inventory) {
+        final PhaseContext<@NonNull ?> context = PhaseTracker.getWorldInstance(this.player.serverLevel()).getPhaseContext();
         final TransactionalCaptureSupplier transactor = context.getTransactor();
+        final var player = this.player;
 
         final Inventory craftInv = ((Inventory) player.containerMenu).query(QueryTypes.INVENTORY_TYPE.get().of(CraftingInventory.class));
+        final RecipeBookMenu.PostPlaceAction result;
         if (!(craftInv instanceof CraftingInventory)) {
-            recipeBookMenu.handlePlacement(shift, recipe, player);
+            result = recipeBookMenu.handlePlacement(shift,isCreative, recipe, serverLevel, inventory);
             SpongeCommon.logger().warn("Detected crafting without a InventoryCrafting!? Crafting Event will not fire.");
-            return;
+            return result;
         }
 
         try (final EffectTransactor ignored = transactor.logPlaceRecipe(shift, recipe, player, (CraftingInventory) craftInv)) {
-            recipeBookMenu.handlePlacement(shift, recipe, player);
+            result = recipeBookMenu.handlePlacement(shift,isCreative, recipe, serverLevel, inventory);
             player.containerMenu.broadcastChanges();
         }
+        return result;
     }
 }
