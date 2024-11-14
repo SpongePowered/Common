@@ -125,7 +125,7 @@ public final class SpongeMapDecorationBuilder implements MapDecoration.Builder {
         final byte rot = this.getByteFromContainer(container, Constants.Map.DECORATION_ROTATION);
 
 
-        final var mcType = BuiltInRegistries.MAP_DECORATION_TYPE.get((ResourceLocation) (Object) type);
+        final var mcType = BuiltInRegistries.MAP_DECORATION_TYPE.getValue((ResourceLocation) (Object) type);
         if (mcType == null) {
             throw new IllegalStateException("Missing a MapDecorationType, could not find one for Minecraft's MapDecoration.Type: " + type);
         }
