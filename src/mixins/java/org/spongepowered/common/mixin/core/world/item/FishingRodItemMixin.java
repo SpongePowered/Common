@@ -71,7 +71,7 @@ public abstract class FishingRodItemMixin {
         if (level instanceof ServerLevel serverLevel) {
             int $$6 = (int)(EnchantmentHelper.getFishingTimeReduction(serverLevel, itemstack, player) * 20.0F);
             int $$7 = EnchantmentHelper.getFishingLuckBonus(serverLevel, itemstack, player);
-            FishingHook fishHook = new FishingHook(player, level, $$7, $$6, itemstack);
+            FishingHook fishHook = new FishingHook(player, level, $$7, $$6);
 
             PhaseTracker.getCauseStackManager().pushCause(player);
             if (SpongeCommon.post(SpongeEventFactory.createFishingEventStart(PhaseTracker.getCauseStackManager().currentCause(), (FishingBobber) fishHook))) {
@@ -85,7 +85,7 @@ public abstract class FishingRodItemMixin {
     }
 
     @Redirect(method = "use", at = @At(value = "NEW", target = "net/minecraft/world/entity/projectile/FishingHook"))
-    private FishingHook onNewEntityFishHook(final Player $$0, final Level $$1, final int $$2, final int $$3, final ItemStack $$4) {
+    private FishingHook onNewEntityFishHook(final Player $$0, final Level $$1, final int $$2, final int $$3) {
         // Use the fish hook we created for the event
         FishingHook fishHook = this.impl$fishHook;
         this.impl$fishHook = null;

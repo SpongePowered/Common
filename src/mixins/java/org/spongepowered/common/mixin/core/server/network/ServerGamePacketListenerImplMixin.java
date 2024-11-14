@@ -293,7 +293,7 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
             at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;getControllingPassenger()Lnet/minecraft/world/entity/LivingEntity;")
     )
     private void impl$handleVehicleMoveEvent(final ServerboundMoveVehiclePacket param0, final CallbackInfo ci) {
-        final ServerboundMoveVehiclePacketAccessor packet = (ServerboundMoveVehiclePacketAccessor) param0;
+        final ServerboundMoveVehiclePacketAccessor packet = (ServerboundMoveVehiclePacketAccessor) (Object) param0;
         final Entity rootVehicle = this.player.getRootVehicle();
         final Vector3d fromRotation = new Vector3d(rootVehicle.getYRot(), rootVehicle.getXRot(), 0);
 
@@ -301,8 +301,9 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
         // We need this because we ignore very small position changes as to not spam as many move events.
         final Vector3d fromPosition = VecHelper.toVector3d(rootVehicle.position());
 
-        final Vector3d originalToPosition = new Vector3d(param0.getX(), param0.getY(), param0.getZ());
-        final Vector3d originalToRotation = new Vector3d(param0.getYRot(), param0.getXRot(), 0);
+        final var position = param0.position();
+        final Vector3d originalToPosition = new Vector3d(position.x, position.y(), position.z());
+        final Vector3d originalToRotation = new Vector3d(param0.yRot(), param0.xRot(), 0);
 
         // common checks and throws are done here.
         final @Nullable Vector3d toPosition = SpongeCommonEventFactory.callMoveEvent(
@@ -325,7 +326,7 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
             if (!fromRotation.equals(toRotation)) {
                 rootVehicle.absMoveTo(rootVehicle.getX(), rootVehicle.getY(), rootVehicle.getZ(), (float) toRotation.y(), (float) toRotation.x());
             }
-            this.connection.send(new ClientboundMoveVehiclePacket(rootVehicle));
+            this.connection.send(ClientboundMoveVehiclePacket.fromEntity(rootVehicle));
             ci.cancel();
             return;
         }
@@ -333,12 +334,11 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
         if (!toPosition.equals(originalToPosition) || !toRotation.equals(originalToRotation)) {
             // notify the client about the new position
             rootVehicle.absMoveTo(toPosition.x(), toPosition.y(), toPosition.z(), (float) toRotation.y(), (float) toRotation.x());
-            this.connection.send(new ClientboundMoveVehiclePacket(rootVehicle));
+            this.connection.send(ClientboundMoveVehiclePacket.fromEntity(rootVehicle));
 
             // update the packet, let MC take care of the rest.
-            packet.accessor$x(toPosition.x());
-            packet.accessor$y(toPosition.y());
-            packet.accessor$z(toPosition.z());
+            final var newPos = VecHelper.toVanillaVector3d(toPosition);
+            packet.accessor$position(newPos);
             packet.accessor$yRot((float) toRotation.x());
             packet.accessor$xRot((float) toRotation.y());
 

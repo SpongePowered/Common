@@ -296,7 +296,7 @@ public final class ProjectileUtil {
             @Override
             protected Optional<FishingBobber> createProjectile(final LivingEntity source, final ServerLocation loc) {
                 if (source instanceof Player) {
-                    final FishingHook hook = new FishingHook((Player) source, source.level(), 0, 0, new ItemStack(Items.FISHING_ROD));
+                    final FishingHook hook = new FishingHook((Player) source, source.level(), 0, 0);
                     hook.setPos(loc.x(), loc.y(), loc.z());
                     return ProjectileUtil.doLaunch(loc.world(), (FishingBobber) hook);
                 }

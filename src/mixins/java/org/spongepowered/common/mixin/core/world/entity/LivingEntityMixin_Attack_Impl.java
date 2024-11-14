@@ -189,7 +189,7 @@ public abstract class LivingEntityMixin_Attack_Impl extends EntityMixin implemen
      * After calling #actuallyHurt, if cancelled return early
      * Also reset values
      */
-    @Inject(method = "hurtServer",cancellable = true,
+    @Inject(method = "hurtServer", cancellable = true,
         at = @At(value = "INVOKE", shift = At.Shift.AFTER, ordinal = 1,
             target = "Lnet/minecraft/world/entity/LivingEntity;actuallyHurt(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/damagesource/DamageSource;F)V"))
     private void attackImpl$afterActuallyHurt2(ServerLevel $$0, DamageSource $$1, float $$2, CallbackInfoReturnable<Boolean> cir) {
@@ -212,32 +212,38 @@ public abstract class LivingEntityMixin_Attack_Impl extends EntityMixin implemen
         return this.attackImpl$actuallyHurtFinalDamage;
     }
 
-    /**
-     * Sets blocked damage after #actuallyHurt
-     */
-    @ModifyVariable(method = "hurtServer", ordinal = 2,
-        at = @At(value = "INVOKE",
-            target = "Lnet/minecraft/advancements/critereon/EntityHurtPlayerTrigger;trigger(Lnet/minecraft/server/level/ServerPlayer;Lnet/minecraft/world/damagesource/DamageSource;FFZ)V",
-            shift = At.Shift.AFTER))
-    private float attackImpl$modifyBlockedDamage(float damageBlocked) {
-        return this.attackImpl$actuallyHurtBlockedDamage;
-    }
+    // TODO - Pending on a Mixin bug: https://github.com/SpongePowered/Mixin/issues/684
+//    /**
+//     * Sets blocked damage after #actuallyHurt
+//     */
+//    @ModifyVariable(method = "hurtServer", ordinal = 1,
+//        at = @At(value = "INVOKE",
+//            target = "Lnet/minecraft/advancements/critereon/EntityHurtPlayerTrigger;trigger(Lnet/minecraft/server/level/ServerPlayer;Lnet/minecraft/world/damagesource/DamageSource;FFZ)V",
+//            shift = At.Shift.AFTER
+//        ),
+//        slice = @Slice(
+//            from = @At(value = "FIELD", target = "Lnet/minecraft/advancements/CriteriaTriggers;ENTITY_HURT_PLAYER:Lnet/minecraft/advancements/critereon/EntityHurtPlayerTrigger;"),
+//            to = @At(value = "FIELD", target = "Lnet/minecraft/stats/Stats;DAMAGE_BLOCKED_BY_SHIELD:Lnet/minecraft/resources/ResourceLocation;")
+//        ))
+//    private float attackImpl$modifyBlockedDamage(float damageBlocked) {
+//        return this.attackImpl$actuallyHurtBlockedDamage;
+//    }
 
-    @Redirect(method = "hurtServer", at = @At(value = "INVOKE",  target = "Lnet/minecraft/world/entity/LivingEntity;playHurtSound(Lnet/minecraft/world/damagesource/DamageSource;)V"))
+    @Redirect(method = "hurtServer", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;playHurtSound(Lnet/minecraft/world/damagesource/DamageSource;)V"))
     private void attackImpl$onHurtSound(final LivingEntity instance, final DamageSource $$0) {
         if (this.bridge$vanishState().createsSounds()) {
             this.shadow$playHurtSound($$0);
         }
     }
 
-    @Redirect(method = "hurtServer", at = @At(value = "INVOKE",  target = "Lnet/minecraft/world/entity/LivingEntity;makeSound(Lnet/minecraft/sounds/SoundEvent;)V"))
+    @Redirect(method = "hurtServer", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;makeSound(Lnet/minecraft/sounds/SoundEvent;)V"))
     private void attackImpl$onMakeSound(final LivingEntity instance, final SoundEvent $$0) {
         if (this.bridge$vanishState().createsSounds()) {
             instance.makeSound($$0);
         }
     }
 
-    @Inject(method = "actuallyHurt", at = @At(value = "INVOKE",target = "Lnet/minecraft/world/entity/LivingEntity;getDamageAfterArmorAbsorb(Lnet/minecraft/world/damagesource/DamageSource;F)F"))
+    @Inject(method = "actuallyHurt", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;getDamageAfterArmorAbsorb(Lnet/minecraft/world/damagesource/DamageSource;F)F"))
     public void attackImpl$startActuallyHurt(final ServerLevel level, final DamageSource damageSource,
                                              final float originalDamage, final CallbackInfo ci) {
         // TODO check for direct call?
@@ -341,7 +347,7 @@ public abstract class LivingEntityMixin_Attack_Impl extends EntityMixin implemen
      * {@link #shadow$hurtArmor}
      * {@link ServerPlayer#awardStat} for {@link Stats#DAMAGE_RESISTED} and {@link Stats#DAMAGE_DEALT}
      * from {@link LivingEntity#hurt} and #actuallyHurt
-     *
+     * <p>
      * And capture inventory changes if needed
      */
     protected void attackImpl$handlePostDamage() {

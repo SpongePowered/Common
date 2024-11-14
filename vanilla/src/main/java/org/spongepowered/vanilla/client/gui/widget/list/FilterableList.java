@@ -123,11 +123,6 @@ public class FilterableList<P extends FilterableList<P, E>, E extends Filterable
     }
 
     @Override
-    protected int getScrollbarPosition() {
-        return this.getX() + this.width - 6;
-    }
-
-    @Override
     public void setSelected(@Nullable final E entry) {
         if (this.selectConsumer != null) {
             this.selectConsumer.accept(entry);
@@ -138,7 +133,7 @@ public class FilterableList<P extends FilterableList<P, E>, E extends Filterable
 
     @Override
     public boolean mouseClicked(final double p_mouseClicked_1_, final double p_mouseClicked_3_, final int p_mouseClicked_5_) {
-        this.updateScrollingState(p_mouseClicked_1_, p_mouseClicked_3_, p_mouseClicked_5_);
+        this.updateScrolling(p_mouseClicked_1_, p_mouseClicked_3_, p_mouseClicked_5_);
         if (!this.isMouseOver(p_mouseClicked_1_, p_mouseClicked_3_)) {
             return false;
         } else {
@@ -150,8 +145,8 @@ public class FilterableList<P extends FilterableList<P, E>, E extends Filterable
                     return true;
                 }
             } else if (p_mouseClicked_5_ == 0) {
-                this.clickedHeader((int) (p_mouseClicked_1_ - (double) (this.getX() + this.width / 2 - this.getRowWidth() / 2)),
-                    (int) (p_mouseClicked_3_ - (double) this.getY()) + (int) this.getScrollAmount() - 4);
+                this.onClick((int) (p_mouseClicked_1_ - (double) (this.getX() + this.width / 2 - this.getRowWidth() / 2)),
+                    (int) (p_mouseClicked_3_ - (double) this.getY()) + (int) this.scrollAmount() - 4);
                 return true;
             }
 

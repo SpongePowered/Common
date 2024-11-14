@@ -117,10 +117,10 @@ public final class ItemStackData {
                         .get(h -> (ItemType) h.getItem().getCraftingRemainder().getItem())
                     .create(Keys.DISPLAY_NAME)
                         .get(h -> SpongeAdventure.asAdventure(h.getDisplayName()))
-                    .create(Keys.CUSTOM_MODEL_DATA)
-                        .get(h -> h.getOrDefault(DataComponents.CUSTOM_MODEL_DATA, CustomModelData.DEFAULT).value())
-                        .set((h, v) -> h.set(DataComponents.CUSTOM_MODEL_DATA, new CustomModelData(v)))
-                        .delete(h -> h.remove(DataComponents.CUSTOM_MODEL_DATA))
+//                    .create(Keys.CUSTOM_MODEL_DATA)
+//                        .get(h -> h.getOrDefault(DataComponents.CUSTOM_MODEL_DATA, CustomModelData.EMPTY))
+//                        .set((h, v) -> h.set(DataComponents.CUSTOM_MODEL_DATA, new CustomModelData(v)))
+//                        .delete(h -> h.remove(DataComponents.CUSTOM_MODEL_DATA))
                     .create(Keys.CUSTOM_NAME)
                         .get(h -> {
                             if (h.has(DataComponents.CUSTOM_NAME)) {

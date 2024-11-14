@@ -25,6 +25,7 @@
 package org.spongepowered.common.accessor.network.protocol.game;
 
 import net.minecraft.network.protocol.game.ServerboundMoveVehiclePacket;
+import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.gen.Accessor;
@@ -32,11 +33,7 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 @Mixin(ServerboundMoveVehiclePacket.class)
 public interface ServerboundMoveVehiclePacketAccessor {
 
-    @Accessor("x") @Mutable void accessor$x(final double x);
-
-    @Accessor("y") @Mutable void accessor$y(final double y);
-
-    @Accessor("z") @Mutable void accessor$z(final double z);
+    @Accessor("position") @Mutable void accessor$position(final Vec3 position);
 
     @Accessor("yRot") @Mutable void accessor$yRot(final float yRot);
 

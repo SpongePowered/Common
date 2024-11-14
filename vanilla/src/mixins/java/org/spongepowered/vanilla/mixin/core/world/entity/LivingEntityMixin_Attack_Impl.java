@@ -41,18 +41,18 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 public abstract class LivingEntityMixin_Attack_Impl {
 
     @SuppressWarnings("InvalidInjectorMethodSignature")
-    @ModifyConstant(method = "hurtServer", constant = @Constant(classValue = Wolf.class, ordinal = 0))
+    @ModifyConstant(method = "resolvePlayerResponsibleForDamage", constant = @Constant(classValue = Wolf.class, ordinal = 0))
     private Class attackImpl$onWolfCast(final Object entity, final Class wolf) {
         return TamableAnimal.class;
     }
 
-    @Redirect(method = "hurtServer",
+    @Redirect(method = "resolvePlayerResponsibleForDamage",
         at = @At(value = "INVOKE" , target = "Lnet/minecraft/world/entity/animal/Wolf;isTame()Z"))
     private boolean attackImpl$onWolfIsTame(@Coerce final Object instance) {
         return ((TamableAnimal)instance).isTame();
     }
 
-    @Redirect(method = "hurtServer",
+    @Redirect(method = "resolvePlayerResponsibleForDamage",
         at = @At(value = "INVOKE" , target = "Lnet/minecraft/world/entity/animal/Wolf;getOwner()Lnet/minecraft/world/entity/LivingEntity;"))
     private LivingEntity attackImpl$onWolfGetOwner(@Coerce final Object instance) {
         return ((TamableAnimal)instance).getOwner();

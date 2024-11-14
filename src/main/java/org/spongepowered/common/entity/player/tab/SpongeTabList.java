@@ -194,7 +194,7 @@ public final class SpongeTabList implements TabList {
         final RemoteChatSession.Data chatSessionData = ((SpongeTabListEntry) entry).profilePublicKey() == null ? null : new RemoteChatSession.Data(entry.profile().uuid(), ((SpongeTabListEntry) entry).profilePublicKey());
         final net.minecraft.network.chat.Component displayName = entry.displayName().isPresent() ? SpongeAdventure.asVanilla(entry.displayName().get()) : null;
         final ClientboundPlayerInfoUpdatePacket.Entry data = new ClientboundPlayerInfoUpdatePacket.Entry(entry.profile().uniqueId(), SpongeGameProfile.toMcProfile(entry.profile()),
-            entry.listed(), entry.latency(), (GameType) (Object) entry.gameMode(), displayName, listOrder, chatSessionData);
+            entry.listed(), entry.latency(), (GameType) (Object) entry.gameMode(), displayName, false, listOrder, chatSessionData);
         ((ClientboundPlayerInfoUpdatePacketAccessor) packet).accessor$entries(List.of(data));
         this.player.connection.send(packet);
     }

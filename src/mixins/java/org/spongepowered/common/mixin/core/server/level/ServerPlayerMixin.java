@@ -229,7 +229,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements SubjectBr
         final var thisPlayer = ((net.minecraft.server.level.ServerPlayer) (Object) this);
 
         final ChunkPos chunkPos = new ChunkPos(VecHelper.toBlockPos(pos));
-        level.getChunkSource().addRegionTicket(TicketType.POST_TELEPORT, chunkPos, 1, thisPlayer.getId());
+        level.getChunkSource().addRegionTicket(TicketType.FORCED, chunkPos, 1, chunkPos);
 
         thisPlayer.stopRiding();
         if (thisPlayer.isSleeping()) {
@@ -425,9 +425,8 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements SubjectBr
                 frame.addContext(EventContextKeys.MOVEMENT_TYPE, MovementTypes.PLUGIN);
             }
 
-            final var thisPlayer = (net.minecraft.server.level.ServerPlayer) (Object) this;
             return this.bridge$changeDimension(new TeleportTransition(world, new Vec3(x, y, z), Vec3.ZERO, yaw, pitch, relative,
-                    e -> world.getChunkSource().addRegionTicket(TicketType.POST_TELEPORT, e.chunkPosition(), 1, thisPlayer.getId()))) != null;
+                    e -> world.getChunkSource().addRegionTicket(TicketType.FORCED, e.chunkPosition(), 1, e.chunkPosition()))) != null;
         }
     }
 
@@ -698,7 +697,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements SubjectBr
         final LivingEntity livingentity = this.shadow$getKillCredit();
         if (livingentity != null) {
             this.shadow$awardStat(Stats.ENTITY_KILLED_BY.get(livingentity.getType()));
-            livingentity.awardKillScore((net.minecraft.server.level.ServerPlayer) (Object) this, this.deathScore, cause);
+            livingentity.awardKillScore((net.minecraft.server.level.ServerPlayer) (Object) this, cause);
             this.shadow$createWitherRose(livingentity);
         }
 

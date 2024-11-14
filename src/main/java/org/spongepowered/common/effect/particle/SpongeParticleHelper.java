@@ -243,6 +243,7 @@ public final class SpongeParticleHelper {
                 final ClientboundLevelParticlesPacket packet = new ClientboundLevelParticlesPacket(
                         this.particleData,
                         true,
+                        true,
                         posX, posY, posZ,
                         offX, offY, offZ,
                         0.0F,
@@ -262,6 +263,7 @@ public final class SpongeParticleHelper {
 
                     final ClientboundLevelParticlesPacket packet = new ClientboundLevelParticlesPacket(
                             this.particleData,
+                            true,
                             true,
                             px0, py0, pz0,
                             velocityX, velocityY, velocityZ,

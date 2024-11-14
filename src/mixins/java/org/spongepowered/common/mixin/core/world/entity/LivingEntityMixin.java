@@ -92,7 +92,6 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
     // @formatter:off
     @Shadow protected int useItemRemaining;
     @Shadow protected boolean dead;
-    @Shadow protected int deathScore;
     @Shadow protected ItemStack useItem;
     @Shadow @Nullable private DamageSource lastDamageSource;
     @Shadow private long lastDamageStamp;

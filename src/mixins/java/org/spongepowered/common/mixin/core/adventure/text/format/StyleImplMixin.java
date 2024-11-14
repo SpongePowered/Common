@@ -47,6 +47,7 @@ public abstract class StyleImplMixin implements StyleBridge {
             this.bridge$vanilla = StyleAccessor.invoker$new(
                 // color
                 SpongeAdventure.asVanillaNullable($this.color()),
+                null,
                 // decorations
                 SpongeAdventure.asVanillaNullable($this.decoration(TextDecoration.BOLD)),
                 SpongeAdventure.asVanillaNullable($this.decoration(TextDecoration.ITALIC)),

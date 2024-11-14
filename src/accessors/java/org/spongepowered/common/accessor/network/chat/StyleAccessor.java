@@ -29,20 +29,22 @@ import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextColor;
 import net.minecraft.resources.ResourceLocation;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.gen.Invoker;
 import org.spongepowered.common.UntransformedInvokerError;
 
+import javax.annotation.Nullable;
+import java.util.Optional;
+
 @Mixin(Style.class)
 public interface StyleAccessor {
 
     @Invoker("<init>")
-    static Style invoker$new(final @Nullable TextColor color, final @Nullable Boolean bold, final @Nullable Boolean italic,
-            final @Nullable Boolean underlined, final @Nullable Boolean strikethrough, final @Nullable Boolean obfuscated,
-            final @Nullable ClickEvent clickEvent, final @Nullable HoverEvent hoverEvent, final @Nullable String insertion,
-            final @Nullable ResourceLocation font) {
+    static Style invoker$new(final @Nullable TextColor color, final @Nullable Integer shadowColor, final @Nullable Boolean bold, final @Nullable Boolean italic,
+         final @Nullable Boolean underlined, final @Nullable Boolean strikethrough, final @Nullable Boolean obfuscated,
+         final @Nullable ClickEvent clickEvent, final @Nullable HoverEvent hoverEvent, final @Nullable String insertion,
+         final @Nullable ResourceLocation font) {
         throw new UntransformedInvokerError();
     }
 
