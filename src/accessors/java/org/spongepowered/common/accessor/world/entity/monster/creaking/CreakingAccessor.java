@@ -25,15 +25,13 @@
 package org.spongepowered.common.accessor.world.entity.monster.creaking;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.world.entity.monster.creaking.CreakingTransient;
+import net.minecraft.world.entity.monster.creaking.Creaking;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
-@Mixin(CreakingTransient.class)
-public interface CreakingTransientAccessor {
+@Mixin(Creaking.class)
+public interface CreakingAccessor {
 
     @Accessor("homePos") BlockPos accessor$homePos();
-
-    @Accessor("homePos") void accessor$setHomePos(BlockPos pos);
 
 }

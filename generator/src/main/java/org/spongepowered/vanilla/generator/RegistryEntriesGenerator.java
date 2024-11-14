@@ -164,12 +164,12 @@ class RegistryEntriesGenerator<V> implements Generator {
             if (!featureFlagSet.isSubsetOf(FeatureFlags.VANILLA_SET)) {
                 final var flags = FeatureFlags.REGISTRY.toNames(featureFlagSet).stream().map(rl -> rl.getNamespace().equals("minecraft") ? rl.getPath() : rl.getNamespace() + ":" + rl.getPath()).toArray();
                 // Use this when new feature flags are introduced
-                if (featureFlagSet.contains(FeatureFlags.WINTER_DROP)) {
-                    var annotation = AnnotationSpec.builder(ClassName.get("org.spongepowered.api.util.annotation", "Experimental"))
-                            .addMember("value", "$S", flags).build();
-                    builder.addAnnotation(annotation).build();
-                    builder.addAnnotation(ApiStatus.Experimental.class).build();
-                }
+//                if (featureFlagSet.contains(FeatureFlags.WINTER_DROP)) {
+//                    var annotation = AnnotationSpec.builder(ClassName.get("org.spongepowered.api.util.annotation", "Experimental"))
+//                            .addMember("value", "$S", flags).build();
+//                    builder.addAnnotation(annotation).build();
+//                    builder.addAnnotation(ApiStatus.Experimental.class).build();
+//                }
             }
 
 

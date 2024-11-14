@@ -247,13 +247,6 @@ public final class GeneratorMain {
                  "getSerializedName",
                  "sponge"
             ),
-            new EnumEntriesValidator<>(
-                "data.type",
-                "CreakingHearts",
-                CreakingHeartBlock.CreakingHeartState.class,
-                "getSerializedName",
-                "sponge"
-            ),
             new RegistryEntriesGenerator<>(
                  "map.decoration",
                  "MapDecorationTypes",

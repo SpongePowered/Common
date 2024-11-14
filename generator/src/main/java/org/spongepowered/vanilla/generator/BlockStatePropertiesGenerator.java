@@ -32,7 +32,6 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.FrontAndTop;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.CreakingHeartBlock;
 import net.minecraft.world.level.block.entity.trialspawner.TrialSpawnerState;
 import net.minecraft.world.level.block.entity.vault.VaultState;
 import net.minecraft.world.level.block.state.BlockState;
@@ -63,14 +62,13 @@ import net.minecraft.world.level.block.state.properties.Tilt;
 import net.minecraft.world.level.block.state.properties.WallSide;
 import org.tinylog.Logger;
 
+import javax.lang.model.element.Modifier;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.TreeMap;
-
-import javax.lang.model.element.Modifier;
 
 /**
  * Generates catalog classes for {@link BlockState} properties.
@@ -132,7 +130,6 @@ public class BlockStatePropertiesGenerator implements Generator {
         vanillaEnumTypeMapping.put(StructureMode.class, BlockStatePropertiesGenerator.inDataTypePkg("StructureMode"));
         vanillaEnumTypeMapping.put(PistonType.class, BlockStatePropertiesGenerator.inDataTypePkg("PistonType"));
         vanillaEnumTypeMapping.put(BambooLeaves.class, BlockStatePropertiesGenerator.inDataTypePkg("BambooLeavesType"));
-        vanillaEnumTypeMapping.put(CreakingHeartBlock.CreakingHeartState.class, BlockStatePropertiesGenerator.inDataTypePkg("CreakingHeart"));
         vanillaEnumTypeMapping.put(WallSide.class, BlockStatePropertiesGenerator.inDataTypePkg("WallConnectionState"));
         vanillaEnumTypeMapping.put(RailShape.class, BlockStatePropertiesGenerator.inDataTypePkg("RailDirection"));
         vanillaEnumTypeMapping.put(AttachFace.class, BlockStatePropertiesGenerator.inDataTypePkg("AttachmentSurface"));
