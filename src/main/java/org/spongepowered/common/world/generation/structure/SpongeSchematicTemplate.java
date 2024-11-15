@@ -54,7 +54,7 @@ public record SpongeSchematicTemplate(ResourceKey key, StructureTemplate nbtStru
 
     @Override
     public DataContainer toContainer() {
-        final CompoundTag serialized = SpongeSchematicTemplate.encode(this, SpongeCommon.server().registryAccess());
+        final CompoundTag serialized = SpongeSchematicTemplate.encode(this, SpongeCommon.vanillaRegistryAccess());
         return NBTTranslator.INSTANCE.translateFrom(serialized);
     }
 

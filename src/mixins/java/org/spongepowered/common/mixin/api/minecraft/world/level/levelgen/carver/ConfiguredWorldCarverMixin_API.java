@@ -56,7 +56,7 @@ public abstract class ConfiguredWorldCarverMixin_API<WC extends CarverConfigurat
 
     @Override
     public DataView toContainer() {
-        final JsonElement serialized = SpongeCarverTemplate.encode((Codec<ConfiguredWorldCarver<?>>) (Object) this.worldCarver.configuredCodec(), (ConfiguredWorldCarver<WC>) (Object) this, SpongeCommon.server().registryAccess());
+        final JsonElement serialized = SpongeCarverTemplate.encode((Codec<ConfiguredWorldCarver<?>>) (Object) this.worldCarver.configuredCodec(), (ConfiguredWorldCarver<WC>) (Object) this, SpongeCommon.vanillaRegistryAccess());
         try {
             return DataFormats.JSON.get().read(serialized.toString());
         } catch (IOException e) {

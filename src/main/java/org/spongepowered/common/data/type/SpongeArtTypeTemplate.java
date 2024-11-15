@@ -61,7 +61,7 @@ public record SpongeArtTypeTemplate(ResourceKey key, PaintingVariant represented
 
     @Override
     public DataContainer toContainer() {
-        final JsonElement serialized = SpongeArtTypeTemplate.encode(this, SpongeCommon.server().registryAccess());
+        final JsonElement serialized = SpongeArtTypeTemplate.encode(this, SpongeCommon.vanillaRegistryAccess());
         try {
             return DataFormats.JSON.get().read(serialized.toString());
         } catch (IOException e) {
@@ -116,7 +116,7 @@ public record SpongeArtTypeTemplate(ResourceKey key, PaintingVariant represented
         @Override
         public Builder fromDataPack(final DataView dataView) throws IOException {
             final JsonElement json = JsonParser.parseString(DataFormats.JSON.get().write(dataView));
-            final var damageType = SpongeArtTypeTemplate.decode(json, SpongeCommon.server().registryAccess());
+            final var damageType = SpongeArtTypeTemplate.decode(json, SpongeCommon.vanillaRegistryAccess());
             this.fromValue((ArtType) (Object) damageType);
             return this;
         }

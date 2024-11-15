@@ -65,7 +65,7 @@ public record SpongeJigsawPoolTemplate(ResourceKey key, StructureTemplatePool re
 
     @Override
     public DataContainer toContainer() {
-        final JsonElement serialized = SpongeJigsawPoolTemplate.encode(this, SpongeCommon.server().registryAccess());
+        final JsonElement serialized = SpongeJigsawPoolTemplate.encode(this, SpongeCommon.vanillaRegistryAccess());
         try {
             return DataFormats.JSON.get().read(serialized.toString());
         } catch (IOException e) {
@@ -113,7 +113,7 @@ public record SpongeJigsawPoolTemplate(ResourceKey key, StructureTemplatePool re
         @Override
         public Builder fromDataPack(final DataView pack) throws IOException {
             final JsonElement json = JsonParser.parseString(DataFormats.JSON.get().write(pack));
-            final StructureTemplatePool decoded = SpongeJigsawPoolTemplate.decode(json, SpongeCommon.server().registryAccess());
+            final StructureTemplatePool decoded = SpongeJigsawPoolTemplate.decode(json, SpongeCommon.vanillaRegistryAccess());
             return this.fromValue((JigsawPool) decoded);
         }
 

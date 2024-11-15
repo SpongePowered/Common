@@ -56,7 +56,7 @@ public record SpongeFeatureTemplate(ResourceKey key, ConfiguredFeature<?, ?> rep
 
     @Override
     public DataContainer toContainer() {
-        final JsonElement serialized = SpongeFeatureTemplate.encode(this, SpongeCommon.server().registryAccess());
+        final JsonElement serialized = SpongeFeatureTemplate.encode(this, SpongeCommon.vanillaRegistryAccess());
         try {
             return DataFormats.JSON.get().read(serialized.toString());
         } catch (IOException e) {
@@ -123,7 +123,7 @@ public record SpongeFeatureTemplate(ResourceKey key, ConfiguredFeature<?, ?> rep
         @Override
         public Builder fromDataPack(final DataView pack) throws IOException {
             final JsonElement json = JsonParser.parseString(DataFormats.JSON.get().write(pack));
-            final ConfiguredFeature<?, ?> feature = SpongeFeatureTemplate.decode(json, SpongeCommon.server().registryAccess());
+            final ConfiguredFeature<?, ?> feature = SpongeFeatureTemplate.decode(json, SpongeCommon.vanillaRegistryAccess());
             this.fromValue((Feature) (Object) feature);
             return this;
         }

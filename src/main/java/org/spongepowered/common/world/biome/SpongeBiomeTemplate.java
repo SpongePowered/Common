@@ -85,7 +85,7 @@ public record SpongeBiomeTemplate(ResourceKey key, Biome representedBiome, DataP
 
     @Override
     public DataContainer toContainer() {
-        final JsonElement serialized = SpongeBiomeTemplate.encode(this, SpongeCommon.server().registryAccess());
+        final JsonElement serialized = SpongeBiomeTemplate.encode(this, SpongeCommon.vanillaRegistryAccess());
         try {
             return DataFormats.JSON.get().read(serialized.toString());
         } catch (IOException e) {
@@ -154,7 +154,7 @@ public record SpongeBiomeTemplate(ResourceKey key, Biome representedBiome, DataP
         @Override
         public Builder fromDataPack(final DataView pack) throws IOException {
             final JsonElement json = JsonParser.parseString(DataFormats.JSON.get().write(pack));
-            final Biome biome = SpongeBiomeTemplate.decode(json, SpongeCommon.server().registryAccess());
+            final Biome biome = SpongeBiomeTemplate.decode(json, SpongeCommon.vanillaRegistryAccess());
             this.fromValue((org.spongepowered.api.world.biome.Biome) (Object) biome);
             return this;
         }

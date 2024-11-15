@@ -34,7 +34,7 @@ public final class SpongeDamageSourceFactory implements DamageSource.Factory {
 
     private DamageSources damageSources() {
         if (this.damageSources == null) {
-            this.damageSources = new DamageSources(SpongeCommon.server().registryAccess());
+            this.damageSources = new DamageSources(SpongeCommon.vanillaRegistryAccess());
         }
         return damageSources;
     }

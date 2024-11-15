@@ -58,7 +58,7 @@ public record SpongeCarverTemplate(ResourceKey key, ConfiguredWorldCarver<?> rep
 
     @Override
     public DataContainer toContainer() {
-        final JsonElement serialized = SpongeCarverTemplate.encode(this, SpongeCommon.server().registryAccess());
+        final JsonElement serialized = SpongeCarverTemplate.encode(this, SpongeCommon.vanillaRegistryAccess());
         try {
             return DataFormats.JSON.get().read(serialized.toString());
         } catch (IOException e) {
@@ -125,7 +125,7 @@ public record SpongeCarverTemplate(ResourceKey key, ConfiguredWorldCarver<?> rep
         @Override
         public Builder fromDataPack(final DataView pack) throws IOException {
             final JsonElement json = JsonParser.parseString(DataFormats.JSON.get().write(pack));
-            final ConfiguredWorldCarver<?> carver = SpongeCarverTemplate.decode(ConfiguredWorldCarver.DIRECT_CODEC, json, SpongeCommon.server().registryAccess());
+            final ConfiguredWorldCarver<?> carver = SpongeCarverTemplate.decode(ConfiguredWorldCarver.DIRECT_CODEC, json, SpongeCommon.vanillaRegistryAccess());
             this.fromValue((Carver) (Object) carver);
             return this;
         }

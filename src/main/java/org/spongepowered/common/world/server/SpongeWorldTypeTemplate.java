@@ -100,7 +100,7 @@ public record SpongeWorldTypeTemplate(
 
     @Override
     public DataContainer toContainer() {
-        final JsonElement serialized = SpongeWorldTypeTemplate.encode(this, SpongeCommon.server().registryAccess());
+        final JsonElement serialized = SpongeWorldTypeTemplate.encode(this, SpongeCommon.vanillaRegistryAccess());
         try {
             final DataContainer container = DataFormats.JSON.get().read(serialized.toString());
             container.set(Queries.CONTENT_VERSION, this.contentVersion());

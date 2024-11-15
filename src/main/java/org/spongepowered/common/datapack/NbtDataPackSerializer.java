@@ -50,7 +50,7 @@ public class NbtDataPackSerializer<T extends DataPackEntry<T>> extends DataPackS
 
     @Override
     public void serializeObject(final SpongeDataPack<CompoundTag, T> pack, final Path packDir, final T packEntry) throws IOException {
-        final CompoundTag serialized = this.encoder.encode(packEntry, SpongeCommon.server().registryAccess());
+        final CompoundTag serialized = this.encoder.encode(packEntry, SpongeCommon.vanillaRegistryAccess());
         final Path file = this.packEntryFile(pack.type(), packEntry.key(), packDir);
         Files.createDirectories(file.getParent());
         NbtDataPackSerializer.writeFile(file, serialized);
@@ -73,7 +73,7 @@ public class NbtDataPackSerializer<T extends DataPackEntry<T>> extends DataPackS
             final CompoundTag element = NbtIo.readCompressed(dis, NbtAccounter.unlimitedHeap());
             if (this.decoder != null) {
                 // TODO this is actually blocking
-                return this.decoder.decode(pack, key, element, SpongeCommon.server().registryAccess());
+                return this.decoder.decode(pack, key, element, SpongeCommon.vanillaRegistryAccess());
             }
         }
         return null;

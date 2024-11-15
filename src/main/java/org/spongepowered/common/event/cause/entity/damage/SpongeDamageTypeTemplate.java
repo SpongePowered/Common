@@ -62,7 +62,7 @@ public record SpongeDamageTypeTemplate(ResourceKey key, DamageType representedTy
 
     @Override
     public DataContainer toContainer() {
-        final JsonElement serialized = SpongeDamageTypeTemplate.encode(this, SpongeCommon.server().registryAccess());
+        final JsonElement serialized = SpongeDamageTypeTemplate.encode(this, SpongeCommon.vanillaRegistryAccess());
         try {
             return DataFormats.JSON.get().read(serialized.toString());
         } catch (IOException e) {
@@ -154,7 +154,7 @@ public record SpongeDamageTypeTemplate(ResourceKey key, DamageType representedTy
         @Override
         public Builder fromDataPack(final DataView pack) throws IOException {
             final JsonElement json = JsonParser.parseString(DataFormats.JSON.get().write(pack));
-            final DamageType damageType = SpongeDamageTypeTemplate.decode(json, SpongeCommon.server().registryAccess());
+            final DamageType damageType = SpongeDamageTypeTemplate.decode(json, SpongeCommon.vanillaRegistryAccess());
             this.fromValue((org.spongepowered.api.event.cause.entity.damage.DamageType) (Object) damageType);
             return this;
         }

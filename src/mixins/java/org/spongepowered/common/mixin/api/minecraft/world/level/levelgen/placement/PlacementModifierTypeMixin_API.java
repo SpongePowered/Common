@@ -48,7 +48,7 @@ public interface PlacementModifierTypeMixin_API<P extends net.minecraft.world.le
     default PlacementModifier configure(final DataView config) throws IllegalArgumentException {
         try {
             final JsonElement json = JsonParser.parseString(DataFormats.JSON.get().write(config));
-            final RegistryOps<JsonElement> ops = RegistryOps.create(JsonOps.INSTANCE, SpongeCommon.server().registryAccess());
+            final RegistryOps<JsonElement> ops = RegistryOps.create(JsonOps.INSTANCE, SpongeCommon.vanillaRegistryAccess());
             return (PlacementModifier) this.shadow$codec().codec().parse(ops, json).getOrThrow();
         } catch (Exception e) {
             throw new IllegalArgumentException("Could not configure PlacementModifier." , e);
