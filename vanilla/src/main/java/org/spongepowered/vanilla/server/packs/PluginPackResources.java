@@ -30,7 +30,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.AbstractPackResources;
 import net.minecraft.server.packs.PackLocationInfo;
 import net.minecraft.server.packs.PackType;
-import net.minecraft.server.packs.metadata.MetadataSectionSerializer;
+import net.minecraft.server.packs.metadata.MetadataSectionType;
 import net.minecraft.server.packs.metadata.pack.PackMetadataSection;
 import net.minecraft.server.packs.resources.IoSupplier;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -109,8 +109,8 @@ public final class PluginPackResources extends AbstractPackResources {
 
     @Nullable
     @Override
-    public <T> T getMetadataSection(final MetadataSectionSerializer<T> deserializer) throws IOException {
-        if (deserializer.getMetadataSectionName().equals("pack")) {
+    public <T> T getMetadataSection(final MetadataSectionType<T> deserializer) throws IOException {
+        if (deserializer.name().equals("pack")) {
             return (T) this.metadata;
         }
         return null;

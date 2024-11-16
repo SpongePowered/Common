@@ -39,6 +39,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.common.item.util.ItemStackUtil;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 @Mixin(Ingredient.class)
 @Implements(@Interface(iface = org.spongepowered.api.item.recipe.crafting.Ingredient.class, prefix = "ingredient$", remap = Remap.NONE))
@@ -46,11 +47,11 @@ public abstract class IngredientMixin_API {
 
     // @formatter:off
     @Shadow public abstract boolean shadow$test(@Nullable ItemStack p_test_1_);
-    @Shadow public abstract List<Holder<Item>> shadow$items();
+    @Shadow public abstract Stream<Holder<Item>> shadow$items();
     // @formatter:on
 
     public List<ItemType> ingredient$displayedItems() {
-        return this.shadow$items().stream().map((holder) -> (ItemType) holder.value()).toList();
+        return this.shadow$items().map((holder) -> (ItemType) holder.value()).toList();
     }
 
     public boolean ingredient$test(final ItemStackLike itemStack) {
