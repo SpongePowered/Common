@@ -265,9 +265,9 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
             this.shadow$teleport(new PositionMoveRotation(
                     VecHelper.toVanillaVector3d(fromPosition),
                     Vec3.ZERO,
-                    (float) toRotation.y(), (float) toRotation.x()
+                    (float) (toRotation.y() - originalToRotation.y()), (float) (toRotation.x() - originalToRotation.x())
                 ),
-                EnumSet.of(Relative.X_ROT, Relative.Y_ROT)
+                Relative.ROTATION
             );
             ci.cancel();
             return;
@@ -283,10 +283,11 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
             this.player.setXRot((float) originalToRotation.x());
             this.player.setYRot((float) originalToRotation.y());
             this.shadow$teleport(new PositionMoveRotation(
-                    VecHelper.toVanillaVector3d(toPosition),
+                    VecHelper.toVanillaVector3d(toPosition.sub(originalToPosition)),
                     Vec3.ZERO,
-                    (float) toRotation.y(), (float) toRotation.x()),
-                EnumSet.allOf(Relative.class));
+                    (float) (toRotation.y() - originalToRotation.y()), (float) (toRotation.x() - originalToRotation.x())
+                ),
+                Relative.ALL);
             ci.cancel();
         } else if (!toRotation.equals(originalToRotation)) {
             // Notify the client about the new rotation.
@@ -294,9 +295,12 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
             // The rotation values can be out of "valid" range so set them directly to the same value the client has.
             this.player.setXRot((float) originalToRotation.x());
             this.player.setYRot((float) originalToRotation.y());
-            this.shadow$teleport(fromPosition.x(), fromPosition.y(), fromPosition.z(),
-                (float) toRotation.y(), (float) toRotation.x(),
-                EnumSet.allOf(RelativeMovement.class));
+            this.shadow$teleport(new PositionMoveRotation(
+                    Vec3.ZERO,
+                    Vec3.ZERO,
+                    (float) (toRotation.y() - originalToRotation.y()), (float) (toRotation.x() - originalToRotation.x())
+                ),
+                EnumSet.of(Relative.X, Relative.Y, Relative.Z, Relative.X_ROT, Relative.Y_ROT, Relative.DELTA_X, Relative.DELTA_Y, Relative.DELTA_Z));
 
             // Let MC handle the movement but override the rotation.
             ((ServerboundMovePlayerPacketAccessor) packetIn).accessor$yRot((float) toRotation.y());
