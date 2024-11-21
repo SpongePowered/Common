@@ -30,6 +30,8 @@ import org.spongepowered.configurate.hocon.HoconConfigurationLoader;
 import org.spongepowered.configurate.loader.ConfigurationLoader;
 import org.spongepowered.configurate.objectmapping.ObjectMapper;
 import org.spongepowered.configurate.objectmapping.meta.NodeResolver;
+import org.spongepowered.libs.LibraryManager;
+import org.spongepowered.vanilla.installer.library.TinyLogger;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -56,6 +58,7 @@ public final class Installer {
                 .build();
         this.config = this.loadConfig();
         this.libraryManager = new LibraryManager(
+            TinyLogger.INSTANCE,
             this.config.checkLibraryHashes,
             Paths.get(this.config.librariesDirectory.replace("${BASE_DIRECTORY}", directory.toAbsolutePath().toString())),
             this.getClass().getResource("/libraries.json")

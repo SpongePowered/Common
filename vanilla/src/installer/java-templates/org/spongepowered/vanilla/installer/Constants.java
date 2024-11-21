@@ -34,9 +34,6 @@ public final class Constants {
         public static final String MINECRAFT_SERVER_JAR_NAME = "minecraft_server";
         public static final String MINECRAFT_MAPPINGS_PREFIX = Libraries.MINECRAFT_PATH_PREFIX + "/mappings";
         public static final String MINECRAFT_MAPPINGS_NAME = "server.txt";
-
-        public static final String SPONGE_NEXUS_DOWNLOAD_URL = "https://repo.spongepowered.org/service/rest/v1/search/assets?md5=%s&maven"
-            + ".groupId=%s&maven.artifactId=%s&maven.baseVersion=%s&maven.extension=jar";
     }
 
     public static final class ManifestAttributes {

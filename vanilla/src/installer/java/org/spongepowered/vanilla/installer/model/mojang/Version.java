@@ -25,64 +25,22 @@
 package org.spongepowered.vanilla.installer.model.mojang;
 
 import java.net.URL;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-public final class Version {
+public record Version(AssetIndex assetIndex, String assets, Downloads downloads, String id,
+                      List<Library> libraries, String mainClass, VersionType type, String releaseTime, String time) {
 
-    public AssetIndex assetIndex;
-    public String assets;
-    public Downloads downloads;
-    public String id;
-    public List<Library> libraries;
-    public String mainClass;
-    @SuppressWarnings("UseOfObsoleteDateTimeApi")
-    public Date releaseTime;
-    @SuppressWarnings("UseOfObsoleteDateTimeApi")
-    public Date time;
-    public VersionManifest.Version.Type type;
+    public record AssetIndex(String id, String sha1, int size, int totalSize, URL url) {}
 
-    public static class AssetIndex {
-
-        public String id;
-        public String sha1;
-        public int size;
-        public int totalSize;
-        public URL url;
-    }
-
-    public static class Downloads {
-
-        public Download client;
-        public Download client_mappings;
-        public Download server;
-        public Download server_mappings;
-
-        public static class Download {
-
-            public String sha1;
-            public int size;
-            public URL url;
+    public record Downloads(Download client, Download client_mappings, Download server, Download server_mappings) {
+        public record Download(String sha1, int size, URL url) {
         }
     }
 
-    public static class Library {
-
-        public org.spongepowered.vanilla.installer.model.mojang.Version.Library.Downloads downloads;
-        public String name;
-
-        public static class Downloads {
-
-            public Artifact artifact;
-            public Map<String, Artifact> classifiers;
-
-            public static class Artifact {
-
-                public String path;
-                public String sha1;
-                public int size;
-                public URL url;
+    public record Library(Library.Downloads downloads, String name) {
+        public record Downloads(Artifact artifact, Map<String, Artifact> classifiers) {
+            public record Artifact(String path, String sha1, int size, URL url) {
             }
         }
     }

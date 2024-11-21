@@ -54,35 +54,20 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 public abstract class OutputDependenciesToJson extends DefaultTask {
 
-    // From http://stackoverflow.com/questions/9655181/convert-from-byte-array-to-hex-string-in-java
-    private static final char[] hexArray = "0123456789abcdef".toCharArray();
+    private static final char[] hexChars = "0123456789abcdef".toCharArray();
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
     /**
      * A single dependency.
      */
-    static final class DependencyDescriptor implements Comparable<DependencyDescriptor> {
-
-        final String group;
-        final String module;
-        final String version;
-        final String md5;
-
-        DependencyDescriptor(final String group, final String module, final String version, final String md5) {
-            this.group = group;
-            this.module = module;
-            this.version = version;
-            this.md5 = md5;
-        }
-
+    record DependencyDescriptor(String group, String module, String version, String sha512) implements Comparable<DependencyDescriptor> {
         @Override
         public int compareTo(final DependencyDescriptor that) {
             final int group = this.group.compareTo(that.group);
@@ -97,35 +82,6 @@ public abstract class OutputDependenciesToJson extends DefaultTask {
 
             return this.version.compareTo(that.version);
         }
-
-        @Override
-        public boolean equals(final Object other) {
-            if (this == other) {
-                return true;
-            }
-            if (other == null || this.getClass() != other.getClass()) {
-                return false;
-            }
-            final DependencyDescriptor that = (DependencyDescriptor) other;
-            return Objects.equals(this.group, that.group)
-                && Objects.equals(this.module, that.module)
-                && Objects.equals(this.version, that.version);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(this.group, this.module, this.version);
-        }
-
-        @Override
-        public String toString() {
-            return "DependencyDescriptor{" +
-                "group='" + this.group + '\'' +
-                ", module='" + this.module + '\'' +
-                ", version='" + this.version + '\'' +
-                ", md5='" + this.md5 + '\'' +
-                '}';
-        }
     }
 
     /**
@@ -134,14 +90,7 @@ public abstract class OutputDependenciesToJson extends DefaultTask {
      * <p>At runtime, transitive dependencies won't be traversed, so this needs to
      * include direct + transitive depends.</p>
      */
-    static final class DependencyManifest {
-
-        final Map<String, List<DependencyDescriptor>> dependencies;
-
-        DependencyManifest(final Map<String, List<DependencyDescriptor>> dependencies) {
-            this.dependencies = dependencies;
-        }
-    }
+    record DependencyManifest(Map<String, List<DependencyDescriptor>> dependencies) {}
 
     /**
      * Configuration to gather dependency artifacts from.
@@ -225,27 +174,28 @@ public abstract class OutputDependenciesToJson extends DefaultTask {
             .map(dependency -> {
                 final ModuleComponentIdentifier id = (ModuleComponentIdentifier) dependency.getId().getComponentIdentifier();
 
-                // Get file input stream for reading the file content
-                final String md5hash;
+                final MessageDigest digest;
+                try {
+                    digest = MessageDigest.getInstance("SHA-512");
+                } catch (final NoSuchAlgorithmException e) {
+                    throw new GradleException("Failed to find digest algorithm", e);
+                }
+
                 try (final InputStream in = Files.newInputStream(dependency.getFile().toPath())) {
-                    final MessageDigest hasher = MessageDigest.getInstance("MD5");
                     final byte[] buf = new byte[4096];
                     int read;
                     while ((read = in.read(buf)) != -1) {
-                        hasher.update(buf, 0, read);
+                        digest.update(buf, 0, read);
                     }
-
-                    md5hash = OutputDependenciesToJson.toHexString(hasher.digest());
-                } catch (final IOException | NoSuchAlgorithmException ex) {
-                    throw new GradleException("Failed to create hash for " + dependency, ex);
+                } catch (final IOException e) {
+                    throw new GradleException("Failed to digest file for " + dependency, e);
                 }
 
-                // create descriptor
                 return new DependencyDescriptor(
                     id.getGroup(),
                     id.getModule(),
                     id.getVersion(),
-                    md5hash
+                    OutputDependenciesToJson.toHexString(digest.digest())
                 );
             })
             .sorted(Comparator.naturalOrder()) // sort dependencies for stable output
@@ -253,13 +203,13 @@ public abstract class OutputDependenciesToJson extends DefaultTask {
     }
 
     public static String toHexString(final byte[] bytes) {
-        final char[] hexChars = new char[bytes.length * 2];
-        for (int j = 0; j < bytes.length; j++) {
-            final int v = bytes[j] & 0xFF;
-            hexChars[j * 2] = OutputDependenciesToJson.hexArray[v >>> 4];
-            hexChars[j * 2 + 1] = OutputDependenciesToJson.hexArray[v & 0x0F];
+        final char[] chars = new char[bytes.length << 1];
+        int i = 0;
+        for (final byte b : bytes) {
+            chars[i++] = OutputDependenciesToJson.hexChars[(b >> 4) & 15];
+            chars[i++] = OutputDependenciesToJson.hexChars[b & 15];
         }
-        return new String(hexChars);
+        return new String(chars);
     }
 
     public static class ConfigurationHolder {
@@ -274,7 +224,7 @@ public abstract class OutputDependenciesToJson extends DefaultTask {
             return this.getArtifacts().map(set -> set.stream()
               .map(art -> art.getId().getComponentIdentifier())
               .filter(id -> id instanceof ModuleComponentIdentifier)
-              .map(art -> art.getDisplayName())
+              .map(ComponentIdentifier::getDisplayName)
               .collect(Collectors.toSet()));
         }
 

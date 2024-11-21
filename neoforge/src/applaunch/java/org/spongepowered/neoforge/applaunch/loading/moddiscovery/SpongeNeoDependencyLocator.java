@@ -35,7 +35,8 @@ import net.neoforged.neoforgespi.locating.IModFile;
 import net.neoforged.neoforgespi.locating.ModFileDiscoveryAttributes;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.spongepowered.neoforge.applaunch.loading.moddiscovery.library.LibraryManager;
+import org.spongepowered.libs.LibraryManager;
+import org.spongepowered.neoforge.applaunch.loading.moddiscovery.library.Log4JLogger;
 import org.spongepowered.neoforge.applaunch.transformation.SpongeNeoTransformationService;
 
 import java.nio.file.Path;
@@ -52,6 +53,7 @@ public class SpongeNeoDependencyLocator implements IDependencyLocator {
 
         final Environment env = Launcher.INSTANCE.environment();
         LibraryManager libraryManager = new LibraryManager(
+            new Log4JLogger(LogManager.getLogger(LibraryManager.class)),
             env.getProperty(SpongeNeoTransformationService.Keys.CHECK_LIBRARY_HASHES.get()).orElse(true),
             env.getProperty(SpongeNeoTransformationService.Keys.LIBRARIES_DIRECTORY.get())
                 .orElseThrow(() -> new IllegalStateException("no libraries available")),
@@ -66,8 +68,8 @@ public class SpongeNeoDependencyLocator implements IDependencyLocator {
         libraryManager.finishedProcessing();
 
         final ModFileDiscoveryAttributes attributes = ModFileDiscoveryAttributes.DEFAULT.withDependencyLocator(this);
-        for (final LibraryManager.Library library : libraryManager.getAll().values()) {
-            final Path path = library.getFile();
+        for (final LibraryManager.Library library : libraryManager.getAll("main")) {
+            final Path path = library.file();
             SpongeNeoDependencyLocator.LOGGER.debug("Proposing jar {} as a game library", path);
 
             pipeline.addModFile(IModFile.create(SecureJar.from(path), JarModsDotTomlModFileReader::manifestParser, IModFile.Type.GAMELIBRARY, attributes));

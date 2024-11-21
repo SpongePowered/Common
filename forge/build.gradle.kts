@@ -18,7 +18,8 @@ plugins {
 }
 
 val commonProject = parent!!
-val transformersProject = parent!!.project(":modlauncher-transformers")
+val transformersProject = commonProject.project(":modlauncher-transformers")
+val libraryManagerProject = commonProject.project(":library-manager")
 val testPluginsProject: Project? = rootProject.subprojects.find { "testplugins" == it.name }
 
 val apiVersion: String by project
@@ -211,6 +212,7 @@ dependencies {
     service(project(transformersProject.path)) {
         exclude(group = "cpw.mods", module = "modlauncher")
     }
+    service(project(libraryManagerProject.path))
     service(platform(apiLibs.configurate.bom))
     service(apiLibs.configurate.core) {
         exclude(group = "org.checkerframework", module = "checker-qual")
@@ -232,6 +234,7 @@ dependencies {
 
     val serviceShadedLibraries = serviceShadedLibrariesConfig.name
     serviceShadedLibraries(project(transformersProject.path)) { isTransitive = false }
+    serviceShadedLibraries(project(libraryManagerProject.path)) { isTransitive = false }
 
     val gameShadedLibraries = gameShadedLibrariesConfig.name
     gameShadedLibraries("org.spongepowered:spongeapi:$apiVersion") { isTransitive = false }

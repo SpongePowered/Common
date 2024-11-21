@@ -24,65 +24,10 @@
  */
 package org.spongepowered.vanilla.installer.model.mojang;
 
-import com.google.gson.annotations.SerializedName;
-
 import java.net.URL;
-import java.util.Date;
 import java.util.List;
-import java.util.Objects;
 
-public final class VersionManifest {
-
-    public Latest latest;
-    public List<Version> versions;
-
-    public static class Latest {
-
-        public String snapshot;
-        public String release;
-    }
-
-    public static class Version {
-
-        public String id;
-        public Type type;
-        public URL url;
-        @SuppressWarnings("UseOfObsoleteDateTimeApi")
-        public Date time;
-        @SuppressWarnings("UseOfObsoleteDateTimeApi")
-        public Date releaseTime;
-
-        @Override
-        public boolean equals(final Object other) {
-            if (this == other) {
-                return true;
-            }
-            if (other == null || this.getClass() != other.getClass()) {
-                return false;
-            }
-            final Version that = (Version) other;
-            return Objects.equals(this.id, that.id) && Objects.equals(this.type, that.type);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(this.id, this.type);
-        }
-
-        @Override
-        public String toString() {
-            return this.type + ": " + this.id;
-        }
-
-        public enum Type {
-            @SerializedName("old_alpha")
-            OLD_ALPHA,
-            @SerializedName("old_beta")
-            OLD_BETA,
-            @SerializedName("release")
-            RELEASE,
-            @SerializedName("snapshot")
-            SNAPSHOT
-        }
-    }
+public record VersionManifest(Latest latest, List<Version> versions) {
+    public record Latest(String snapshot, String release) {}
+    public record Version(String id, VersionType type, URL url, String time, String releaseTime) {}
 }

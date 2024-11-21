@@ -22,31 +22,33 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.spongepowered.vanilla.installer;
+package org.spongepowered.neoforge.applaunch.loading.moddiscovery.library;
 
-import java.util.concurrent.Callable;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
+import org.spongepowered.libs.Logger;
 
-final class AsyncUtils {
+public final class Log4JLogger implements Logger {
+    private final org.apache.logging.log4j.Logger delegate;
 
-    private AsyncUtils() {
+    public Log4JLogger(final org.apache.logging.log4j.Logger delegate) {
+        this.delegate = delegate;
     }
 
-    static <T> CompletableFuture<T> asyncFailableFuture(final Callable<T> action, final Executor executor) {
-        final CompletableFuture<T> future = new CompletableFuture<>();
-        executor.execute(() -> {
-            try {
-                future.complete(action.call());
-            } catch (final Exception ex) {
-                future.completeExceptionally(ex);
-            }
-        });
-        return future;
+    @Override
+    public void log(final Level level, final String message, final Object... args) {
+        this.delegate.log(this.convertLevel(level), message, args);
     }
 
-    @SuppressWarnings("unchecked")
-    static <T extends Throwable, R> R sneakyThrow(final Throwable original) throws T {
-        throw (T) original;
+    @Override
+    public void log(final Level level, final String message, final Throwable throwable) {
+        this.delegate.log(this.convertLevel(level), message, throwable);
+    }
+
+    private org.apache.logging.log4j.Level convertLevel(final Level level) {
+        return switch (level) {
+            case DEBUG -> org.apache.logging.log4j.Level.DEBUG;
+            case INFO -> org.apache.logging.log4j.Level.INFO;
+            case WARN -> org.apache.logging.log4j.Level.WARN;
+            case ERROR -> org.apache.logging.log4j.Level.ERROR;
+        };
     }
 }

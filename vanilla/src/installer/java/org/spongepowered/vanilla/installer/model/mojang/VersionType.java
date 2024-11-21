@@ -22,31 +22,17 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.spongepowered.neoforge.applaunch.loading.moddiscovery.library;
+package org.spongepowered.vanilla.installer.model.mojang;
 
-import java.util.concurrent.Callable;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
+import com.google.gson.annotations.SerializedName;
 
-final class AsyncUtils {
-
-    private AsyncUtils() {
-    }
-
-    static <T> CompletableFuture<T> asyncFailableFuture(final Callable<T> action, final Executor executor) {
-        final CompletableFuture<T> future = new CompletableFuture<>();
-        executor.execute(() -> {
-            try {
-                future.complete(action.call());
-            } catch (final Exception ex) {
-                future.completeExceptionally(ex);
-            }
-        });
-        return future;
-    }
-
-    @SuppressWarnings("unchecked")
-    static <T extends Throwable, R> R sneakyThrow(final Throwable original) throws T {
-        throw (T) original;
-    }
+public enum VersionType {
+    @SerializedName("old_alpha")
+    OLD_ALPHA,
+    @SerializedName("old_beta")
+    OLD_BETA,
+    @SerializedName("release")
+    RELEASE,
+    @SerializedName("snapshot")
+    SNAPSHOT
 }
