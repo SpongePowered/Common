@@ -6,6 +6,7 @@ plugins {
 indra {
     javaVersions {
         strictVersions(false) // it's just buildscript, no need for anything fancy
+        target(17)
     }
 }
 

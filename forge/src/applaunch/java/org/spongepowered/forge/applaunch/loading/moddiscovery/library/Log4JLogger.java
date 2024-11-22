@@ -22,36 +22,33 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.spongepowered.vanilla.installer.model.sponge;
+package org.spongepowered.forge.applaunch.loading.moddiscovery.library;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import org.spongepowered.libs.Logger;
 
-public final class Libraries {
+public final class Log4JLogger implements Logger {
+    private final org.apache.logging.log4j.Logger delegate;
 
-    public Map<String, List<Dependency>> dependencies;
+    public Log4JLogger(final org.apache.logging.log4j.Logger delegate) {
+        this.delegate = delegate;
+    }
 
-    public static final class Dependency {
+    @Override
+    public void log(final Level level, final String message, final Object... args) {
+        this.delegate.log(this.convertLevel(level), message, args);
+    }
 
-        public String group, module, version, md5;
+    @Override
+    public void log(final Level level, final String message, final Throwable throwable) {
+        this.delegate.log(this.convertLevel(level), message, throwable);
+    }
 
-        @Override
-        public int hashCode() {
-            return Objects.hash(this.group, this.module);
-        }
-
-        @Override
-        public boolean equals(final Object o) {
-            if (this == o) {
-                return true;
-            }
-            if (o == null || this.getClass() != o.getClass()) {
-                return false;
-            }
-            final Dependency that = (Dependency) o;
-            return this.group.equals(that.group) &&
-                this.module.equals(that.module);
-        }
+    private org.apache.logging.log4j.Level convertLevel(final Level level) {
+        return switch (level) {
+            case DEBUG -> org.apache.logging.log4j.Level.DEBUG;
+            case INFO -> org.apache.logging.log4j.Level.INFO;
+            case WARN -> org.apache.logging.log4j.Level.WARN;
+            case ERROR -> org.apache.logging.log4j.Level.ERROR;
+        };
     }
 }

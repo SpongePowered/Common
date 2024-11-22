@@ -183,6 +183,9 @@ public final class ItemStackData {
                             return true;
                         })
                         .supports(h -> !h.has(DataComponents.MAX_DAMAGE))
+                    .create(Keys.MODEL)
+                        .get(stack -> (ResourceKey) (Object) stack.get(DataComponents.ITEM_MODEL))
+                        .set((stack, model) -> stack.set(DataComponents.ITEM_MODEL, (ResourceLocation) (Object) model))
                     .create(Keys.ITEM_DURABILITY)
                         .get(stack -> stack.getMaxDamage() - stack.getDamageValue())
                         .set((stack, durability) -> stack.setDamageValue(stack.getMaxDamage() - durability))

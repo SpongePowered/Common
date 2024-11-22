@@ -53,18 +53,44 @@ abstract class ChunkHolderMixin extends GenerationChunkHolderMixin {
     @Shadow public abstract CompletableFuture<ChunkResult<LevelChunk>> shadow$getEntityTickingChunkFuture();
     // @formatter:on
 
+    private LevelChunk impl$loadedChunk;
+
     /**
      * After onFullChunkStatusChange
      */
     @Inject(method = "lambda$scheduleFullChunkPromotion$4", at = @At("TAIL"))
     private void impl$onScheduleFullChunkPromotion(final ChunkMap $$0x, final FullChunkStatus $$1x, final CallbackInfo ci) {
-        if ($$1x == FullChunkStatus.ENTITY_TICKING && ShouldFire.CHUNK_EVENT_LOAD) {
+        if ($$1x == FullChunkStatus.ENTITY_TICKING) {
             this.shadow$getEntityTickingChunkFuture().getNow(ChunkHolder.UNLOADED_LEVEL_CHUNK).ifSuccess(chunk -> {
-                final Vector3i chunkPos = VecHelper.toVector3i(chunk.getPos());
-                final ChunkEvent.Load event = SpongeEventFactory.createChunkEventLoad(PhaseTracker.getInstance().currentCause(),
+                this.impl$loadedChunk = chunk;
+                if (ShouldFire.CHUNK_EVENT_LOAD) {
+                    final Vector3i chunkPos = VecHelper.toVector3i(chunk.getPos());
+                    final ChunkEvent.Load event = SpongeEventFactory.createChunkEventLoad(PhaseTracker.getInstance().currentCause(),
                         (WorldChunk) chunk, chunkPos, (ResourceKey) (Object) chunk.getLevel().dimension().location());
-                SpongeCommon.post(event);
+                    SpongeCommon.post(event);
+                }
             });
         }
+    }
+
+    @Inject(method = "demoteFullChunk", at = @At("HEAD"))
+    private void impl$onDemoteFullChunkPre(final ChunkMap $$0x, final FullChunkStatus $$1x, final CallbackInfo ci) {
+        if (this.impl$loadedChunk != null && ShouldFire.CHUNK_EVENT_UNLOAD_PRE) {
+            final Vector3i chunkPos = VecHelper.toVector3i(this.impl$loadedChunk.getPos());
+            final ChunkEvent.Unload event = SpongeEventFactory.createChunkEventUnloadPre(PhaseTracker.getInstance().currentCause(),
+                (WorldChunk) this.impl$loadedChunk, chunkPos, (ResourceKey) (Object) this.impl$loadedChunk.getLevel().dimension().location());
+            SpongeCommon.post(event);
+        }
+    }
+
+    @Inject(method = "demoteFullChunk", at = @At("TAIL"))
+    private void impl$onDemoteFullChunkPost(final ChunkMap $$0x, final FullChunkStatus $$1x, final CallbackInfo ci) {
+        if (this.impl$loadedChunk != null && ShouldFire.CHUNK_EVENT_UNLOAD_POST) {
+            final Vector3i chunkPos = VecHelper.toVector3i(this.impl$loadedChunk.getPos());
+            final ChunkEvent.Unload event = SpongeEventFactory.createChunkEventUnloadPost(PhaseTracker.getInstance().currentCause(), chunkPos,
+                (ResourceKey) (Object) this.impl$loadedChunk.getLevel().dimension().location());
+            SpongeCommon.post(event);
+        }
+        this.impl$loadedChunk = null;
     }
 }

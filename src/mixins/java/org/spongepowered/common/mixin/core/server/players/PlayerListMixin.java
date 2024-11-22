@@ -680,4 +680,12 @@ public abstract class PlayerListMixin implements PlayerListBridge {
             ci.cancel();
         }
     }
+
+    @Redirect(method = "remove", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;hasExactlyOnePlayerPassenger()Z"))
+    private boolean impl$skipUnserializableRootVehicle(final Entity instance) {
+        //Intentionally only checking for the entity type and
+        //not for the TRANSIENT key. This ensures that arbitrary
+        //entities are removed with the player but players are ignored.
+        return instance.hasExactlyOnePlayerPassenger() && instance.getType().canSerialize();
+    }
 }

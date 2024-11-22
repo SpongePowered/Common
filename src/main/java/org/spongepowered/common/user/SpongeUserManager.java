@@ -28,7 +28,6 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.world.level.storage.LevelResource;
 import net.minecraft.world.level.storage.PlayerDataStorage;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -40,7 +39,6 @@ import org.spongepowered.api.profile.GameProfile;
 import org.spongepowered.api.profile.GameProfileCache;
 import org.spongepowered.api.user.UserManager;
 import org.spongepowered.common.SpongeCommon;
-import org.spongepowered.common.accessor.server.MinecraftServerAccessor;
 import org.spongepowered.common.accessor.server.players.PlayerListAccessor;
 import org.spongepowered.common.accessor.world.level.storage.PlayerDataStorageAccessor;
 import org.spongepowered.common.entity.player.SpongeUserData;
@@ -48,17 +46,10 @@ import org.spongepowered.common.entity.player.SpongeUserView;
 import org.spongepowered.common.profile.SpongeGameProfile;
 
 import java.io.IOException;
-import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardWatchEventKinds;
-import java.nio.file.WatchEvent;
-import java.nio.file.WatchKey;
-import java.nio.file.WatchService;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -76,14 +67,11 @@ public final class SpongeUserManager implements UserManager {
 
     public static final UUID FAKEPLAYER_UUID = UUID.fromString("41C82C87-7AFB-4024-BA57-13D2C99CAE77");
 
-    // This is the important set - this tells us if a User file actually exists,
-    // it should mirror the filesystem.
-    private final Set<UUID> knownUUIDs = new HashSet<>();
+    private final SpongeUserFileCache userFileCache;
     private final Cache<UUID, SpongeUserData> userCache = Caffeine.newBuilder()
             .expireAfterAccess(1, TimeUnit.HOURS)
             .build();
     private final Set<SpongeUserData> dirtyUsers = ConcurrentHashMap.newKeySet();
-    private final Map<String, SpongeUserMutableWatchEvent> watcherUpdateMap = new HashMap<>();
 
     private final MinecraftServer server;
     private final ExecutorService executorService = Executors.newSingleThreadExecutor(new ThreadFactoryBuilder()
@@ -91,16 +79,13 @@ public final class SpongeUserManager implements UserManager {
             .setNameFormat("Sponge-User-Data-Loader")
             .build());
 
-    private @Nullable WatchService filesystemWatchService = null;
-    private @Nullable WatchKey watchKey = null;
-
     public SpongeUserManager(final MinecraftServer server) {
         this.server = server;
+        this.userFileCache = new SpongeUserFileCache(this::getSaveHandlerDirectory);
     }
 
     public void init() {
-        this.refreshFilesystemProfiles();
-        this.setupWatchers();
+        this.userFileCache.init();
     }
 
     @Override
@@ -128,18 +113,18 @@ public final class SpongeUserManager implements UserManager {
         if (currentUser != null) {
             return CompletableFuture.completedFuture(SpongeUserView.create(uuidToUse));
         }
+        if (!always && !this.userFileCache.contains(uuidToUse)) {
+            return CompletableFuture.completedFuture(null);
+        }
         return CompletableFuture.supplyAsync(() -> {
-            if (always || this.knownUUIDs.contains(uuidToUse)) {
-                final com.mojang.authlib.@Nullable GameProfile profile = this.server.getProfileCache().get(uuidToUse)
-                    .orElseGet(() -> new com.mojang.authlib.GameProfile(uuidToUse, null));
-                try {
-                    this.createUser(profile);
-                } catch (final IOException e) {
-                    throw new CompletionException(e);
-                }
-                return SpongeUserView.create(uuidToUse);
+            final com.mojang.authlib.@Nullable GameProfile profile = this.server.getProfileCache().get(uuidToUse)
+                .orElseGet(() -> new com.mojang.authlib.GameProfile(uuidToUse, null));
+            try {
+                this.createUser(profile);
+            } catch (final IOException e) {
+                throw new CompletionException(e);
             }
-            return null;
+            return SpongeUserView.create(uuidToUse);
         }, this.executorService);
     }
 
@@ -173,7 +158,7 @@ public final class SpongeUserManager implements UserManager {
     @Override
     public Stream<GameProfile> streamAll() {
         final GameProfileCache cache = ((Server) this.server).gameProfileManager().cache();
-        return this.knownUUIDs.stream().map(x -> cache.findById(x).orElseGet(() -> GameProfile.of(x)));
+        return this.userFileCache.knownUUIDs().map(x -> cache.findById(x).orElseGet(() -> GameProfile.of(x)));
     }
 
     @Override
@@ -271,10 +256,9 @@ public final class SpongeUserManager implements UserManager {
     }
 
     private void createUser(final com.mojang.authlib.GameProfile profile) throws IOException {
-        this.pollFilesystemWatcher();
         final @Nullable SpongeUserData user = SpongeUserData.create(profile);
         this.userCache.put(profile.getId(), user);
-        this.knownUUIDs.add(profile.getId());
+        this.userFileCache.userCreated(profile.getId());
     }
 
     public void markDirty(final SpongeUserData user) {
@@ -283,131 +267,6 @@ public final class SpongeUserManager implements UserManager {
                     .error("User {} is either online or the data has has dropped out of the cache and will not be saved.", user.uniqueId());
         } else {
             this.dirtyUsers.add(user);
-        }
-    }
-
-    // -- Directory Watching
-
-    void setupWatchers() {
-        this.teardownWatchers();
-        // Setup the watch service
-        try {
-            this.filesystemWatchService = FileSystems.getDefault().newWatchService();
-            this.watchKey = this.getSaveHandlerDirectory().register(
-                    this.filesystemWatchService,
-                    StandardWatchEventKinds.ENTRY_CREATE,
-                    StandardWatchEventKinds.ENTRY_DELETE);
-        } catch (final IOException e) {
-            SpongeCommon.logger().warn("Could not start file watcher");
-            if (this.filesystemWatchService != null) {
-                // it might be the watchKey that failed, so null it out again.
-                try {
-                    this.filesystemWatchService.close();
-                } catch (final IOException ex) {
-                    // ignored
-                }
-            }
-            this.watchKey = null;
-            this.filesystemWatchService = null;
-        }
-    }
-
-    void teardownWatchers() {
-        if (this.watchKey != null) {
-            this.watchKey.cancel();
-            this.watchKey = null;
-        }
-
-        if (this.filesystemWatchService != null) {
-            try {
-                this.filesystemWatchService.close();
-            } catch (final IOException e) {
-                // ignored - we're nulling this anyway
-            } finally {
-                this.filesystemWatchService = null;
-            }
-        }
-    }
-
-    void refreshFilesystemProfiles() {
-        if (this.watchKey != null && this.watchKey.isValid()) {
-            this.watchKey.reset();
-        }
-        this.knownUUIDs.clear();
-        this.userCache.invalidateAll();
-
-        // Add all known profiles from the data files
-        final Path playerDataDir = ((MinecraftServerAccessor) this.server).accessor$storageSource().getLevelPath(LevelResource.PLAYER_DATA_DIR);
-        if (Files.isDirectory(playerDataDir)) {
-            try (Stream<Path> list = Files.list(playerDataDir)) {
-                list.map(Path::toString)
-                        .filter(file -> file.endsWith(".dat")) // only .dat files
-                        .map(file -> file.substring(0, file.length() - 4))
-                        .filter(uuid -> !uuid.contains(".")) // fail fast for invalid uuid
-                        .map(playerUuid -> {
-                            try {
-                                return UUID.fromString(playerUuid);
-                            } catch (final Exception ex) {
-                                return null;
-                            }
-                        })
-                        .filter(Objects::nonNull)
-                        .forEach(this.knownUUIDs::add);
-            } catch (IOException e) {
-                SpongeCommon.logger().error("Failed to get player files");
-            }
-        }
-    }
-
-    private void pollFilesystemWatcher() {
-        if (this.watchKey == null || !this.watchKey.isValid()) {
-            // Reboot this if it's somehow failed.
-            this.refreshFilesystemProfiles();
-            this.setupWatchers();
-            return;
-        }
-        // We've already got the UUIDs, so we need to just see if the file system
-        // watcher has found any more (or removed any).
-        synchronized (this.watcherUpdateMap) {
-            this.watcherUpdateMap.clear();
-            for (final WatchEvent<?> event : this.watchKey.pollEvents()) {
-                @SuppressWarnings("unchecked") final WatchEvent<Path> ev = (WatchEvent<Path>) event;
-                final @Nullable Path file = ev.context();
-
-                // It is possible that the context is null, in which case, ignore it.
-                if (file != null) {
-                    final String filename = file.getFileName().toString();
-
-                    // We don't determine the UUIDs yet, we'll only do that if we need to.
-                    this.watcherUpdateMap.computeIfAbsent(filename, f -> new SpongeUserMutableWatchEvent()).set(ev.kind());
-                }
-            }
-
-            // Now we know what the final result is, we can act upon it.
-            for (final Map.Entry<String, SpongeUserMutableWatchEvent> entry : this.watcherUpdateMap.entrySet()) {
-                final WatchEvent.Kind<?> kind = entry.getValue().get();
-                if (kind != null) {
-                    final String name = entry.getKey();
-                    final UUID uuid;
-                    if (name.endsWith(".dat")) {
-                        try {
-                            uuid = UUID.fromString(name.substring(0, name.length() - 4));
-
-                            // It will only be create or delete here.
-                            if (kind == StandardWatchEventKinds.ENTRY_CREATE) {
-                                this.knownUUIDs.add(uuid);
-                            } else {
-                                this.knownUUIDs.remove(uuid);
-                                // We don't do this, in case we were caught at a bad time.
-                                // Everything else should handle it for us, however.
-                                // this.userCache.invalidate(uuid);
-                            }
-                        } catch (final IllegalArgumentException ex) {
-                            // ignored, file isn't of use to us.
-                        }
-                    }
-                }
-            }
         }
     }
 

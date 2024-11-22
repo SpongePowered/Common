@@ -30,6 +30,7 @@ import org.spongepowered.api.ResourceKey;
 import org.spongepowered.api.registry.RegistryKey;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -37,7 +38,7 @@ import java.util.function.Supplier;
 
 public final class RegistryLoader<T> extends InitialRegistryData<T> {
 
-    private final Map<ResourceKey, T> values = new HashMap<>();
+    private final Map<ResourceKey, T> values = new LinkedHashMap<>();
     private @MonotonicNonNull Map<ResourceKey, Integer> ids;
 
     private RegistryLoader() {

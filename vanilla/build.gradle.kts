@@ -9,7 +9,8 @@ plugins {
 }
 
 val commonProject = parent!!
-val transformersProject = parent!!.project(":modlauncher-transformers")
+val transformersProject = commonProject.project(":modlauncher-transformers")
+val libraryManagerProject = commonProject.project(":library-manager")
 val testPluginsProject: Project? = rootProject.subprojects.find { "testplugins" == it.name }
 
 val apiVersion: String by project
@@ -163,6 +164,8 @@ dependencies {
         exclude(group = "net.sf.jopt-simple")
         exclude(group = "org.ow2.asm")
     }
+
+    installer(project(libraryManagerProject.path))
 
     val init = initLibrariesConfig.name
     init(libs.securemodules)

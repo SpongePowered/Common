@@ -22,35 +22,33 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.spongepowered.common.user;
+package org.spongepowered.neoforge.applaunch.loading.moddiscovery.library;
 
-import java.nio.file.StandardWatchEventKinds;
-import java.nio.file.WatchEvent;
+import org.spongepowered.libs.Logger;
 
-// Used to reduce the number of calls to maps.
-final class SpongeUserMutableWatchEvent {
+public final class Log4JLogger implements Logger {
+    private final org.apache.logging.log4j.Logger delegate;
 
-    private WatchEvent.Kind<?> kind = null;
-
-    public WatchEvent.Kind<?> get() {
-        return this.kind;
+    public Log4JLogger(final org.apache.logging.log4j.Logger delegate) {
+        this.delegate = delegate;
     }
 
-    public void set(WatchEvent.Kind<?> kind) {
-        if (kind == StandardWatchEventKinds.ENTRY_MODIFY) {
-            // This should never happen, we don't listen to this.
-            // However, if it does, treat it as a create, because it
-            // infers the existence of the file.
-            kind = StandardWatchEventKinds.ENTRY_CREATE;
-        }
-
-        if (kind == StandardWatchEventKinds.ENTRY_CREATE || kind == StandardWatchEventKinds.ENTRY_DELETE) {
-            if (this.kind != null && this.kind != kind) {
-                this.kind = null;
-            } else {
-                this.kind = kind;
-            }
-        }
+    @Override
+    public void log(final Level level, final String message, final Object... args) {
+        this.delegate.log(this.convertLevel(level), message, args);
     }
 
+    @Override
+    public void log(final Level level, final String message, final Throwable throwable) {
+        this.delegate.log(this.convertLevel(level), message, throwable);
+    }
+
+    private org.apache.logging.log4j.Level convertLevel(final Level level) {
+        return switch (level) {
+            case DEBUG -> org.apache.logging.log4j.Level.DEBUG;
+            case INFO -> org.apache.logging.log4j.Level.INFO;
+            case WARN -> org.apache.logging.log4j.Level.WARN;
+            case ERROR -> org.apache.logging.log4j.Level.ERROR;
+        };
+    }
 }

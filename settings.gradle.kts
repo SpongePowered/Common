@@ -69,6 +69,7 @@ includeBuild("SpongeAPI") {
     }
 }
 include("modlauncher-transformers")
+include("library-manager")
 include("generator")
 
 // Optional projects

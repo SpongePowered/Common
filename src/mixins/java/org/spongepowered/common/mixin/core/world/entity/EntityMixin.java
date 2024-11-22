@@ -992,4 +992,10 @@ public abstract class EntityMixin implements EntityBridge, PlatformEntityBridge,
 
     }*/
 
+    @Redirect(method = "startRiding(Lnet/minecraft/world/entity/Entity;Z)Z", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/EntityType;canSerialize()Z"))
+    private boolean impl$allowRidingAnything(final EntityType<?> instance) {
+        //Vanilla has started to prevent riding non-serializable entities.
+        //This results in players being unable to ride other players.
+        return true;
+    }
 }

@@ -178,19 +178,16 @@ public final class RegistryHolderLogic implements RegistryHolder {
         if (defaultValues != null) {
             final MappedRegistry<T> mr = (MappedRegistry<T>) registry;
             defaultValues.forEach((vk, vi, vv) -> {
-                if (vi.isPresent()) {
-                    mr.register(
-                        net.minecraft.resources.ResourceKey.create(key, (ResourceLocation) (Object) vk),
-                        vv,
-                        RegistrationInfo.BUILT_IN
-                    );
-                } else {
-                    mr.register(
-                        net.minecraft.resources.ResourceKey.create(key, (ResourceLocation) (Object) vk),
-                        vv,
-                        RegistrationInfo.BUILT_IN
-                    );
-                }
+                mr.register(
+                    net.minecraft.resources.ResourceKey.create(key, (ResourceLocation) (Object) vk),
+                    vv,
+                    RegistrationInfo.BUILT_IN
+                );
+                vi.ifPresent(id -> {
+                    if (mr.getId(vv) != id) {
+                        throw new IllegalStateException("Registry entry " + vk + " was expected to have id of " + id + " but was instead " + mr.getId(vv));
+                    }
+                });
             });
         }
 

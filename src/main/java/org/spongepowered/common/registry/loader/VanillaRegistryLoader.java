@@ -251,11 +251,11 @@ public final class VanillaRegistryLoader {
 
     private static RegistryLoader<FireworkShape> fireworkShape() {
         return RegistryLoader.of(l -> {
-            l.addWithId(FireworkExplosion.Shape.BURST.getId(), FireworkShapes.BURST, () -> (FireworkShape) (Object) FireworkExplosion.Shape.BURST);
-            l.addWithId(FireworkExplosion.Shape.CREEPER.getId(), FireworkShapes.CREEPER, () -> (FireworkShape) (Object) FireworkExplosion.Shape.CREEPER);
-            l.addWithId(FireworkExplosion.Shape.LARGE_BALL.getId(), FireworkShapes.LARGE_BALL, () -> (FireworkShape) (Object) FireworkExplosion.Shape.LARGE_BALL);
             l.addWithId(FireworkExplosion.Shape.SMALL_BALL.getId(), FireworkShapes.SMALL_BALL, () -> (FireworkShape) (Object) FireworkExplosion.Shape.SMALL_BALL);
+            l.addWithId(FireworkExplosion.Shape.LARGE_BALL.getId(), FireworkShapes.LARGE_BALL, () -> (FireworkShape) (Object) FireworkExplosion.Shape.LARGE_BALL);
             l.addWithId(FireworkExplosion.Shape.STAR.getId(), FireworkShapes.STAR, () -> (FireworkShape) (Object) FireworkExplosion.Shape.STAR);
+            l.addWithId(FireworkExplosion.Shape.CREEPER.getId(), FireworkShapes.CREEPER, () -> (FireworkShape) (Object) FireworkExplosion.Shape.CREEPER);
+            l.addWithId(FireworkExplosion.Shape.BURST.getId(), FireworkShapes.BURST, () -> (FireworkShape) (Object) FireworkExplosion.Shape.BURST);
         });
     }
 

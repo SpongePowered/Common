@@ -49,7 +49,7 @@ public final class PluginConfigManager implements ConfigManager {
     private final WatchServiceListener listener;
 
     @Inject
-    PluginConfigManager(final DataSerializableTypeSerializer dataSerializableSerializer) throws IOException {
+    PluginConfigManager(final DataSerializableTypeSerializer dataSerializableSerializer, final DataTranslatableTypeSerializer dataTranslatableSerializer) throws IOException {
         // TODO: Move this onto the async scheduler, rather than shared FJ pool?
         this.listener = WatchServiceListener.builder()
                 .threadFactory(new ThreadFactoryBuilder().setDaemon(true).setNameFormat("Sponge-WatchService-%d").build())
@@ -60,6 +60,7 @@ public final class PluginConfigManager implements ConfigManager {
                 // See https://github.com/SpongePowered/SpongeCommon/issues/1348
                 .register(DataSerializableTypeSerializer::accepts, dataSerializableSerializer)
                 .registerAll(SpongeAdventure.CONFIGURATE.serializers())
+                .register(dataTranslatableSerializer::accepts, dataTranslatableSerializer)
                 .build();
     }
 

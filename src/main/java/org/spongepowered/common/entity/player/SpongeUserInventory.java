@@ -139,8 +139,7 @@ public class SpongeUserInventory implements Container {
             if (!this.mainInventory.get(i).isEmpty()) {
                 final CompoundTag nbttagcompound = new CompoundTag();
                 nbttagcompound.putByte("Slot", (byte) i);
-                this.mainInventory.get(i).save(SpongeCommon.server().registryAccess(), nbttagcompound);
-                nbtTagListIn.add(nbttagcompound);
+                nbtTagListIn.add(this.mainInventory.get(i).save(SpongeCommon.server().registryAccess(), nbttagcompound));
             }
         }
 
@@ -148,8 +147,7 @@ public class SpongeUserInventory implements Container {
             if (!this.armorInventory.get(j).isEmpty()) {
                 final CompoundTag nbttagcompound1 = new CompoundTag();
                 nbttagcompound1.putByte("Slot", (byte) (j + 100));
-                this.armorInventory.get(j).save(SpongeCommon.server().registryAccess(), nbttagcompound1);
-                nbtTagListIn.add(nbttagcompound1);
+                nbtTagListIn.add(this.armorInventory.get(j).save(SpongeCommon.server().registryAccess(), nbttagcompound1));
             }
         }
 
@@ -157,8 +155,7 @@ public class SpongeUserInventory implements Container {
             if (!this.offHandInventory.get(k).isEmpty()) {
                 final CompoundTag nbttagcompound2 = new CompoundTag();
                 nbttagcompound2.putByte("Slot", (byte) (k + 150));
-                this.offHandInventory.get(k).save(SpongeCommon.server().registryAccess(), nbttagcompound2);
-                nbtTagListIn.add(nbttagcompound2);
+                nbtTagListIn.add(this.offHandInventory.get(k).save(SpongeCommon.server().registryAccess(), nbttagcompound2));
             }
         }
 
