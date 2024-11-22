@@ -86,34 +86,6 @@ public abstract class MobMixin extends LivingEntityMixin {
         }
     }
 
-    @Inject(method = "dropLeash", cancellable = true,
-        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Leashable;dropLeash(ZZ)V"))
-    private void impl$ThrowUnleashEvent(final boolean sendPacket, final boolean dropLead, final CallbackInfo ci) {
-        if (this.shadow$level().isClientSide) {
-            return;
-        }
-
-        var leashData = this.shadow$getLeashData();
-        if (leashData == null) {
-            return;
-        }
-
-        final net.minecraft.world.entity.Entity entity = leashData.leashHolder;
-
-        final CauseStackManager csm = PhaseTracker.getCauseStackManager();
-        if (entity == null) {
-            csm.pushCause(this);
-        } else {
-            csm.pushCause(entity);
-        }
-        final UnleashEntityEvent event = SpongeEventFactory.createUnleashEntityEvent(csm.currentCause(), (Living) this);
-        SpongeCommon.post(event);
-        csm.popCause();
-        if (event.isCancelled()) {
-            ci.cancel();
-        }
-    }
-
     /**
      * @author gabizou - January 4th, 2016
      *

@@ -26,7 +26,6 @@ package org.spongepowered.common.data.provider.entity;
 
 import net.minecraft.world.entity.monster.creaking.Creaking;
 import org.spongepowered.api.data.Keys;
-import org.spongepowered.common.accessor.world.entity.monster.creaking.CreakingAccessor;
 import org.spongepowered.common.data.provider.DataProviderRegistrator;
 import org.spongepowered.common.util.VecHelper;
 
@@ -37,11 +36,11 @@ public final class CreakingData {
         registrator
             .asImmutable(Creaking.class)
             .create(Keys.CREAKING_IS_LINKED)
-            .get(Creaking::isTransient);
+            .get(Creaking::isHeartBound);
         registrator
             .asMutable(Creaking.class)
             .create(Keys.CREAKING_HOME_POSITION)
-            .get(h -> VecHelper.toVector3i(((CreakingAccessor) h).accessor$homePos()))
+            .get(h -> VecHelper.toVector3i(h.getHomePos()))
             .set((h, v) -> h.setTransient(VecHelper.toBlockPos(v)));
         ;
     }

@@ -25,14 +25,22 @@
 package org.spongepowered.common.mixin.core.world.entity;
 
 import net.minecraft.world.entity.Leashable;
+import org.checkerframework.checker.units.qual.A;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.entity.Entity;
+import org.spongepowered.api.entity.living.Living;
 import org.spongepowered.api.event.Cause;
+import org.spongepowered.api.event.CauseStackManager;
 import org.spongepowered.api.event.SpongeEventFactory;
+import org.spongepowered.api.event.entity.UnleashEntityEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.common.SpongeCommon;
+import org.spongepowered.common.event.tracking.PhaseTracker;
+
+import java.util.Objects;
 
 @Mixin(Leashable.class)
 public interface LeashableMixin {
@@ -44,6 +52,29 @@ public interface LeashableMixin {
             if (Sponge.eventManager().post(SpongeEventFactory.createLeashEntityEvent(currentCause, (Entity) $$0))) {
                 ci.cancel();
             }
+        }
+    }
+
+    @Inject(method = "dropLeash(Lnet/minecraft/world/entity/Entity;ZZ)V", at = @At("HEAD"), cancellable = true)
+    private static void impl$onDropLeash(final net.minecraft.world.entity.Entity entity, final boolean $$1, final boolean $$2, final CallbackInfo ci) {
+        if (entity == null || entity.level().isClientSide) {
+            return;
+        }
+
+        Leashable.LeashData leashData = ((Leashable) (Object) entity).getLeashData();
+        if (leashData == null) {
+            return;
+        }
+
+        final net.minecraft.world.entity.Entity holder = leashData.leashHolder;
+
+        final CauseStackManager csm = PhaseTracker.getCauseStackManager();
+        csm.pushCause(Objects.requireNonNullElse(holder, entity));
+        final UnleashEntityEvent event = SpongeEventFactory.createUnleashEntityEvent(csm.currentCause(), (Entity) entity);
+        SpongeCommon.post(event);
+        csm.popCause();
+        if (event.isCancelled()) {
+            ci.cancel();
         }
     }
 

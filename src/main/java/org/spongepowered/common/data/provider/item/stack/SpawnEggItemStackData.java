@@ -32,6 +32,7 @@ import net.minecraft.world.item.SpawnEggItem;
 import net.minecraft.world.item.component.CustomData;
 import org.spongepowered.api.data.Keys;
 import org.spongepowered.api.entity.EntityArchetype;
+import org.spongepowered.common.SpongeCommon;
 import org.spongepowered.common.data.provider.DataProviderRegistrator;
 import org.spongepowered.common.entity.SpongeEntityArchetypeBuilder;
 
@@ -46,7 +47,7 @@ public final class SpawnEggItemStackData {
                     .get(stack -> {
                         final Item item = stack.getItem();
                         final SpawnEggItem eggItem = (SpawnEggItem) item;
-                        final EntityType<?> type = eggItem.getType(stack);
+                        final EntityType<?> type = eggItem.getType(SpongeCommon.vanillaRegistryAccess(), stack);
                         final var tag = stack.getOrDefault(DataComponents.ENTITY_DATA, CustomData.EMPTY).getUnsafe();
 
                         final EntityArchetype.Builder builder = EntityArchetype.builder().type((org.spongepowered.api.entity.EntityType<?>) type);
@@ -60,7 +61,7 @@ public final class SpawnEggItemStackData {
                     .get(stack -> {
                         final Item item = stack.getItem();
                         final SpawnEggItem eggItem = (SpawnEggItem) item;
-                        return (org.spongepowered.api.entity.EntityType) eggItem.getType(stack);
+                        return (org.spongepowered.api.entity.EntityType) eggItem.getType(SpongeCommon.vanillaRegistryAccess(), stack);
                     })
         ;
     }
