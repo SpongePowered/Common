@@ -249,6 +249,10 @@ public final class EntityData {
                             ((PortalProcessorBridge)h.portalProcess).bridge$init(h.level());
                         })
                         .delete(h -> h.portalProcess = null)
+                    .create(Keys.BOUNDING_BOX_BASE_SIZE)
+                        .get(h -> (double) h.getBbWidth())
+                    .create(Keys.BOUNDING_BOX_HEIGHT)
+                        .get(h -> (double) h.getBbHeight())
                 .asMutable(EntityMaxAirBridge.class)
                     .create(Keys.MAX_AIR)
                         .get(EntityMaxAirBridge::bridge$getMaxAir)

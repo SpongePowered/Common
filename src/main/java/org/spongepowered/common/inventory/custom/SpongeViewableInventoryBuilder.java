@@ -138,6 +138,7 @@ public final class SpongeViewableInventoryBuilder implements ViewableInventory.B
     // Slot definition Impl:
     public BuildingStep slotsAtIndizes(List<Slot> source, List<Integer> at) {
         Validate.isTrue(source.size() == at.size(), "Source and index list sizes differ");
+        this.lastSlot = null;
         for (int i = 0; i < at.size(); i++) {
             Slot slot = source.get(i);
             Integer index = at.get(i);
@@ -215,7 +216,9 @@ public final class SpongeViewableInventoryBuilder implements ViewableInventory.B
     // dummy
     @Override
     public BuildingStep item(ItemStackLike item) {
-        this.lastSlot.set(item);
+        if (this.lastSlot != null) {
+            this.lastSlot.set(item);
+        }
         return this;
     }
 

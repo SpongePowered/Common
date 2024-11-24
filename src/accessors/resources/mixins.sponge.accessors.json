@@ -66,6 +66,7 @@
         "world.entity.EntityAccessor",
         "world.entity.EntityTypeAccessor",
         "world.entity.ExperienceOrbAccessor",
+        "world.entity.InteractionAccessor",
         "world.entity.LightningBoltAccessor",
         "world.entity.LivingEntityAccessor",
         "world.entity.MobAccessor",

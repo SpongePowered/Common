@@ -213,6 +213,7 @@ public abstract class AbstractContainerMenuMixin_Inventory implements TrackedCon
         try (final EffectTransactor ignored = transactor.logClickContainer(menu, slotId, dragType, clickType, player)) {
             this.impl$isClicking = true;
             this.shadow$doClick(slotId, dragType, clickType, player);
+            this.bridge$detectAndSendChanges(true, false);
         } finally {
             this.impl$isClicking = false;
         }
@@ -283,7 +284,10 @@ public abstract class AbstractContainerMenuMixin_Inventory implements TrackedCon
 
             // Only call Menu Callbacks when clicking
             if (this.impl$isClicking && menu != null && !menu.onChange(newStack, oldStack, (org.spongepowered.api.item.inventory.Container) this, i, slot)) {
-                this.lastSlots.set(i, oldStack.copy());  // revert changes
+                // revert changes
+                oldStack = oldStack.copy();
+                slot.set(oldStack);
+                this.lastSlots.set(i, oldStack);
                 this.impl$sendSlotContents(i, oldStack); // Send reverted slots to clients
             } else {
                 this.impl$capture(i, newStack, oldStack); // Capture changes for inventory events

@@ -50,6 +50,7 @@ import org.spongepowered.api.util.Transform;
 import org.spongepowered.api.world.server.ServerLocation;
 import org.spongepowered.api.world.server.ServerWorld;
 import org.spongepowered.math.imaginary.Quaterniond;
+import org.spongepowered.math.matrix.Matrix4d;
 import org.spongepowered.math.vector.Vector3d;
 import org.spongepowered.plugin.PluginContainer;
 import org.spongepowered.plugin.builtin.jvm.Plugin;
@@ -83,6 +84,7 @@ public class DisplayEntityTest {
                         final int col5 = 3;
                         final int col6 = 5;
                         final int col7 = 6;
+                        final int col8 = 7;
                         var textDisplay = spawnEntity(player.world(), EntityTypes.TEXT_DISPLAY, centerPos, forwardDir, -4, -1);
                         textDisplay.offer(Keys.DISPLAY_NAME, Component.text("DisplayEntityTest").color(NamedTextColor.GOLD));
                         textDisplay.offer(Keys.SEE_THROUGH_BLOCKS, true);
@@ -246,6 +248,14 @@ public class DisplayEntityTest {
                         // TODO force interpolator start value update?
                         textDisplay.offer(Keys.INTERPOLATION_DURATION, Ticks.of(20));
                         textDisplay.offer(Keys.INTERPOLATION_DELAY, Ticks.of(20));
+
+                        blockDisplay = createEntity(player.world(), EntityTypes.BLOCK_DISPLAY, centerPos, forwardDir, col8, 0);
+                        blockDisplay.offer(Keys.BLOCK_STATE, BlockTypes.CHERRY_SAPLING.get().defaultState());
+                        blockDisplay.offer(Keys.MATRIX, Matrix4d
+                            .createRotation(Quaterniond.fromAxesAnglesDeg(0, 45, 0))
+                            .scale(0.5)
+                            .rotate(Quaterniond.fromAxesAnglesDeg(45, 0, 0)));
+                        player.world().spawnEntity(blockDisplay);
 
                         // TODO interpolate text opacity?
 

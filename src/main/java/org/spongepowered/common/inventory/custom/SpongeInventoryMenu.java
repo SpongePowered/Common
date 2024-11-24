@@ -370,17 +370,13 @@ public class SpongeInventoryMenu implements InventoryMenu {
 
     public boolean onChange(final ItemStack newStack, final ItemStack oldStack, final Container container, final int slotIndex, final Slot slot) {
 
-        // readonly by default cancels top inventory changes . but can be overridden by change callbacks
-        if (this.readonly && !(slot.container instanceof PlayerInventory)) {
-            return false;
-        }
-
         if (this.changeHandler != null) {
             final Cause cause = PhaseTracker.getCauseStackManager().currentCause();
             return this.changeHandler.handle(cause, container, ((org.spongepowered.api.item.inventory.Slot) slot), slotIndex,
                     ItemStackUtil.snapshotOf(oldStack), ItemStackUtil.snapshotOf(newStack));
         }
-        return true;
+        // readonly by default cancels top inventory changes . but can be overridden by change callbacks
+        return !this.isReadOnly(slotIndex) || slot.container instanceof PlayerInventory;
     }
 
 }
