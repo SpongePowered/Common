@@ -65,7 +65,7 @@ public abstract class AbstractFurnaceBlockEntityMixin extends BaseContainerBlock
 
     // @Formatter:off
     @Shadow protected NonNullList<ItemStack> items;
-    @Shadow int cookingProgress;
+    @Shadow int cookingTimer;
     @Shadow int cookingTotalTime;
 
     // @Formatter:on
@@ -130,7 +130,7 @@ public abstract class AbstractFurnaceBlockEntityMixin extends BaseContainerBlock
             shift = At.Shift.BEFORE,
             value = "FIELD",
             opcode = Opcodes.PUTFIELD,
-            target = "Lnet/minecraft/world/level/block/entity/AbstractFurnaceBlockEntity;cookingProgress:I"
+            target = "Lnet/minecraft/world/level/block/entity/AbstractFurnaceBlockEntity;cookingTimer:I"
         ),
         slice = @Slice(
             from = @At(
@@ -149,7 +149,7 @@ public abstract class AbstractFurnaceBlockEntityMixin extends BaseContainerBlock
     }
 
     private void impl$callInteruptSmeltEvent() {
-        if (this.cookingProgress > 0) {
+        if (this.cookingTimer > 0) {
             final ItemStackSnapshot fuel = ItemStackUtil.snapshotOf(this.items.get(1));
             final Cause cause = PhaseTracker.getCauseStackManager().currentCause();
             final var recipe = this.bridge$getCurrentRecipe();

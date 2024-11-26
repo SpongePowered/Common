@@ -34,17 +34,17 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 @Mixin(AbstractFurnaceBlockEntity.class)
 public interface AbstractFurnaceBlockEntityAccessor {
 
-    @Accessor("litTime") int accessor$litTime();
+    @Accessor("litTotalTime") int accessor$litTime();
 
-    @Accessor("litTime") void accessor$litTime(final int litTime);
+    @Accessor("litTotalTime") void accessor$litTime(final int litTime);
 
-    @Accessor("litDuration") int accessor$litDuration();
+    @Accessor("litTimeRemaining") int accessor$litDuration();
 
-    @Accessor("litDuration") void accessor$litDuration(final int litDuration);
+    @Accessor("litTimeRemaining") void accessor$litDuration(final int litDuration);
 
-    @Accessor("cookingProgress") int accessor$cookingProgress();
+    @Accessor("cookingTimer") int accessor$cookingProgress();
 
-    @Accessor("cookingProgress") void accessor$cookingProgress(final int cookingProgress);
+    @Accessor("cookingTimer") void accessor$cookingProgress(final int cookingProgress);
 
     @Accessor("cookingTotalTime") int accessor$cookingTotalTime();
 

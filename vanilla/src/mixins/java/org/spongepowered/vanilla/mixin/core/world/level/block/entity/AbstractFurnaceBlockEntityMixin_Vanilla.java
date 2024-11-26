@@ -70,7 +70,7 @@ public abstract class AbstractFurnaceBlockEntityMixin_Vanilla extends BaseContai
 
     // @formatter:off
     @Shadow protected NonNullList<ItemStack> items;
-    @Shadow int cookingProgress;
+    @Shadow int cookingTimer;
     // @formatter:on
 
     private boolean vanilla$filledWaterBucket;
@@ -92,7 +92,7 @@ public abstract class AbstractFurnaceBlockEntityMixin_Vanilla extends BaseContai
         final ItemStackSnapshot fuel = ItemStackUtil.snapshotOf(slots.get(1));
 
         final Cause cause = PhaseTracker.getCauseStackManager().currentCause();
-        if (entity.cookingProgress == 0) { // Start
+        if (entity.cookingTimer == 0) { // Start
             final CookingEvent.Start event = SpongeEventFactory.createCookingEventStart(cause, (FurnaceBlockEntity) entityIn, Optional.of(fuel),
                 Optional.of((CookingRecipe) recipe.value()), Optional.of((ResourceKey) (Object) recipe.id().location()));
             SpongeCommon.post(event);
@@ -122,7 +122,7 @@ public abstract class AbstractFurnaceBlockEntityMixin_Vanilla extends BaseContai
                 recipe.map(r -> (CookingRecipe) r.value()), recipe.map(r -> (ResourceKey) (Object) r.id().location()));
         SpongeCommon.post(event);
         if (event.isCancelled()) {
-            return entity.cookingProgress; // dont tick down
+            return entity.cookingTimer; // dont tick down
         }
 
         return clampedCookTime;

@@ -42,9 +42,9 @@ import java.util.Set;
 public abstract class AbstractFurnaceBlockEntityMixin_API extends BaseContainerBlockEntityMixin_API implements FurnaceBlockEntity {
 
     // @formatter:off
-    @Shadow int litTime;
-    @Shadow int litDuration;
-    @Shadow int cookingProgress;
+    @Shadow int litTimeRemaining;
+    @Shadow int litTotalTime;
+    @Shadow int cookingTimer;
     @Shadow int cookingTotalTime;
     @Shadow protected NonNullList<ItemStack> items;
     // @formatter:on
@@ -64,9 +64,9 @@ public abstract class AbstractFurnaceBlockEntityMixin_API extends BaseContainerB
     @Override
     public DataContainer toContainer() {
         return super.toContainer()
-            .set(Constants.TileEntity.Furnace.BURN_TIME, this.litTime)
-            .set(Constants.TileEntity.Furnace.BURN_TIME_TOTAL, this.litDuration)
-            .set(Constants.TileEntity.Furnace.COOK_TIME, this.cookingProgress)
+            .set(Constants.TileEntity.Furnace.BURN_TIME, this.litTimeRemaining)
+            .set(Constants.TileEntity.Furnace.BURN_TIME_TOTAL, this.litTotalTime)
+            .set(Constants.TileEntity.Furnace.COOK_TIME, this.cookingTimer)
             .set(Constants.TileEntity.Furnace.COOK_TIME_TOTAL, this.cookingTotalTime);
     }
 
