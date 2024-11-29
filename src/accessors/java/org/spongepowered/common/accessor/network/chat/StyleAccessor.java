@@ -35,7 +35,6 @@ import org.spongepowered.asm.mixin.gen.Invoker;
 import org.spongepowered.common.UntransformedInvokerError;
 
 import javax.annotation.Nullable;
-import java.util.Optional;
 
 @Mixin(Style.class)
 public interface StyleAccessor {

@@ -25,10 +25,8 @@
 package org.spongepowered.common.mixin.core.world.entity;
 
 import net.minecraft.world.entity.Leashable;
-import org.checkerframework.checker.units.qual.A;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.entity.Entity;
-import org.spongepowered.api.entity.living.Living;
 import org.spongepowered.api.event.Cause;
 import org.spongepowered.api.event.CauseStackManager;
 import org.spongepowered.api.event.SpongeEventFactory;

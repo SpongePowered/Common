@@ -24,8 +24,6 @@
  */
 package org.spongepowered.vanilla.generator;
 
-import com.squareup.javapoet.AnnotationSpec;
-import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
@@ -38,7 +36,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.flag.FeatureElement;
 import net.minecraft.world.flag.FeatureFlagSet;
 import net.minecraft.world.flag.FeatureFlags;
-import org.jetbrains.annotations.ApiStatus;
 
 import java.io.IOException;
 import java.util.Comparator;

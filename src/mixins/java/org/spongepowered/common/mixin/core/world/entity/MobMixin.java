@@ -34,10 +34,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.spongepowered.api.entity.Entity;
 import org.spongepowered.api.entity.ai.goal.GoalExecutorTypes;
 import org.spongepowered.api.entity.living.Agent;
-import org.spongepowered.api.entity.living.Living;
-import org.spongepowered.api.event.CauseStackManager;
-import org.spongepowered.api.event.SpongeEventFactory;
-import org.spongepowered.api.event.entity.UnleashEntityEvent;
 import org.spongepowered.api.event.entity.ai.SetAITargetEvent;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -47,14 +43,12 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.common.SpongeCommon;
 import org.spongepowered.common.bridge.world.entity.GrieferBridge;
 import org.spongepowered.common.bridge.world.entity.ai.goal.GoalSelectorBridge;
 import org.spongepowered.common.bridge.world.entity.player.PlayerBridge;
 import org.spongepowered.common.entity.EntityUtil;
 import org.spongepowered.common.event.ShouldFire;
 import org.spongepowered.common.event.SpongeCommonEventFactory;
-import org.spongepowered.common.event.tracking.PhaseTracker;
 
 @Mixin(Mob.class)
 public abstract class MobMixin extends LivingEntityMixin {

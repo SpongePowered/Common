@@ -32,7 +32,6 @@ import net.minecraft.core.HolderSet;
 import net.minecraft.core.SectionPos;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.RegistryOps;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerChunkCache;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.MobCategory;

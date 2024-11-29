@@ -62,13 +62,14 @@ import net.minecraft.world.level.block.state.properties.Tilt;
 import net.minecraft.world.level.block.state.properties.WallSide;
 import org.tinylog.Logger;
 
-import javax.lang.model.element.Modifier;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.TreeMap;
+
+import javax.lang.model.element.Modifier;
 
 /**
  * Generates catalog classes for {@link BlockState} properties.

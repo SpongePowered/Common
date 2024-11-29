@@ -42,7 +42,6 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.Rarity;
 import net.minecraft.world.item.component.ChargedProjectiles;
 import net.minecraft.world.item.component.Consumable;
-import net.minecraft.world.item.component.CustomModelData;
 import net.minecraft.world.item.component.DamageResistant;
 import net.minecraft.world.item.component.ItemContainerContents;
 import net.minecraft.world.item.component.ItemLore;

@@ -69,7 +69,6 @@ import net.minecraft.world.item.component.FireworkExplosion;
 import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.WorldDataConfiguration;
-import net.minecraft.world.level.block.CreakingHeartBlock;
 import net.minecraft.world.level.block.entity.trialspawner.TrialSpawnerState;
 import net.minecraft.world.level.block.state.properties.BambooLeaves;
 import net.minecraft.world.level.block.state.properties.DripstoneThickness;
