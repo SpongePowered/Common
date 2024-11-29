@@ -61,6 +61,9 @@ public class DisplayEntityData {
                 .asMutable(Display.class)
                     .create(Keys.TRANSFORM)
                         .get(DisplayEntityData::getTransform)
+                        .set((h, v) -> DisplayEntityData.setTransform(h, v.toMatrix()))
+                    .create(Keys.MATRIX)
+                        .get(DisplayEntityData::getMatrix)
                         .set(DisplayEntityData::setTransform)
                 .asMutable(DisplayAccessor.class)
                     .create(Keys.BILLBOARD_TYPE)
@@ -219,9 +222,17 @@ public class DisplayEntityData {
         return transform;
     }
 
-    private static void setTransform(final Display h, final Transform transform) {
+    private static Matrix4d getMatrix(final Display display) {
+        var vanillaTransform = DisplayAccessor.invoker$createTransformation(display.getEntityData());
+        var vMatrix = vanillaTransform.getMatrix();
+        return Matrix4d.from(
+            vMatrix.get(0, 0), vMatrix.get(1, 0), vMatrix.get(2, 0), vMatrix.get(3, 0),
+            vMatrix.get(0, 1), vMatrix.get(1, 1), vMatrix.get(2, 1), vMatrix.get(3, 1),
+            vMatrix.get(0, 2), vMatrix.get(1, 2), vMatrix.get(2, 2), vMatrix.get(3, 2),
+            vMatrix.get(0, 3), vMatrix.get(1, 3), vMatrix.get(2, 3), vMatrix.get(3, 3));
+    }
 
-        final Matrix4d matrix = transform.toMatrix();
+    private static void setTransform(final Display h, final Matrix4d matrix) {
         var vMatrix = new org.joml.Matrix4f(
                 (float) matrix.get(0, 0), (float) matrix.get(1, 0), (float) matrix.get(2, 0), (float) matrix.get(3, 0),
                 (float) matrix.get(0, 1), (float) matrix.get(1, 1), (float) matrix.get(2, 1), (float) matrix.get(3, 1),

@@ -30,6 +30,8 @@ import net.minecraft.network.PacketListener;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.common.ServerboundClientInformationPacket;
 import net.minecraft.network.protocol.game.ClientboundContainerSetSlotPacket;
+import net.minecraft.network.protocol.game.ClientboundSetCursorItemPacket;
+import net.minecraft.network.protocol.game.ClientboundSetPlayerInventoryPacket;
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.server.level.ServerLevel;
@@ -103,7 +105,7 @@ public final class PacketPhaseUtil {
                     final org.spongepowered.api.item.inventory.ItemStack stack = snapshot.asMutable();
                     slot.set(stack);
                     ((net.minecraft.server.level.ServerPlayer) player).connection.send(
-                            new ClientboundContainerSetSlotPacket(-2, player.inventoryMenu.getStateId(), ((SlotAdapter) slot).getOrdinal(), ItemStackUtil.toNative(stack)));
+                            new ClientboundSetPlayerInventoryPacket(((SlotAdapter) slot).getOrdinal(), ItemStackUtil.toNative(stack)));
                 } else {
                     final int slotNumber = ((SlotAdapter) slot).getOrdinal();
                     final Slot nmsSlot = containerMenu.getSlot(slotNumber);
@@ -138,7 +140,7 @@ public final class PacketPhaseUtil {
         player.containerMenu.setCarried(cursor);
         player.containerMenu.setRemoteCarried(cursor);
         if (player instanceof net.minecraft.server.level.ServerPlayer) {
-            ((net.minecraft.server.level.ServerPlayer) player).connection.send(new ClientboundContainerSetSlotPacket(-1, player.containerMenu.getStateId(), -1, cursor));
+            ((net.minecraft.server.level.ServerPlayer) player).connection.send(new ClientboundSetCursorItemPacket(cursor));
         }
     }
 
@@ -146,7 +148,7 @@ public final class PacketPhaseUtil {
         final ItemStack cursor = ItemStackUtil.fromSnapshotToNative(customCursor);
         player.containerMenu.setCarried(cursor);
         if (player instanceof net.minecraft.server.level.ServerPlayer) {
-            ((net.minecraft.server.level.ServerPlayer) player).connection.send(new ClientboundContainerSetSlotPacket(-1, -1, -1, cursor));
+            ((net.minecraft.server.level.ServerPlayer) player).connection.send(new ClientboundSetCursorItemPacket(cursor));
         }
     }
 

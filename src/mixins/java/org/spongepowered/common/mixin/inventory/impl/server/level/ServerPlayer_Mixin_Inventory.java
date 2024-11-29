@@ -25,7 +25,7 @@
 package org.spongepowered.common.mixin.inventory.impl.server.level;
 
 import net.minecraft.core.NonNullList;
-import net.minecraft.network.protocol.game.ClientboundContainerSetSlotPacket;
+import net.minecraft.network.protocol.game.ClientboundSetPlayerInventoryPacket;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
@@ -54,6 +54,6 @@ public abstract class ServerPlayer_Mixin_Inventory {
         final org.spongepowered.api.item.inventory.Slot offhand
                 = ((org.spongepowered.api.entity.living.player.server.ServerPlayer) this.this$0).inventory().offhand();
         this.this$0.connection.send(
-                new ClientboundContainerSetSlotPacket(-2, 0, ((SlotAdapter) offhand).getOrdinal(), ItemStackUtil.toNative(offhand.peek())));
+                new ClientboundSetPlayerInventoryPacket(((SlotAdapter) offhand).getOrdinal(), ItemStackUtil.toNative(offhand.peek())));
     }
 }
