@@ -234,6 +234,7 @@ public class DisplayEntityTest {
                         player.world().spawnEntity(blockDisplay);
                         blockDisplay.offer(Keys.TELEPORT_DURATION, Ticks.of(20));
                         blockDisplay.setLocation(((ServerLocation) blockDisplay.location().add(0.0, 4.0, 0.0)));
+                        blockDisplay.setScale(new Vector3d(1.0,5.0,1.0));
 
 
                         textDisplay = createEntity(player.world(), EntityTypes.TEXT_DISPLAY, centerPos, forwardDir, col7, 0);

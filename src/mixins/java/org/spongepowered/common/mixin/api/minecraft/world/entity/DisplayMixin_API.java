@@ -24,11 +24,30 @@
  */
 package org.spongepowered.common.mixin.api.minecraft.world.entity;
 
+import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.world.entity.Display;
+import org.joml.Vector3f;
 import org.spongepowered.api.entity.display.DisplayEntity;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.math.vector.Vector3d;
 
 @Mixin(Display.class)
 public abstract class DisplayMixin_API extends EntityMixin_API implements DisplayEntity {
 
+    // @formatter:off
+    @Shadow @Final private static EntityDataAccessor<Vector3f> DATA_SCALE_ID;
+    // @formatter:on
+
+    @Override
+    public void setScale(Vector3d scale) {
+        entityData.set(DisplayMixin_API.DATA_SCALE_ID, new Vector3f((float) scale.x(), (float) scale.y(), (float) scale.z()));
+    }
+
+    @Override
+    public Vector3d scale() {
+        Vector3f scale = entityData.get(DisplayMixin_API.DATA_SCALE_ID);
+        return new Vector3d(scale.x, scale.y, scale.z);
+    }
 }
