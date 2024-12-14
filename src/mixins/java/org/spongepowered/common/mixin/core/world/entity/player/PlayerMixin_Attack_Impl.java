@@ -44,7 +44,9 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.Slice;
@@ -216,6 +218,14 @@ public abstract class PlayerMixin_Attack_Impl extends LivingEntityMixin_Attack_I
             at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;getKnockback(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/damagesource/DamageSource;)F"))
     public float attackImpl$sweepHook(final Player instance, final Entity entity, final DamageSource damageSource) {
         return this.attackImpl$attackEvent.knockbackModifier();
+    }
+
+    @ModifyConstant(method = "attack", constant = @Constant(floatValue = 1.0F), slice = @Slice(
+        from = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;getKnockback(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/damagesource/DamageSource;)F"),
+        to = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;knockback(DDD)V"))
+    )
+    private float attackImpl$noDoubleAddKb(final float constant) {
+        return 0.0F;
     }
 
     /**
