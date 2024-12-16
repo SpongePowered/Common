@@ -24,6 +24,7 @@
  */
 package org.spongepowered.forge.hook;
 
+import net.minecraft.core.Holder;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
 import org.spongepowered.common.hooks.ItemHooks;
@@ -32,6 +33,6 @@ public class ForgeItemHooks implements ItemHooks {
 
     @Override
     public boolean canEnchantmentBeAppliedToItem(Enchantment enchantment, ItemStack stack) {
-        return stack.canApplyAtEnchantingTable(enchantment);
+        return stack.canApplyAtEnchantingTable(Holder.direct(enchantment));
     }
 }
