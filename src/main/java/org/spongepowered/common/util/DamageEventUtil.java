@@ -222,7 +222,7 @@ public final class DamageEventUtil {
     }
 
     public static DamageFunction provideCooldownAttackStrengthFunction(final Player player, final float attackStrength) {
-        final var modifier = DamageEventUtil.buildAttackDamageModifier(DamageModifierTypes.ATTACK_STRENGTH, player);
+        final var modifier = DamageEventUtil.buildAttackDamageModifier(DamageModifierTypes.ATTACK_COOLDOWN, player);
         final DoubleUnaryOperator function = (damage) -> damage * (0.2F + attackStrength * attackStrength * 0.8F);
         return new DamageFunction(modifier, function);
     }
