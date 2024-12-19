@@ -31,6 +31,7 @@ log4j-api = { module = "org.apache.logging.log4j:log4j-api", version.ref = "log4
 log4j-core = { module = "org.apache.logging.log4j:log4j-core", version.ref = "log4j" }
 log4j-jpl = { module = "org.apache.logging.log4j:log4j-jpl", version.ref = "log4j" }
 log4j-slf4j2 = { module = "org.apache.logging.log4j:log4j-slf4j2-impl", version.ref = "log4j" }
+bootstrap-api = { module = "net.minecraftforge:bootstrap-api", version.ref = "bootstrap" }
 bootstrap = { module = "net.minecraftforge:bootstrap", version.ref = "bootstrap" }
 modlauncher = { module = "net.minecraftforge:modlauncher", version.ref = "modlauncher" }
 neo-modlauncher = { module = "cpw.mods:modlauncher", version.ref = "neo-modlauncher" }

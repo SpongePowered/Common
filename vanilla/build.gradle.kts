@@ -17,13 +17,13 @@ val apiVersion: String by project
 val apiJavaTarget: String by project
 val minecraftVersion: String by project
 val recommendedVersion: String by project
-val organization: String by project
 val projectUrl: String by project
 
 description = "The SpongeAPI implementation for Vanilla Minecraft"
 version = spongeImpl.generatePlatformBuildVersionString(apiVersion, minecraftVersion, recommendedVersion)
 
 // SpongeVanilla libraries
+val devlaunchLibrariesConfig: NamedDomainObjectProvider<Configuration> = configurations.register("devlaunchLibraries")
 val installerLibrariesConfig: NamedDomainObjectProvider<Configuration> = configurations.register("installerLibraries")
 val initLibrariesConfig: NamedDomainObjectProvider<Configuration> = configurations.register("initLibraries") // JVM initial classpath
 val bootLibrariesConfig: NamedDomainObjectProvider<Configuration> = configurations.register("bootLibraries")
@@ -54,69 +54,83 @@ val mixins: NamedDomainObjectProvider<SourceSet> = commonProject.sourceSets.name
 val main: NamedDomainObjectProvider<SourceSet> = commonProject.sourceSets.named("main")
 
 // SpongeVanilla source sets
+// Dev launch
+val vanillaDevLaunch by sourceSets.register("devlaunch") {
+    configurations.named(implementationConfigurationName) {
+        extendsFrom(devlaunchLibrariesConfig.get())
+    }
+}
+
+// Prod launch
 val vanillaInstaller by sourceSets.register("installer") {
     configurations.named(implementationConfigurationName) {
         extendsFrom(installerLibrariesConfig.get())
     }
 }
 
-val vanillaMain by sourceSets.named("main") {
-    // implementation (compile) dependencies
-    spongeImpl.applyNamedDependencyOnOutput(commonProject, accessors.get(), this, project, this.implementationConfigurationName)
-    spongeImpl.applyNamedDependencyOnOutput(commonProject, launch.get(), this, project, this.implementationConfigurationName)
-    spongeImpl.applyNamedDependencyOnOutput(commonProject, applaunch.get(), this, project, this.implementationConfigurationName)
+// Boot layer
+val vanillaAppLaunch by sourceSets.register("applaunch") {
+    spongeImpl.addDependencyToImplementation(applaunch.get(), this)
 
     configurations.named(implementationConfigurationName) {
-        extendsFrom(gameLayerConfig.get())
+        extendsFrom(bootLayerConfig.get())
     }
 }
+
+// Game layer
 val vanillaLaunch by sourceSets.register("launch") {
-    // implementation (compile) dependencies
-    spongeImpl.applyNamedDependencyOnOutput(commonProject, launch.get(), this, project, this.implementationConfigurationName)
-    spongeImpl.applyNamedDependencyOnOutput(commonProject, applaunch.get(), this, project, this.implementationConfigurationName)
-    spongeImpl.applyNamedDependencyOnOutput(commonProject, main.get(), this, project, this.implementationConfigurationName)
-    spongeImpl.applyNamedDependencyOnOutput(project, this, vanillaMain, project, vanillaMain.implementationConfigurationName)
+    spongeImpl.addDependencyToImplementation(applaunch.get(), this)
+    spongeImpl.addDependencyToImplementation(launch.get(), this)
+    spongeImpl.addDependencyToImplementation(main.get(), this)
+    spongeImpl.addDependencyToImplementation(vanillaAppLaunch, this)
 
     configurations.named(implementationConfigurationName) {
         extendsFrom(gameLayerConfig.get())
     }
 }
 val vanillaAccessors by sourceSets.register("accessors") {
-    spongeImpl.applyNamedDependencyOnOutput(commonProject, mixins.get(), this, project, this.implementationConfigurationName)
-    spongeImpl.applyNamedDependencyOnOutput(commonProject, accessors.get(), this, project, this.implementationConfigurationName)
-    spongeImpl.applyNamedDependencyOnOutput(project, this, vanillaLaunch, project, vanillaLaunch.implementationConfigurationName)
+    spongeImpl.addDependencyToImplementation(accessors.get(), this)
 
     configurations.named(implementationConfigurationName) {
         extendsFrom(gameLayerConfig.get())
     }
 }
 val vanillaMixins by sourceSets.register("mixins") {
-    // implementation (compile) dependencies
-    spongeImpl.applyNamedDependencyOnOutput(commonProject, mixins.get(), this, project, this.implementationConfigurationName)
-    spongeImpl.applyNamedDependencyOnOutput(commonProject, accessors.get(), this, project, this.implementationConfigurationName)
-    spongeImpl.applyNamedDependencyOnOutput(commonProject, launch.get(), this, project, this.implementationConfigurationName)
-    spongeImpl.applyNamedDependencyOnOutput(commonProject, applaunch.get(), this, project, this.implementationConfigurationName)
-    spongeImpl.applyNamedDependencyOnOutput(commonProject, main.get(), this, project, this.implementationConfigurationName)
-    spongeImpl.applyNamedDependencyOnOutput(project, vanillaMain, this, project, this.implementationConfigurationName)
-    spongeImpl.applyNamedDependencyOnOutput(project, vanillaAccessors, this, project, this.implementationConfigurationName)
-    spongeImpl.applyNamedDependencyOnOutput(project, vanillaLaunch, this, project, this.implementationConfigurationName)
+    spongeImpl.addDependencyToImplementation(applaunch.get(), this)
+    spongeImpl.addDependencyToImplementation(launch.get(), this)
+    spongeImpl.addDependencyToImplementation(accessors.get(), this)
+    spongeImpl.addDependencyToImplementation(mixins.get(), this)
+    spongeImpl.addDependencyToImplementation(main.get(), this)
+    spongeImpl.addDependencyToImplementation(vanillaAppLaunch, this)
+    spongeImpl.addDependencyToImplementation(vanillaLaunch, this)
+    spongeImpl.addDependencyToImplementation(vanillaAccessors, this)
 
     configurations.named(implementationConfigurationName) {
         extendsFrom(gameLayerConfig.get())
     }
 }
-val vanillaLang by sourceSets.register("lang") {
-    configurations.named(implementationConfigurationName) {
-        extendsFrom(bootLayerConfig.get())
-    }
-}
-val vanillaAppLaunch by sourceSets.register("applaunch") {
-    // implementation (compile) dependencies
-    spongeImpl.applyNamedDependencyOnOutput(commonProject, applaunch.get(), this, project, this.implementationConfigurationName)
-    spongeImpl.applyNamedDependencyOnOutput(project, this, vanillaLaunch, project, vanillaLaunch.implementationConfigurationName)
+val vanillaMain by sourceSets.named("main") {
+    spongeImpl.addDependencyToImplementation(applaunch.get(), this)
+    spongeImpl.addDependencyToImplementation(launch.get(), this)
+    spongeImpl.addDependencyToImplementation(accessors.get(), this)
+    spongeImpl.addDependencyToImplementation(main.get(), this)
+    spongeImpl.addDependencyToImplementation(vanillaAppLaunch, this)
+    spongeImpl.addDependencyToImplementation(vanillaLaunch, this)
+    spongeImpl.addDependencyToImplementation(vanillaAccessors, this)
+
+    spongeImpl.addDependencyToImplementation(this, vanillaMixins)
 
     configurations.named(implementationConfigurationName) {
-        extendsFrom(bootLayerConfig.get())
+        extendsFrom(gameLayerConfig.get())
+    }
+
+    // The rest of the project because we want everything in the initial classpath
+    spongeImpl.addDependencyToRuntimeOnly(mixins.get(), this)
+    spongeImpl.addDependencyToRuntimeOnly(vanillaDevLaunch, this)
+    spongeImpl.addDependencyToRuntimeOnly(vanillaMixins, this)
+
+    configurations.named(runtimeOnlyConfigurationName) {
+        extendsFrom(devlaunchLibrariesConfig.get())
     }
 }
 
@@ -143,11 +157,8 @@ configurations.configureEach {
 }
 
 dependencies {
-    api(project(":", configuration = "launch"))
-    implementation(project(":", configuration = "accessors"))
-    implementation(project(commonProject.path))
-
-    vanillaMixins.implementationConfigurationName(project(commonProject.path))
+    val devlaunch = devlaunchLibrariesConfig.name
+    devlaunch(libs.bootstrap.api)
 
     val installer = installerLibrariesConfig.name
     installer(apiLibs.gson)
@@ -260,8 +271,10 @@ dependencies {
 
     spongeImpl.copyModulesExcludingProvided(gameLibrariesConfig.get(), bootLayerConfig.get(), gameManagedLibrariesConfig.get())
 
-    // Allow boot layer manipulation such as merging applaunch sourcesets
-    vanillaAppLaunch.runtimeOnlyConfigurationName("net.minecraftforge:bootstrap-dev:2.1.1")
+    val runOnly = vanillaMain.runtimeOnlyConfigurationName
+    testPluginsProject?.also {
+        runOnly(project(it.path))
+    }
 }
 
 minecraft {
@@ -315,40 +328,9 @@ minecraft {
             // jvmArgs("-Dbsl.debug=true") // Uncomment to debug bootstrap classpath
             mainClass("net.minecraftforge.bootstrap.ForgeBootstrap")
 
-            // Put modules in boot layer
-            sourceSet = vanillaAppLaunch
-
-            // Merge applaunch sourcesets in a single module
-            val applaunchOutputs = files(applaunch.get().output, vanillaAppLaunch.output)
-            environment("MOD_CLASSES", applaunchOutputs.joinToString(";") { "applaunch%%$it" })
-
             // Configure resources
-            val gameResources = mutableListOf<FileCollection>()
-            gameResources.addAll(gameManagedLibrariesConfig.get().files.map { files(it) })
-
-            gameResources.add(files(
-                main.get().output, vanillaMain.output,
-                mixins.get().output, vanillaMixins.output,
-                accessors.get().output, vanillaAccessors.output,
-                launch.get().output, vanillaLaunch.output,
-                gameShadedLibrariesConfig.get()
-            ))
-
-            jvmArgs("-Dsponge.gameResources=" + gameResources.joinToString(";") { it.joinToString("&") })
-
-            val runTask = tasks.named(this.name) {
-                dependsOn(applaunchOutputs)
-                dependsOn(gameResources)
-            }
-
-            testPluginsProject?.also {
-                val plugins: FileCollection = it.sourceSets.getByName("main").output
-                environment("SPONGE_PLUGINS", plugins.joinToString("&"))
-
-                runTask.configure {
-                    dependsOn(plugins)
-                }
-            }
+            jvmArgs("-Dsponge.dev.boot=" + bootLayerConfig.get().resolvedConfiguration.resolvedArtifacts.joinToString(";") { it.file.name })
+            jvmArgs("-Dsponge.dev.gameShaded=" + gameShadedLibrariesConfig.get().resolvedConfiguration.resolvedArtifacts.joinToString(";") { it.file.name })
         }
     }
 }
@@ -533,14 +515,6 @@ tasks {
     assemble {
         dependsOn(universalJar)
     }
-}
-
-indraSpotlessLicenser {
-    licenseHeaderFile(rootProject.file("HEADER.txt"))
-
-    property("name", "Sponge")
-    property("organization", organization)
-    property("url", projectUrl)
 }
 
 val universalJar by tasks.existing

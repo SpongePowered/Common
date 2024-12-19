@@ -93,18 +93,16 @@ public abstract class SpongeImplementationExtension {
         }
     }
 
-    public void applyNamedDependencyOnOutput(final Project originProject, final SourceSet sourceAdding, final SourceSet targetSource, final Project implProject, final String dependencyConfigName) {
-        implProject.getLogger().lifecycle(
-            "[{}] Adding {}({}) to {}({}).{}",
-            implProject.getName(),
-            originProject.getPath(),
-            sourceAdding.getName(),
-            implProject.getPath(),
-            targetSource.getName(),
-            dependencyConfigName
-        );
+    public void addDependencyToRuntimeOnly(final SourceSet source, final SourceSet target) {
+        this.addDependencyTo(source, target.getRuntimeOnlyConfigurationName());
+    }
 
-        implProject.getDependencies().add(dependencyConfigName, sourceAdding.getOutput());
+    public void addDependencyToImplementation(final SourceSet source, final SourceSet target) {
+        this.addDependencyTo(source, target.getImplementationConfigurationName());
+    }
+
+    public void addDependencyTo(final SourceSet source, final String targetConfig) {
+        this.project.getDependencies().add(targetConfig, source.getOutput());
     }
 
     public String generateImplementationVersionString(final String apiVersion, final String minecraftVersion, final String implRecommendedVersion) {
