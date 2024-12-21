@@ -27,10 +27,11 @@ package org.spongepowered.forge.mixin.core.world.level.block.entity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
 import net.minecraft.core.RegistryAccess;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeHolder;
-import net.minecraft.world.level.Level;
+import net.minecraft.world.item.crafting.SingleRecipeInput;
 import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import org.objectweb.asm.Opcodes;
@@ -69,7 +70,7 @@ public abstract class AbstractFurnaceBlockEntityMixin_Forge implements AbstractF
     // @formatter:off
     @Shadow protected NonNullList<ItemStack> items;
     @Shadow int cookingProgress;
-    @Shadow private boolean shadow$canBurn(RegistryAccess registryAccess, @Nullable RecipeHolder<?> recipe, NonNullList<ItemStack> slots, int maxStackSize) {
+    @Shadow private boolean shadow$canBurn(RegistryAccess registryAccess, @Nullable RecipeHolder<?> recipe, SingleRecipeInput input, NonNullList<ItemStack> slots, int maxStackSize) {
         throw new UnsupportedOperationException("Shadowed canBurn");
     }
     // @formatter:on
@@ -79,15 +80,16 @@ public abstract class AbstractFurnaceBlockEntityMixin_Forge implements AbstractF
     // Tick up and Start
     @Redirect(method = "serverTick",
         at = @At(value = "INVOKE",
-            target = "Lnet/minecraft/world/level/block/entity/AbstractFurnaceBlockEntity;canBurn(Lnet/minecraft/core/RegistryAccess;Lnet/minecraft/world/item/crafting/RecipeHolder;Lnet/minecraft/core/NonNullList;I)Z",
+            target = "Lnet/minecraft/world/level/block/entity/AbstractFurnaceBlockEntity;canBurn(Lnet/minecraft/core/RegistryAccess;Lnet/minecraft/world/item/crafting/RecipeHolder;Lnet/minecraft/world/item/crafting/SingleRecipeInput;Lnet/minecraft/core/NonNullList;I)Z",
             ordinal = 1))
     private static boolean forge$checkIfCanSmelt(final AbstractFurnaceBlockEntity entityIn,
-                                                     final RegistryAccess registryAccess,
-                                                     final RecipeHolder<?> recipe,
-                                                     final NonNullList<ItemStack> slots,
-                                                     final int maxStackSize) {
+                                                 final RegistryAccess registryAccess,
+                                                 final RecipeHolder<?> recipe,
+                                                 final SingleRecipeInput input,
+                                                 final NonNullList<ItemStack> slots,
+                                                 final int maxStackSize) {
         final var entity = (AbstractFurnaceBlockEntityMixin_Forge) (Object) (entityIn);
-        if (!entity.shadow$canBurn(registryAccess, recipe, slots, maxStackSize)) {
+        if (!entity.shadow$canBurn(registryAccess, recipe, input, slots, maxStackSize)) {
             return false;
         }
 
@@ -111,7 +113,7 @@ public abstract class AbstractFurnaceBlockEntityMixin_Forge implements AbstractF
     // Tick down
     @Redirect(method = "serverTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/Mth;clamp(III)I"))
     private static int forge$resetCookTimeIfCancelled(final int newCookTime, final int zero, final int totalCookTime,
-                                                          final Level level, final BlockPos entityPos, final BlockState state, final AbstractFurnaceBlockEntity entityIn) {
+                                                      final ServerLevel level, final BlockPos entityPos, final BlockState state, final AbstractFurnaceBlockEntity entityIn) {
         final int clampedCookTime = Mth.clamp(newCookTime, zero, totalCookTime);
         final var entity = (AbstractFurnaceBlockEntityMixin_Forge) (Object) entityIn;
         final ItemStackSnapshot fuel = ItemStackUtil.snapshotOf(entity.items.get(1));
@@ -133,7 +135,7 @@ public abstract class AbstractFurnaceBlockEntityMixin_Forge implements AbstractF
         slice = @Slice(
             from = @At(value = "FIELD", target = "Lnet/minecraft/world/level/block/Blocks;WET_SPONGE:Lnet/minecraft/world/level/block/Block;", opcode = Opcodes.GETSTATIC)
         ))
-    private void forge$captureBucketFill(final RegistryAccess registryAccess, final RecipeHolder<?> recipe, final NonNullList<ItemStack> slots, final int maxStackSize, final CallbackInfoReturnable<Boolean> cir) {
+    private void forge$captureBucketFill(final RegistryAccess registryAccess, final RecipeHolder<?> recipe, final SingleRecipeInput input, final NonNullList<ItemStack> slots, final int maxStackSize, final CallbackInfoReturnable<Boolean> cir) {
         this.forge$filledWaterBucket = true;
     }
 
@@ -142,7 +144,7 @@ public abstract class AbstractFurnaceBlockEntityMixin_Forge implements AbstractF
         locals = LocalCapture.CAPTURE_FAILHARD,
         at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/ItemStack;shrink(I)V"))
     private void forge$afterSmeltItem(
-        final RegistryAccess registryAccess, final RecipeHolder<?> recipe,
+        final RegistryAccess registryAccess, final RecipeHolder<?> recipe, final SingleRecipeInput input,
         final NonNullList<ItemStack> slots, final int maxStackSize,
         final CallbackInfoReturnable<Boolean> cir,
         final ItemStack itemIn, final ItemStack recipeResult, final ItemStack itemOut
