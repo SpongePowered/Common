@@ -22,17 +22,15 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.spongepowered.vanilla.devlaunch;
+package org.spongepowered.bootstrap.dev;
 
 import net.minecraftforge.bootstrap.api.BootstrapClasspathModifier;
 
+import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -51,11 +49,12 @@ public class SpongeDevClasspathFixer implements BootstrapClasspathModifier {
      */
     @Override
     public boolean process(final List<Path[]> classpath) {
-        final Set<String> bootLibs = Set.of(System.getProperty("sponge.dev.boot").split(";"));
-        final Set<String> gameShadedLibs = Set.of(System.getProperty("sponge.dev.gameShaded").split(";"));
+        final Set<String> ignoredLibs = Set.of("bootstrap-dev.jar");
+        final Set<String> bootLibs = Set.of(System.getProperty("sponge.dev.boot").split(File.pathSeparator));
+        final Set<String> gameShadedLibs = Set.of(System.getProperty("sponge.dev.gameShaded").split(File.pathSeparator));
 
-        final Map<String, List<Path>> bootSourceSets = new HashMap<>();
-        final Map<String, List<Path>> unknownProjects = new HashMap<>();
+        final Multimap<String, Path> bootSourceSets = new Multimap<>();
+        final Multimap<String, Path> unknownProjects = new Multimap<>();
 
         final List<Path> spongeImplUnion = new ArrayList<>();
         final List<Path> gameLibs = new ArrayList<>();
@@ -75,8 +74,11 @@ public class SpongeDevClasspathFixer implements BootstrapClasspathModifier {
                 }
 
                 switch (sourceSet.project()) {
-                    case "modlauncher-transformers":
-                        bootSourceSets.computeIfAbsent("transformers", k -> new LinkedList<>()).add(path);
+                    case "bootstrap-dev":
+                        // ignore
+                        break;
+                    case "modlauncher-transformers", "library-manager":
+                        bootSourceSets.add(sourceSet.project(), path);
                         break;
                     case "SpongeAPI":
                         switch (sourceSet.name()) {
@@ -91,27 +93,28 @@ public class SpongeDevClasspathFixer implements BootstrapClasspathModifier {
                                 break;
                         }
                         break;
-                    case "Sponge", "vanilla":
-                        switch (sourceSet.name()) {
-                            case "devlaunch":
-                                // ignore
-                                break;
-                            case "applaunch":
-                                bootSourceSets.computeIfAbsent("applaunch", k -> new LinkedList<>()).add(path);
-                                break;
-                            default:
-                                spongeImplUnion.add(path);
-                                break;
+                    case "Sponge", "vanilla", "forge":
+                        if (sourceSet.name().equals("applaunch")) {
+                            bootSourceSets.add("applaunch", path);
+                        } else {
+                            spongeImplUnion.add(path);
                         }
                         break;
                     default:
-                        unknownProjects.computeIfAbsent(sourceSet.project(), k -> new LinkedList<>()).add(path);
+                        unknownProjects.add(sourceSet.project(), path);
                         break;
                 }
                 return true;
             }
 
             final String fileName = path.getFileName().toString();
+
+            if (ignoredLibs.contains(fileName)) {
+                if (DEBUG) {
+                    System.out.println("Ignored: " + path);
+                }
+                return true;
+            }
 
             if (bootLibs.contains(fileName)) {
                 if (DEBUG) {
