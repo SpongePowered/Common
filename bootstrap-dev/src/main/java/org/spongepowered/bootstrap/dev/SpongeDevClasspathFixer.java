@@ -161,26 +161,26 @@ public class SpongeDevClasspathFixer implements BootstrapClasspathModifier {
             });
         }
 
-        final StringBuilder gameResourcesEnvBuilder = new StringBuilder();
+        final StringBuilder resourcesEnvBuilder = new StringBuilder();
         for (final Path resource : gameLibs) {
-            gameResourcesEnvBuilder.append(resource).append(';');
+            resourcesEnvBuilder.append(resource).append(File.pathSeparator);
         }
         for (final List<Path> project : unknownProjects.values()) {
             for (final Path resource : project) {
-                gameResourcesEnvBuilder.append(resource).append('&');
+                resourcesEnvBuilder.append(resource).append('&');
             }
-            gameResourcesEnvBuilder.setCharAt(gameResourcesEnvBuilder.length() - 1, ';');
+            resourcesEnvBuilder.setCharAt(resourcesEnvBuilder.length() - 1, File.pathSeparatorChar);
         }
         for (final Path resource : spongeImplUnion) {
-            gameResourcesEnvBuilder.append(resource).append('&');
+            resourcesEnvBuilder.append(resource).append('&');
         }
-        gameResourcesEnvBuilder.setLength(gameResourcesEnvBuilder.length() - 1);
-        final String gameResourcesEnv = gameResourcesEnvBuilder.toString();
+        resourcesEnvBuilder.setLength(resourcesEnvBuilder.length() - 1);
+        final String resourcesEnv = resourcesEnvBuilder.toString();
 
         if (DEBUG) {
-            System.out.println("Game resources env: " + gameResourcesEnv);
+            System.out.println("Resources env: " + resourcesEnv);
         }
-        System.setProperty("sponge.gameResources", gameResourcesEnv);
+        System.setProperty("sponge.resources", resourcesEnv);
         return true;
     }
 }

@@ -223,12 +223,9 @@ extensions.configure(UserDevExtension::class) {
             environment("MOD_CLASSES", "nop")
         }
 
-        create("client") {
-            workingDirectory(file("run/client"))
-        }
+        create("client")
 
         create("server") {
-            workingDirectory(file("run/client"))
             args("--nogui")
         }
     }

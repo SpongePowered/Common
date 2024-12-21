@@ -42,6 +42,7 @@ import org.spongepowered.vanilla.installer.model.mojang.Version;
 import org.spongepowered.vanilla.installer.model.mojang.VersionManifest;
 import org.tinylog.Logger;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -68,6 +69,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.StringJoiner;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.jar.JarFile;
@@ -177,12 +179,11 @@ public final class InstallerMain {
             }
         }
 
-        final StringBuilder gameLibsEnv = new StringBuilder();
+        final StringJoiner resourcesEnv = new StringJoiner(File.pathSeparator);
         for (final Path lib : gameLibs) {
-            gameLibsEnv.append(lib.toAbsolutePath()).append(';');
+            resourcesEnv.add(lib.toAbsolutePath().toString());
         }
-        gameLibsEnv.setLength(gameLibsEnv.length() - 1);
-        System.setProperty("sponge.gameResources", gameLibsEnv.toString());
+        System.setProperty("sponge.resources", resourcesEnv.toString());
 
         final List<String> gameArgs = new ArrayList<>(LauncherCommandLine.remainingArgs);
         gameArgs.add("--launchTarget");

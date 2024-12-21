@@ -24,14 +24,16 @@
  */
 package org.spongepowered.forge.applaunch.loading.moddiscovery;
 
+import cpw.mods.jarhandling.JarMetadata;
 import cpw.mods.jarhandling.SecureJar;
+import net.minecraftforge.fml.loading.moddiscovery.AbstractModProvider;
 import net.minecraftforge.fml.loading.moddiscovery.ModFile;
 import net.minecraftforge.fml.loading.moddiscovery.ModFileInfo;
+import net.minecraftforge.fml.loading.moddiscovery.ModFileParser;
 import net.minecraftforge.fml.loading.moddiscovery.ModJarMetadata;
 import net.minecraftforge.forgespi.language.IModFileInfo;
 import net.minecraftforge.forgespi.locating.IModFile;
-import net.minecraftforge.forgespi.locating.IModLocator;
-import net.minecraftforge.forgespi.locating.ModFileFactory;
+import net.minecraftforge.forgespi.locating.IModProvider;
 import org.spongepowered.common.applaunch.AppLaunch;
 import org.spongepowered.common.applaunch.metadata.PluginMetadataFixer;
 import org.spongepowered.common.applaunch.plugin.PluginPlatformConstants;
@@ -46,7 +48,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
+@SuppressWarnings("UnstableApiUsage")
 public final class PluginFileParser {
+    private static final String MODS_TOML   = "META-INF/mods.toml";
+    private static final String MODULE_INFO = "module-info.class";
+
     private static Constructor<ModJarMetadata> modJarMetadataConstructor;
 
     static {
@@ -58,7 +64,7 @@ public final class PluginFileParser {
         }
     }
 
-    private static IModFileInfo parsePluginMetadata(final IModFile iModFile) {
+    private static IModFileInfo parsePluginFileInfo(final IModFile iModFile) {
         final ModFile modFile = (ModFile) iModFile;
         AppLaunch.logger().debug("Considering plugin file candidate {}", modFile.getFilePath());
 
@@ -82,6 +88,14 @@ public final class PluginFileParser {
         }
     }
 
+    private static IModFileInfo parseModFileInfo(final IModFile iModFile) {
+        return ModFileParser.modsTomlParser(iModFile);
+    }
+
+    private static IModFileInfo parseLibraryFileInfo(final IModFile iModFile) {
+        return DummyModProvider.INSTANCE.manifestParser(iModFile);
+    }
+
     private static ModJarMetadata newModJarMetadata() {
         try {
             return modJarMetadataConstructor.newInstance();
@@ -90,13 +104,56 @@ public final class PluginFileParser {
         }
     }
 
-    public static ModFile newPluginInstance(final IModLocator locator, final Path... path) {
-        ModJarMetadata mjm = newModJarMetadata();
-        ModFile modFile = (ModFile) ModFileFactory.FACTORY.build(SecureJar.from(jar -> mjm, path), locator, PluginFileParser::parsePluginMetadata);
-        mjm.setModFile(modFile);
-        return modFile;
+    private static boolean useModJarMetadata(final SecureJar jar) {
+        final SecureJar.ModuleDataProvider data = jar.moduleDataProvider();
+        if (data.findFile(PluginFileParser.MODULE_INFO).isPresent()) {
+            return false;
+        }
+        return data.findFile(PluginFileParser.MODS_TOML).isPresent() || data.findFile(PluginPlatformConstants.METADATA_FILE_LOCATION).isPresent();
     }
 
-    private PluginFileParser() {
+    public static ModFile newModFile(final IModProvider provider, boolean allowUnknown, final Path... paths) {
+        final ModJarMetadata mjm = newModJarMetadata();
+        final SecureJar jar = SecureJar.from(j -> useModJarMetadata(j) ? mjm : JarMetadata.from(j, paths), paths);
+
+        final SecureJar.ModuleDataProvider data = jar.moduleDataProvider();
+        final String type = data.getManifest().getMainAttributes().getValue("FMLModType");
+
+        if (data.findFile(PluginFileParser.MODS_TOML).isPresent()) {
+            ModFile modFile = new ModFile(jar, provider, PluginFileParser::parseModFileInfo, type == null ? "MOD" : type);
+            mjm.setModFile(modFile);
+            return modFile;
+        }
+
+        if (data.findFile(PluginPlatformConstants.METADATA_FILE_LOCATION).isPresent()) {
+            ModFile modFile = new ModFile(jar, provider, PluginFileParser::parsePluginFileInfo, type == null ? "MOD" : type);
+            mjm.setModFile(modFile);
+            return modFile;
+        }
+
+        if (!allowUnknown && type == null) {
+            throw new IllegalArgumentException("Unknown mod file type");
+        }
+
+        return new ModFile(jar, provider, PluginFileParser::parseLibraryFileInfo, type == null ? "GAMELIBRARY" : type);
+    }
+
+    public static ModFile newLibraryFile(final IModProvider provider, final Path... paths) {
+        final SecureJar jar = SecureJar.from(paths);
+        return new ModFile(jar, provider, PluginFileParser::parseLibraryFileInfo, "GAMELIBRARY");
+    }
+
+    private static class DummyModProvider extends AbstractModProvider {
+        private static final DummyModProvider INSTANCE = new DummyModProvider();
+
+        @Override
+        public String name() {
+            return "dummy";
+        }
+
+        @Override
+        public IModFileInfo manifestParser(IModFile mod) {
+            return super.manifestParser(mod);
+        }
     }
 }
