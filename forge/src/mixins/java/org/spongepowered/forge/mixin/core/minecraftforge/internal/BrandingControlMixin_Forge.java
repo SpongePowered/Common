@@ -36,16 +36,7 @@ public abstract class BrandingControlMixin_Forge {
      * @reason This is also not Kansas anymore
      */
     @Overwrite
-    public static String getClientBranding() {
-        return "forge/spongeforge";
-    }
-
-    /**
-     * @author Zidane
-     * @reason What that said above
-     */
-    @Overwrite
-    public static String getServerBranding() {
+    public static String getBranding() {
         return "forge/spongeforge";
     }
 }
