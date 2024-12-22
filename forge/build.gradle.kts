@@ -1,5 +1,6 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import net.minecraftforge.gradle.userdev.UserDevExtension
+import org.spongepowered.gradle.impl.ConvertAWToAT
 
 buildscript {
     repositories {
@@ -201,11 +202,17 @@ dependencies {
     runtimeOnly(project(bootstrapDevProject.path))
 }
 
+val convertAWToAT = tasks.register("convertAWToAT", ConvertAWToAT::class) {
+    accessWideners(main.get().resources.filter { it.name.endsWith(".accesswidener") })
+    accessWideners(forgeMain.resources.filter { it.name.endsWith(".accesswidener") })
+    accessTransformer.set(project.layout.buildDirectory.file("generated/resources/at.cfg"))
+}
+
 val mixinConfigs: MutableSet<String> = spongeImpl.mixinConfigurations
 
 extensions.configure(UserDevExtension::class) {
     mappings("official", "1.21.3")
-    // accessWidenerPath.set(file("../src/main/resources/common.accesswidener")) TODO
+    accessTransformers.from(convertAWToAT.flatMap { it.accessTransformer })
 
     reobf = false
 
@@ -213,8 +220,7 @@ extensions.configure(UserDevExtension::class) {
         configureEach {
             ideaModule("Sponge.SpongeForge.main")
 
-            property("forge.logging.markers", "REGISTRIES")
-            property("forge.logging.console.level", "debug")
+            // property("forge.logging.console.level", "debug")
 
             // jvmArgs("-Dbsl.debug=true") // Uncomment to debug bootstrap classpath
 

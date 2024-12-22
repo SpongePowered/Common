@@ -176,6 +176,10 @@ dependencies {
     }
 }
 
+minecraft {
+    accessWideners(main.resources.filter { it.name.endsWith(".accesswidener") })
+}
+
 allprojects {
     configurations.configureEach {
         resolutionStrategy.dependencySubstitution {
@@ -199,13 +203,6 @@ allprojects {
         minecraft {
             version(minecraftVersion)
             injectRepositories(false)
-            project.sourceSets["main"].resources
-                .filter { it.name.endsWith(".accesswidener") }
-                .files
-                .forEach {
-                    accessWideners(it)
-                    parent?.minecraft?.accessWideners(it)
-                }
         }
 
         dependencies {

@@ -126,15 +126,8 @@ val superclassConfigs = spongeImpl.getNamedConfigurations("superClassChanges")
 val mixinConfigs = spongeImpl.mixinConfigurations
 
 minecraft {
-    main.get().resources
-            .filter { it.name.endsWith(".accesswidener") }
-            .files
-            .forEach { accessWideners(it) }
-
-    vanillaMain.resources
-            .filter { it.name.endsWith(".accesswidener") }
-            .files
-            .forEach { accessWideners(it) }
+    accessWideners(main.get().resources.filter { it.name.endsWith(".accesswidener") })
+    accessWideners(vanillaMain.resources.filter { it.name.endsWith(".accesswidener") })
 }
 
 configurations.configureEach {

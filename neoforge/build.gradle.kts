@@ -14,7 +14,7 @@ plugins {
     alias(libs.plugins.shadow)
     id("implementation-structure")
     alias(libs.plugins.blossom)
-    id("dev.architectury.loom") version "1.6.411"
+    id("dev.architectury.loom")
 }
 
 val commonProject = parent!!
