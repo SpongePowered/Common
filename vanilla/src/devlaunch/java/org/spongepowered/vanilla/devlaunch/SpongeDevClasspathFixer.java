@@ -28,6 +28,7 @@ import net.minecraftforge.bootstrap.api.BootstrapClasspathModifier;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -51,6 +52,7 @@ public class SpongeDevClasspathFixer implements BootstrapClasspathModifier {
      */
     @Override
     public boolean process(final List<Path[]> classpath) {
+        final Path spongeRoot = Paths.get(System.getProperty("sponge.dev.root")).toAbsolutePath();
         final Set<String> bootLibs = Set.of(System.getProperty("sponge.dev.boot").split(";"));
         final Set<String> gameShadedLibs = Set.of(System.getProperty("sponge.dev.gameShaded").split(";"));
 
@@ -67,46 +69,55 @@ public class SpongeDevClasspathFixer implements BootstrapClasspathModifier {
                 return false;
             }
 
-            final Path path = paths[0];
+            final Path path = paths[0].toAbsolutePath();
             final SourceSet sourceSet = SourceSet.identify(path);
             if (sourceSet != null) {
-                if (DEBUG) {
-                    System.out.println("SourceSet (" + sourceSet + "): " + path);
-                }
+                if (sourceSet.project().startsWith(spongeRoot)) {
+                    if (DEBUG) {
+                        System.out.println("Sponge SourceSet (" + sourceSet + "): " + path);
+                    }
 
-                switch (sourceSet.project()) {
-                    case "modlauncher-transformers":
-                        bootSourceSets.computeIfAbsent("transformers", k -> new LinkedList<>()).add(path);
-                        break;
-                    case "SpongeAPI":
-                        switch (sourceSet.name()) {
-                            case "ap":
-                                // ignore
-                                break;
-                            case "main":
-                                hasAPISourceSet.set(true);
-                                // no break
-                            default:
-                                spongeImplUnion.add(path);
-                                break;
-                        }
-                        break;
-                    case "Sponge", "vanilla":
-                        switch (sourceSet.name()) {
-                            case "devlaunch":
-                                // ignore
-                                break;
-                            case "applaunch":
-                                bootSourceSets.computeIfAbsent("applaunch", k -> new LinkedList<>()).add(path);
-                                break;
-                            default:
-                                spongeImplUnion.add(path);
-                                break;
-                        }
-                        break;
-                    default:
-                        unknownProjects.computeIfAbsent(sourceSet.project(), k -> new LinkedList<>()).add(path);
-                        break;
+                    final String projectName = spongeRoot.relativize(sourceSet.project()).toString();
+                    switch (projectName) {
+                        case "modlauncher-transformers":
+                            bootSourceSets.computeIfAbsent("transformers", k -> new LinkedList<>()).add(path);
+                            break;
+                        case "SpongeAPI":
+                            switch (sourceSet.name()) {
+                                case "ap":
+                                    // ignore
+                                    break;
+                                case "main":
+                                    hasAPISourceSet.set(true);
+                                    // no break
+                                default:
+                                    spongeImplUnion.add(path);
+                                    break;
+                            }
+                            break;
+                        case "", "vanilla":
+                            switch (sourceSet.name()) {
+                                case "devlaunch":
+                                    // ignore
+                                    break;
+                                case "applaunch":
+                                    bootSourceSets.computeIfAbsent("applaunch", k -> new LinkedList<>()).add(path);
+                                    break;
+                                default:
+                                    spongeImplUnion.add(path);
+                                    break;
+                            }
+                            break;
+                        default:
+                            unknownProjects.computeIfAbsent(projectName, k -> new LinkedList<>()).add(path);
+                            break;
+                    }
+                } else {
+                    if (DEBUG) {
+                        System.out.println("External SourceSet (" + sourceSet + "): " + path);
+                    }
+
+                    unknownProjects.computeIfAbsent(sourceSet.project().toString(), k -> new LinkedList<>()).add(path);
                 }
                 return true;
             }

@@ -329,6 +329,7 @@ minecraft {
             mainClass("net.minecraftforge.bootstrap.ForgeBootstrap")
 
             // Configure resources
+            jvmArgs("-Dsponge.dev.root=" + project.rootDir)
             jvmArgs("-Dsponge.dev.boot=" + bootLayerConfig.get().resolvedConfiguration.resolvedArtifacts.joinToString(";") { it.file.name })
             jvmArgs("-Dsponge.dev.gameShaded=" + gameShadedLibrariesConfig.get().resolvedConfiguration.resolvedArtifacts.joinToString(";") { it.file.name })
         }

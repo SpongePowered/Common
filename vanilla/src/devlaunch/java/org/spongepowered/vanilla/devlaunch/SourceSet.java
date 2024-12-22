@@ -29,7 +29,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
-public record SourceSet(String project, String name, String format) {
+public record SourceSet(Path project, String name, String format) {
 
     @Override
     public String toString() {
@@ -57,32 +57,34 @@ public record SourceSet(String project, String name, String format) {
         }
 
         // from right to left
-        final List<String> parts = new ArrayList<>();
+        final List<String> names = new ArrayList<>();
+        final List<Path> paths = new ArrayList<>();
         while (path != null) {
-            parts.add(path.getFileName().toString());
-            if (parts.size() >= 5) {
+            names.add(path.getFileName().toString());
+            paths.add(path);
+            if (names.size() >= 5) {
                 break;
             }
             path = path.getParent();
         }
 
-        if (parts.size() >= 4 && (parts.get(0).equals("classes") || parts.get(0).equals("resources"))) {
-            final String name = parts.get(1);
-            return new SourceSet(parts.get(3), name.equals("production") ? "main" : name, "IntelliJ");
+        if (names.size() >= 4 && (names.get(0).equals("classes") || names.get(0).equals("resources"))) {
+            final String name = names.get(1);
+            return new SourceSet(paths.get(3), name.equals("production") ? "main" : name, "IntelliJ");
         }
 
-        if (parts.size() >= 4 && (parts.get(1).equals("resources") || parts.get(1).equals("generated"))) {
-            return new SourceSet(parts.get(3), parts.get(0), "Gradle");
+        if (names.size() >= 4 && (names.get(1).equals("resources") || names.get(1).equals("generated"))) {
+            return new SourceSet(paths.get(3), names.get(0), "Gradle");
         }
 
-        if (parts.size() >= 5 && parts.get(2).equals("classes")) {
-            return new SourceSet(parts.get(4), parts.get(0), "Gradle");
+        if (names.size() >= 5 && names.get(2).equals("classes")) {
+            return new SourceSet(paths.get(4), names.get(0), "Gradle");
         }
 
-        if (parts.size() >= 3 && parts.get(1).equals("bin")) {
-            return new SourceSet(parts.get(2), parts.get(0), "Eclipse");
+        if (names.size() >= 3 && names.get(1).equals("bin")) {
+            return new SourceSet(paths.get(2), names.get(0), "Eclipse");
         }
 
-        return new SourceSet("", parts.get(0), "Unknown");
+        return new SourceSet(paths.get(0), "?", "Unknown");
     }
 }
