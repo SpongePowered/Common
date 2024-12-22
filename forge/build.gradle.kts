@@ -145,6 +145,7 @@ val forgeMain by sourceSets.named("main") {
     // The rest of the project because we want everything in the initial classpath
     spongeImpl.addDependencyToRuntimeOnly(mixins.get(), this)
     spongeImpl.addDependencyToRuntimeOnly(forgeMixins, this)
+    spongeImpl.addDependencyToRuntimeOnly(forgeLang, this)
 }
 
 configurations.configureEach {
@@ -200,6 +201,9 @@ dependencies {
     }
 
     runtimeOnly(project(bootstrapDevProject.path))
+    testPluginsProject?.also {
+        runtimeOnly(project(it.path))
+    }
 }
 
 val convertAWToAT = tasks.register("convertAWToAT", ConvertAWToAT::class) {
@@ -297,20 +301,6 @@ tasks {
             )
         }
         from(forgeLang.output)
-    }
-
-    val forgeServicesJar by registering(Jar::class) {
-        archiveClassifier.set("services")
-
-        manifest {
-            from(forgeManifest)
-            attributes("Automatic-Module-Name" to "spongeforge.services")
-        }
-
-        from(commonProject.sourceSets.named("applaunch").map { it.output })
-        from(forgeAppLaunch.output)
-
-        duplicatesStrategy = DuplicatesStrategy.WARN
     }
 
     val installerResources = project.layout.buildDirectory.dir("generated/resources/installer")
