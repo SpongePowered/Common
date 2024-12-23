@@ -29,6 +29,7 @@ import net.minecraftforge.bootstrap.api.BootstrapClasspathModifier;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -49,6 +50,7 @@ public class SpongeDevClasspathFixer implements BootstrapClasspathModifier {
      */
     @Override
     public boolean process(final List<Path[]> classpath) {
+        final Path spongeRoot = Paths.get(System.getProperty("sponge.dev.root")).toAbsolutePath();
         final Set<String> ignoredLibs = Set.of("bootstrap-dev.jar");
         final Set<String> bootLibs = Set.of(System.getProperty("sponge.dev.boot").split(File.pathSeparator));
         final Set<String> gameShadedLibs = Set.of(System.getProperty("sponge.dev.gameShaded").split(File.pathSeparator));
@@ -70,46 +72,55 @@ public class SpongeDevClasspathFixer implements BootstrapClasspathModifier {
             final Path path = paths[0];
             final SourceSet sourceSet = SourceSet.identify(path);
             if (sourceSet != null) {
-                if (DEBUG) {
-                    System.out.println("SourceSet (" + sourceSet + "): " + path);
-                }
+                if (sourceSet.project().startsWith(spongeRoot)) {
+                    if (DEBUG) {
+                        System.out.println("Sponge SourceSet (" + sourceSet + "): " + path);
+                    }
 
-                switch (sourceSet.project()) {
-                    case "bootstrap-dev":
-                        // ignore
-                        break;
-                    case "modlauncher-transformers", "library-manager":
-                        bootUnions.add(sourceSet.project(), path);
-                        break;
-                    case "SpongeAPI":
-                        switch (sourceSet.name()) {
-                            case "ap":
-                                // ignore
-                                break;
-                            case "main":
-                                hasAPISourceSet.set(true);
-                                // no break
-                            default:
-                                unions.add("sponge", path);
-                                break;
-                        }
-                        break;
-                    case "Sponge", "vanilla", "forge":
-                        switch (sourceSet.name()) {
-                            case "applaunch":
-                                bootUnions.add("applaunch", path);
-                                break;
-                            case "lang":
-                                unions.add("lang", path);
-                                break;
-                            default:
-                                unions.add("sponge", path);
-                                break;
-                        }
-                        break;
-                    default:
-                        unions.add(sourceSet.project(), path);
-                        break;
+                    final String projectName = spongeRoot.relativize(sourceSet.project()).toString();
+                    switch (projectName) {
+                        case "bootstrap-dev":
+                            // ignore
+                            break;
+                        case "modlauncher-transformers", "library-manager":
+                            bootUnions.add(projectName, path);
+                            break;
+                        case "SpongeAPI":
+                            switch (sourceSet.name()) {
+                                case "ap":
+                                    // ignore
+                                    break;
+                                case "main":
+                                    hasAPISourceSet.set(true);
+                                    // no break
+                                default:
+                                    unions.add("sponge", path);
+                                    break;
+                            }
+                            break;
+                        case "", "vanilla", "forge":
+                            switch (sourceSet.name()) {
+                                case "applaunch":
+                                    bootUnions.add("applaunch", path);
+                                    break;
+                                case "lang":
+                                    unions.add("lang", path);
+                                    break;
+                                default:
+                                    unions.add("sponge", path);
+                                    break;
+                            }
+                            break;
+                        default:
+                            unions.add(projectName, path);
+                            break;
+                    }
+                } else {
+                    if (DEBUG) {
+                        System.out.println("External SourceSet (" + sourceSet + "): " + path);
+                    }
+
+                    unions.add(sourceSet.project().toString(), path);
                 }
                 return true;
             }

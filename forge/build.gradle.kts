@@ -247,6 +247,7 @@ afterEvaluate {
         val bootFileNames = spongeImpl.buildRuntimeFileNames(serviceLayerConfig.get()) // service in boot during dev
         val gameShadedFileNames = spongeImpl.buildRuntimeFileNames(gameShadedLibrariesConfig.get())
         runs.configureEach {
+            jvmArgs("-Dsponge.dev.root=" + project.rootDir)
             jvmArgs("-Dsponge.dev.boot=$bootFileNames")
             jvmArgs("-Dsponge.dev.gameShaded=$gameShadedFileNames")
         }

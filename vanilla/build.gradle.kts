@@ -301,6 +301,7 @@ minecraft {
             // jvmArgs("-Dbsl.debug=true") // Uncomment to debug bootstrap classpath
             mainClass("net.minecraftforge.bootstrap.ForgeBootstrap")
 
+            jvmArgs("-Dsponge.dev.root=" + project.rootDir)
             jvmArgs("-Dsponge.dev.boot=$bootFileNames")
             jvmArgs("-Dsponge.dev.gameShaded=$gameShadedFileNames")
         }
