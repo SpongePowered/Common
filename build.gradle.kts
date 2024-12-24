@@ -57,33 +57,33 @@ val mixinsConfig by configurations.register("mixins") {
 val main by sourceSets
 
 val applaunch by sourceSets.registering {
-    spongeImpl.applyNamedDependencyOnOutput(project, this, main, project, main.implementationConfigurationName)
+    spongeImpl.addDependencyToImplementation(this, main)
 
     configurations.named(implementationConfigurationName) {
         extendsFrom(applaunchConfig)
     }
 }
 val launch by sourceSets.registering {
-    spongeImpl.applyNamedDependencyOnOutput(project, applaunch.get(), this, project, this.implementationConfigurationName)
-    spongeImpl.applyNamedDependencyOnOutput(project, this, main, project, main.implementationConfigurationName)
+    spongeImpl.addDependencyToImplementation(applaunch.get(), this)
+    spongeImpl.addDependencyToImplementation(this, main)
 
     configurations.named(implementationConfigurationName) {
         extendsFrom(launchConfig)
     }
 }
 val accessors by sourceSets.registering {
-    spongeImpl.applyNamedDependencyOnOutput(project, launch.get(), this, project, this.implementationConfigurationName)
-    spongeImpl.applyNamedDependencyOnOutput(project, this, main, project, main.implementationConfigurationName)
+    spongeImpl.addDependencyToImplementation(launch.get(), this)
+    spongeImpl.addDependencyToImplementation(this, main)
 
     configurations.named(implementationConfigurationName) {
         extendsFrom(accessorsConfig)
     }
 }
 val mixins by sourceSets.registering {
-    spongeImpl.applyNamedDependencyOnOutput(project, launch.get(), this, project, this.implementationConfigurationName)
-    spongeImpl.applyNamedDependencyOnOutput(project, applaunch.get(), this, project, this.implementationConfigurationName)
-    spongeImpl.applyNamedDependencyOnOutput(project, accessors.get(), this, project, this.implementationConfigurationName)
-    spongeImpl.applyNamedDependencyOnOutput(project, main, this, project, this.implementationConfigurationName)
+    spongeImpl.addDependencyToImplementation(launch.get(), this)
+    spongeImpl.addDependencyToImplementation(applaunch.get(), this)
+    spongeImpl.addDependencyToImplementation(accessors.get(), this)
+    spongeImpl.addDependencyToImplementation(main, this)
 
     configurations.named(implementationConfigurationName) {
         extendsFrom(mixinsConfig)
@@ -176,25 +176,6 @@ dependencies {
     }
 }
 
-indraSpotlessLicenser {
-    licenseHeaderFile(rootProject.file("HEADER.txt"))
-
-    property("name", "Sponge")
-    property("organization", organization)
-    property("url", projectUrl)
-}
-
-idea {
-    if (project != null) {
-        (project as ExtensionAware).extensions["settings"].run {
-            (this as ExtensionAware).extensions.getByType(org.jetbrains.gradle.ext.TaskTriggersConfig::class).run {
-                afterSync(":modlauncher-transformers:build")
-                afterSync(":library-manager:build")
-            }
-        }
-    }
-}
-
 allprojects {
     configurations.configureEach {
         resolutionStrategy.dependencySubstitution {
@@ -283,6 +264,14 @@ allprojects {
             indentWithSpaces(4)
             trimTrailingWhitespace()
         }
+    }
+
+    indraSpotlessLicenser {
+        licenseHeaderFile(rootProject.file("HEADER.txt"))
+
+        property("name", "Sponge")
+        property("organization", organization)
+        property("url", projectUrl)
     }
 
     val spongeSnapshotRepo: String? by project

@@ -52,12 +52,13 @@ public final class SpongeTabListEntry implements TabListEntry {
     private int latency;
     private GameMode gameMode;
     private boolean listed;
+    private int weight;
     private boolean updateWithoutSend;
     private final ProfilePublicKey.Data profilePublicKey;
 
     public SpongeTabListEntry(
         final TabList list, final GameProfile profile, @Nullable final Component displayName, final int latency, final GameMode gameMode,
-            final boolean listed, final ProfilePublicKey.Data profilePublicKey) {
+            final boolean listed, final int weight, final ProfilePublicKey.Data profilePublicKey) {
         Preconditions.checkState(list instanceof SpongeTabList, "list is not a SpongeTabList");
         this.list = (SpongeTabList) list;
         this.profile = Objects.requireNonNull(profile, "profile");
@@ -65,6 +66,7 @@ public final class SpongeTabListEntry implements TabListEntry {
         this.latency = latency;
         this.gameMode = Objects.requireNonNull(gameMode, "game mode");
         this.listed = listed;
+        this.weight = weight;
         this.profilePublicKey = profilePublicKey;
     }
 
@@ -123,6 +125,18 @@ public final class SpongeTabListEntry implements TabListEntry {
     public SpongeTabListEntry setListed(boolean listed) {
         this.listed = listed;
         this.sendUpdate(ClientboundPlayerInfoUpdatePacket.Action.UPDATE_LISTED);
+        return this;
+    }
+
+    @Override
+    public int weight() {
+        return this.weight;
+    }
+
+    @Override
+    public SpongeTabListEntry setWeight(int weight) {
+        this.weight = weight;
+        this.sendUpdate(ClientboundPlayerInfoUpdatePacket.Action.UPDATE_LIST_ORDER);
         return this;
     }
 

@@ -1,24 +1,3 @@
-plugins {
-    eclipse
-    idea
-}
-// Make sure jar is present for other projects
-eclipse {
-    synchronizationTasks(tasks.jar)
-}
-
-val organization: String by project
-val projectUrl: String by project
-
-indraSpotlessLicenser {
-    licenseHeaderFile(rootProject.file("HEADER.txt"))
-
-    property("name", "Sponge")
-    property("organization", organization)
-    property("url", projectUrl)
-}
-
-
 dependencies {
     // AccessWidener transformer
     implementation(libs.accessWidener) {
@@ -47,4 +26,12 @@ dependencies {
 
     // And finally, compile only annotations
     compileOnly(apiLibs.checkerQual)
+}
+
+tasks {
+    jar {
+        manifest {
+            attributes("Automatic-Module-Name" to "sponge.modlauncher.transformers")
+        }
+    }
 }
