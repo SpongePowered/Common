@@ -1,6 +1,6 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import net.minecraftforge.gradle.userdev.UserDevExtension
-import org.spongepowered.gradle.impl.ConvertAWToAT
+import org.spongepowered.gradle.impl.AWToAT
 
 buildscript {
     repositories {
@@ -206,18 +206,15 @@ dependencies {
     }
 }
 
-val convertAWToAT = tasks.register("convertAWToAT", ConvertAWToAT::class) {
-    accessWideners(main.get().resources.filter { it.name.endsWith(".accesswidener") })
-    accessWideners(forgeMain.resources.filter { it.name.endsWith(".accesswidener") })
-    accessTransformer.set(project.layout.buildDirectory.file("generated/resources/at.cfg"))
-}
+val awFiles: Set<File> = files(main.get().resources, forgeMain.resources).filter { it.name.endsWith(".accesswidener") }.files
+val atFile = project.layout.buildDirectory.file("generated/resources/at.cfg").get().asFile
+AWToAT.convert(awFiles, atFile)
 
 val mixinConfigs: MutableSet<String> = spongeImpl.mixinConfigurations
 
 extensions.configure(UserDevExtension::class) {
     mappings("official", "1.21.3")
-    accessTransformers.from(convertAWToAT.flatMap { it.accessTransformer })
-
+    accessTransformers.from(atFile)
     reobf = false
 
     runs {
@@ -225,11 +222,9 @@ extensions.configure(UserDevExtension::class) {
             ideaModule("Sponge.SpongeForge.main")
 
             // property("forge.logging.console.level", "debug")
-
             // jvmArgs("-Dbsl.debug=true") // Uncomment to debug bootstrap classpath
 
             args(mixinConfigs.flatMap { sequenceOf("--mixin.config", it) })
-
             environment("MOD_CLASSES", "nop")
         }
 

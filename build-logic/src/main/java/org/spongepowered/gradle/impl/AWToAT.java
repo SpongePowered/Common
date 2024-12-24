@@ -32,43 +32,27 @@ import dev.architectury.at.io.AccessTransformFormats;
 import net.fabricmc.accesswidener.AccessWidenerReader;
 import net.fabricmc.accesswidener.AccessWidenerVisitor;
 import org.cadixdev.bombe.type.signature.MethodSignature;
-import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
-import org.gradle.api.file.ConfigurableFileCollection;
-import org.gradle.api.file.RegularFileProperty;
-import org.gradle.api.tasks.InputFiles;
-import org.gradle.api.tasks.OutputFile;
-import org.gradle.api.tasks.TaskAction;
+import org.gradle.api.logging.Logger;
+import org.gradle.api.logging.Logging;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.Set;
 
-public abstract class ConvertAWToAT extends DefaultTask {
+public class AWToAT {
+    private static final Logger logger = Logging.getLogger(AWToAT.class);
 
-    @InputFiles
-    public abstract ConfigurableFileCollection getAccessWideners();
-
-    public void accessWideners(Object... paths) {
-        this.getAccessWideners().from(paths);
-    }
-
-    @OutputFile
-    public abstract RegularFileProperty getAccessTransformer();
-
-    @TaskAction
-    public void convert() {
-        final Set<File> awFiles = this.getAccessWideners().getFiles();
-        final File atFile = this.getAccessTransformer().get().getAsFile();
+    public static void convert(final Iterable<File> awFiles, final File atFile) {
+        AWToAT.logger.lifecycle("Converting AWs {} to AT {} ...", awFiles, atFile);
 
         final AccessTransformSet at = AccessTransformSet.create();
 
         for (final File awFile : awFiles) {
             try (final BufferedReader reader = Files.newBufferedReader(awFile.toPath())) {
-                ConvertAWToAT.convert(reader, at);
+                AWToAT.convert(reader, at);
             } catch (final IOException e) {
                 throw new GradleException("Failed to read access widener: " + awFile, e);
             }
@@ -79,28 +63,30 @@ public abstract class ConvertAWToAT extends DefaultTask {
         } catch (IOException e) {
             throw new GradleException("Failed to write access transformer: " + atFile, e);
         }
+
+        AWToAT.logger.lifecycle("Converted AWs to AT.");
     }
 
-    public static void convert(final BufferedReader reader, final AccessTransformSet at) throws IOException {
+    private static void convert(final BufferedReader reader, final AccessTransformSet at) throws IOException {
         new AccessWidenerReader(new AccessWidenerVisitor() {
             @Override
             public void visitClass(final String name, final  AccessWidenerReader.AccessType access, final  boolean transitive) {
-                at.getOrCreateClass(name).merge(ConvertAWToAT.convertEntry(access));
+                at.getOrCreateClass(name).merge(AWToAT.convertEntry(access));
             }
 
             @Override
             public void visitMethod(final String owner, final String name, final String descriptor, final AccessWidenerReader.AccessType access, final boolean transitive) {
-                at.getOrCreateClass(owner).mergeMethod(MethodSignature.of(name, descriptor), ConvertAWToAT.convertEntry(access));
+                at.getOrCreateClass(owner).mergeMethod(MethodSignature.of(name, descriptor), AWToAT.convertEntry(access));
             }
 
             @Override
             public void visitField(final String owner, final String name, final String descriptor, final AccessWidenerReader.AccessType access, final boolean transitive) {
-                at.getOrCreateClass(owner).mergeField(name, ConvertAWToAT.convertEntry(access));
+                at.getOrCreateClass(owner).mergeField(name, AWToAT.convertEntry(access));
             }
         }).read(reader);
     }
 
-    public static AccessTransform convertEntry(final AccessWidenerReader.AccessType access) {
+    private static AccessTransform convertEntry(final AccessWidenerReader.AccessType access) {
         return switch (access) {
             case ACCESSIBLE -> AccessTransform.of(AccessChange.PUBLIC);
             case EXTENDABLE, MUTABLE -> AccessTransform.of(AccessChange.PUBLIC, ModifierChange.REMOVE);
