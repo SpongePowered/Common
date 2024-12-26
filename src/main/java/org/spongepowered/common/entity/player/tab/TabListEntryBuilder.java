@@ -44,6 +44,7 @@ public final class TabListEntryBuilder implements TabListEntry.Builder {
     private int latency;
     private boolean listed = true;
     private @Nullable GameMode gameMode;
+    private int weight;
 
     @Override
     public TabListEntry.Builder list(TabList list) {
@@ -82,12 +83,18 @@ public final class TabListEntryBuilder implements TabListEntry.Builder {
     }
 
     @Override
+    public TabListEntry.Builder weight(int weight) {
+        this.weight = weight;
+        return this;
+    }
+
+    @Override
     public TabListEntry build() {
         Preconditions.checkState(this.list != null, "list must be set");
         Preconditions.checkState(this.profile != null, "profile must be set");
         Preconditions.checkState(this.gameMode != null, "game mode must be set");
 
-        return new SpongeTabListEntry(this.list, this.profile, this.displayName, this.latency, this.gameMode, this.listed, null);
+        return new SpongeTabListEntry(this.list, this.profile, this.displayName, this.latency, this.gameMode, this.listed, this.weight, null);
     }
 
     @Override
@@ -97,6 +104,7 @@ public final class TabListEntryBuilder implements TabListEntry.Builder {
         this.displayName = value.displayName().orElse(null);
         this.latency = value.latency();
         this.gameMode = Objects.requireNonNull(value.gameMode(), "game mode");
+        this.weight = value.weight();
         return this;
     }
 
@@ -107,6 +115,7 @@ public final class TabListEntryBuilder implements TabListEntry.Builder {
         this.displayName = null;
         this.latency = 0;
         this.gameMode = null;
+        this.weight = 0;
         return this;
     }
 

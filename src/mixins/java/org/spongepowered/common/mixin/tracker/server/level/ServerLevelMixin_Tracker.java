@@ -373,6 +373,14 @@ public abstract class ServerLevelMixin_Tracker extends LevelMixin_Tracker implem
         this.tracker$apiExplosion = apiExplosion;
     }
 
+    @Inject(method = "explode", cancellable = true, at = @At(value = "INVOKE",
+        target = "Lnet/minecraft/world/level/ServerExplosion;explode()V", shift = At.Shift.AFTER))
+    private void tracker$onCancelled(final CallbackInfo ci) {
+        if (this.tracker$apiExplosion == null) {
+            ci.cancel();
+        }
+    }
+
     /**
      * See {@link net.minecraft.client.multiplayer.ClientPacketListener#handleExplosion} for client side handling
      */
