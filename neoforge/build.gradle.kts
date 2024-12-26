@@ -352,6 +352,9 @@ tasks {
 
         from(commonProject.sourceSets.named("applaunch").map { it.output })
         from(forgeAppLaunch.output)
+        // We need to exclude this as NeoForge ships jackson-core as a library
+        // and we would be violating the packages
+        dependencyFilter.exclude(dependencyFilter.dependency("com.fasterxml.jackson.core:jackson-core"))
 
         // Make sure to relocate access widener so that we don't conflict with other coremods
         relocate("net.fabricmc.accesswidener", "org.spongepowered.neoforge.libs.accesswidener")
