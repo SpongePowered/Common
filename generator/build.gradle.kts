@@ -5,12 +5,7 @@ plugins {
 description = "Code generator for automatically producing API catalog classes based off of Vanilla MC data"
 
 minecraft {
-    rootProject.sourceSets["main"].resources
-            .filter { it.name.endsWith(".accesswidener") }
-            .files
-            .forEach {
-                accessWideners(it)
-            }
+    accessWideners(rootProject.sourceSets["main"].resources.filter { it.name.endsWith(".accesswidener") })
 }
 
 configurations.configureEach {

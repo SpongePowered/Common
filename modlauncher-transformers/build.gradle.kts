@@ -31,7 +31,7 @@ dependencies {
 tasks {
     jar {
         manifest {
-            attributes("Automatic-Module-Name" to "sponge.modlauncher.transformers")
+            attributes("Automatic-Module-Name" to "sponge.modlauncher_transformers")
         }
     }
 }

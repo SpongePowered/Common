@@ -14,7 +14,7 @@ plugins {
     alias(libs.plugins.shadow)
     id("implementation-structure")
     alias(libs.plugins.blossom)
-    id("dev.architectury.loom") version "1.6.411"
+    id("dev.architectury.loom")
 }
 
 val commonProject = parent!!
@@ -312,7 +312,7 @@ tasks {
                         .toList()
             }
 
-            jvmArguments.add("-Dbsl.debug=true") // Uncomment to debug bootstrap classpath
+            // jvmArguments.add("-Dbsl.debug=true") // Uncomment to debug bootstrap classpath
 
             sourceSets.forEach {
                 dependsOn(it.classesTaskName)

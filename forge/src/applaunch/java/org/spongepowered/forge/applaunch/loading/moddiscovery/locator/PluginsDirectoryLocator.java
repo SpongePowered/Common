@@ -27,12 +27,12 @@ package org.spongepowered.forge.applaunch.loading.moddiscovery.locator;
 import cpw.mods.modlauncher.api.LamdbaExceptionUtils;
 import net.minecraftforge.fml.loading.ModDirTransformerDiscoverer;
 import net.minecraftforge.fml.loading.StringUtils;
-import net.minecraftforge.fml.loading.moddiscovery.AbstractModProvider;
 import net.minecraftforge.fml.loading.moddiscovery.ModFile;
 import net.minecraftforge.forgespi.locating.IModLocator;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.spongepowered.common.applaunch.AppLaunch;
+import org.spongepowered.forge.applaunch.loading.moddiscovery.AbstractModProvider;
 import org.spongepowered.forge.applaunch.loading.moddiscovery.PluginFileParser;
 
 import java.nio.file.Files;
@@ -40,7 +40,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Stream;
 
 public final class PluginsDirectoryLocator extends AbstractModProvider implements IModLocator {
@@ -60,21 +59,18 @@ public final class PluginsDirectoryLocator extends AbstractModProvider implement
         return modFiles;
     }
 
+    @SuppressWarnings("UnstableApiUsage")
     private Stream<ModFile> scanForPluginsIn(final Path pluginsDirectory) {
         final List<Path> excluded = ModDirTransformerDiscoverer.allExcluded();
         return LamdbaExceptionUtils.uncheck(() -> Files.list(pluginsDirectory))
             .filter((p) -> !excluded.contains(p) && StringUtils.toLowerCase(p.getFileName().toString()).endsWith(".jar"))
             .sorted(Comparator.comparing((path) -> StringUtils.toLowerCase(path.getFileName().toString())))
-            .map((p) -> PluginFileParser.newPluginInstance(this, p))
+            .map((p) -> PluginFileParser.newModFile(this, false, p))
             .filter(ModFile::identifyMods);
     }
 
     @Override
     public String name() {
         return "plugins directory";
-    }
-
-    @Override
-    public void initArguments(final Map<String, ?> arguments) {
     }
 }
