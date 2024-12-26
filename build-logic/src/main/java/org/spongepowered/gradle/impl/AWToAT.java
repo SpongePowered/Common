@@ -41,6 +41,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 
 public class AWToAT {
     private static final Logger logger = Logging.getLogger(AWToAT.class);
@@ -58,8 +59,13 @@ public class AWToAT {
             }
         }
 
-        try (final BufferedWriter writer = Files.newBufferedWriter(atFile.toPath())) {
-            AccessTransformFormats.FML.write(writer, at);
+        try {
+            final Path atPath = atFile.toPath();
+            Files.createDirectories(atPath.getParent());
+
+            try (final BufferedWriter writer = Files.newBufferedWriter(atPath)) {
+                AccessTransformFormats.FML.write(writer, at);
+            }
         } catch (IOException e) {
             throw new GradleException("Failed to write access transformer: " + atFile, e);
         }
