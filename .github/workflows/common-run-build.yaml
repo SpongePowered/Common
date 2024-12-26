@@ -16,13 +16,13 @@ jobs:
       matrix:
         project:
           - vanilla
-#          - forge
+          - forge
           - neoforge
         include:
           - project: vanilla
             gradleProject: SpongeVanilla
-#          - project: forge
-#            gradleProject: SpongeForge
+          - project: forge
+            gradleProject: SpongeForge
           - project: neoforge
             gradleProject: SpongeNeo
     steps:
