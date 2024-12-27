@@ -26,21 +26,21 @@ package org.spongepowered.forge.mixin.core.world.entity.vehicle;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.vehicle.Boat;
+import net.minecraft.world.entity.vehicle.AbstractBoat;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
-import org.spongepowered.common.bridge.world.entity.vehicle.BoatBridge;
+import org.spongepowered.common.bridge.world.entity.vehicle.AbstractBoatBridge;
 
-@Mixin(Boat.class)
-public abstract class BoatMixin_Forge implements BoatBridge {
+@Mixin(AbstractBoat.class)
+public abstract class BoatMixin_Forge implements AbstractBoatBridge {
 
     @Redirect(method = "getGroundFriction", at = @At(
-            value = "INVOKE",
-            target = "Lnet/minecraft/world/level/block/state/BlockState;getFriction(Lnet/minecraft/world/level/LevelReader;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/entity/Entity;)F")
+        value = "INVOKE",
+        target = "Lnet/minecraft/world/level/block/state/BlockState;getFriction(Lnet/minecraft/world/level/LevelReader;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/entity/Entity;)F")
     )
     private float forge$getBlockFrictionIfBoatIsNotOverridingMovingOnLand(BlockState caller, LevelReader level, BlockPos pos, Entity entity) {
         final boolean movesOnLand = this.bridge$getMoveOnLand();

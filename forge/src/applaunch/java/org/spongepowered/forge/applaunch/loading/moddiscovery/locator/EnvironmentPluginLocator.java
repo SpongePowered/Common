@@ -24,15 +24,14 @@
  */
 package org.spongepowered.forge.applaunch.loading.moddiscovery.locator;
 
-import net.minecraftforge.fml.loading.moddiscovery.AbstractModProvider;
 import net.minecraftforge.forgespi.locating.IModLocator;
+import org.spongepowered.forge.applaunch.loading.moddiscovery.AbstractModProvider;
 import org.spongepowered.forge.applaunch.loading.moddiscovery.PluginFileParser;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Stream;
 
 public final class EnvironmentPluginLocator extends AbstractModProvider implements IModLocator {
@@ -41,23 +40,14 @@ public final class EnvironmentPluginLocator extends AbstractModProvider implemen
     public List<ModFileOrException> scanMods() {
         final List<ModFileOrException> modFiles = new ArrayList<>();
         for (final Path[] paths : EnvironmentPluginLocator.getPluginsPaths()) {
-            modFiles.add(new ModFileOrException(PluginFileParser.newPluginInstance(this, paths), null));
+            modFiles.add(new ModFileOrException(PluginFileParser.newModFile(this, false, paths), null));
         }
         return modFiles;
     }
 
     @Override
-    protected ModFileOrException createMod(Path path) {
-        return new ModFileOrException(PluginFileParser.newPluginInstance(this, path), null);
-    }
-
-    @Override
     public String name() {
         return "environment plugin";
-    }
-
-    @Override
-    public void initArguments(final Map<String, ?> arguments) {
     }
 
     private static List<Path[]> getPluginsPaths() {

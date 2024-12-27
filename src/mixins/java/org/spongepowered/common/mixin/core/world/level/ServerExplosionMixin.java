@@ -31,14 +31,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ExplosionDamageCalculator;
 import net.minecraft.world.level.ServerExplosion;
-import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-import org.spongepowered.api.event.Cause;
-import org.spongepowered.api.event.SpongeEventFactory;
-import org.spongepowered.api.event.world.ExplosionEvent;
-import org.spongepowered.api.world.explosion.Explosion;
-import org.spongepowered.api.world.server.ServerLocation;
-import org.spongepowered.api.world.server.ServerWorld;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -46,17 +39,12 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.common.SpongeCommon;
 import org.spongepowered.common.bridge.world.level.ExplosionBridge;
 import org.spongepowered.common.event.ShouldFire;
-import org.spongepowered.common.event.tracking.PhaseTracker;
-import org.spongepowered.common.util.VecHelper;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
-import java.util.stream.Collectors;
 
 @Mixin(net.minecraft.world.level.ServerExplosion.class)
 public abstract class ServerExplosionMixin implements ExplosionBridge {
@@ -84,6 +72,7 @@ public abstract class ServerExplosionMixin implements ExplosionBridge {
     private int impl$resolution;
     private float impl$randomness;
     private double impl$knockbackMultiplier;
+    private List<BlockPos> impl$affectedBlocks;
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void impl$onConstructed(final ServerLevel $$0, final Entity $$1, final DamageSource $$2,
@@ -95,7 +84,6 @@ public abstract class ServerExplosionMixin implements ExplosionBridge {
         this.impl$knockbackMultiplier = 1.0;
     }
 
-    private List<BlockPos> impl$affectedBlocks;
 
     @Redirect(method = "explode", at = @At(value = "INVOKE",
         target = "Lnet/minecraft/world/level/ServerExplosion;calculateExplodedPositions()Ljava/util/List;"))
@@ -107,48 +95,6 @@ public abstract class ServerExplosionMixin implements ExplosionBridge {
 
         this.impl$affectedBlocks = this.shadow$calculateExplodedPositions();
         return this.impl$affectedBlocks;
-    }
-
-
-    @Redirect(method = "hurtEntities", at = @At(value = "INVOKE",
-        target = "Lnet/minecraft/server/level/ServerLevel;getEntities(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/phys/AABB;)Ljava/util/List;"))
-    private List<Entity> impl$onGetHurtEntities(final ServerLevel instance, final Entity sourceEntity, final AABB aabb) {
-        final List<Entity> entities;
-        if (this.impl$shouldDamageEntities) {
-            // filter out invulnerable entities before event
-            entities = instance.getEntities(sourceEntity, aabb).stream()
-                .filter(e -> !e.ignoreExplosion((net.minecraft.world.level.Explosion) this))
-                .toList();
-        } else {
-            entities = Collections.emptyList();
-        }
-
-        if (ShouldFire.EXPLOSION_EVENT_DETONATE) {
-            final var apiWorld = (ServerWorld) this.level;
-            final var apiEntities = entities.stream().map(org.spongepowered.api.entity.Entity.class::cast).toList();
-            final var apiBlockPositions = this.impl$affectedBlocks.stream().map(bp -> ServerLocation.of(apiWorld, VecHelper.toVector3i(bp))).toList();
-            final Cause cause = PhaseTracker.getCauseStackManager().currentCause();
-            final ExplosionEvent.Detonate event = SpongeEventFactory.createExplosionEventDetonate(cause, apiBlockPositions, apiEntities, (Explosion) this, apiWorld);
-            if (SpongeCommon.post(event)) {
-                this.impl$affectedBlocks.clear(); // no blocks affected
-                return Collections.emptyList(); // no entities affected
-            }
-            if (this.shadow$interactsWithBlocks()) {
-                this.impl$affectedBlocks = event.affectedLocations().stream().map(VecHelper::toBlockPos).collect(Collectors.toList());
-            }
-            if (this.impl$shouldDamageEntities) {
-                return event.entities().stream().map(Entity.class::cast).toList();
-            }
-        }
-        return entities;
-    }
-
-    @Redirect(method = "hurtEntities", at = @At(value = "NEW", target = "(DDD)Lnet/minecraft/world/phys/Vec3;"))
-    private Vec3 impl$onAddKnockback(final double $$0, final double $$1, final double $$2) {
-        // Honor our knockback value from event
-        return new Vec3($$0 * this.impl$knockbackMultiplier,
-                        $$1 * this.impl$knockbackMultiplier,
-                        $$2 * this.impl$knockbackMultiplier);
     }
 
     @Redirect(method = "explode", at = @At(value = "INVOKE",

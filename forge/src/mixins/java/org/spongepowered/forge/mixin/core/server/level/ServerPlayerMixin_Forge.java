@@ -24,8 +24,10 @@
  */
 package org.spongepowered.forge.mixin.core.server.level;
 
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.common.event.tracking.PhaseContext;
 import org.spongepowered.common.event.tracking.PhaseTracker;
@@ -37,10 +39,13 @@ import org.spongepowered.forge.mixin.core.world.entity.LivingEntityMixin_Forge;
 @Mixin(ServerPlayer.class)
 public abstract class ServerPlayerMixin_Forge extends LivingEntityMixin_Forge {
 
+    @Shadow public abstract ServerLevel shadow$serverLevel();
+
     // override from LivingEntityMixin_Forge
     @Override
     protected void forge$onElytraUse(final CallbackInfo ci) {
-        final PhaseContext<?> context = PhaseTracker.SERVER.getPhaseContext();
+        final ServerLevel level = this.shadow$serverLevel();
+        final PhaseContext<?> context = PhaseTracker.getWorldInstance(level).getPhaseContext();
         final TransactionalCaptureSupplier transactor = context.getTransactor();
         final net.minecraft.server.level.ServerPlayer player = (net.minecraft.server.level.ServerPlayer) (Object) this;
         try (final EffectTransactor ignored = transactor.logPlayerInventoryChangeWithEffect(player, PlayerInventoryTransaction.EventCreator.STANDARD)) {

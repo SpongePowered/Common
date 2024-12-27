@@ -22,30 +22,15 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.spongepowered.forge.mixin.tracker.world.level.block.state;
+package org.spongepowered.bootstrap.dev;
 
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.level.block.state.BlockBehaviour;
-import net.minecraft.world.level.block.state.BlockState;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+public class Multimap<K, V> extends HashMap<K, List<V>> {
 
-@Mixin(BlockBehaviour.class)
-public abstract class BlockBehaviorMixin_Forge_Tracker {
-    @Shadow protected abstract boolean isRandomlyTicking(BlockState $$0);
-
-    @Inject(
-        method = "getLootTable",
-        at = @At(
-            value = "FIELD",
-            target = "Lnet/minecraft/world/level/block/state/BlockBehaviour;drops:Ljava/util/Optional;",
-            remap = false
-        )
-    )
-    protected void forgeTracker$initializeTrackingState(CallbackInfoReturnable<ResourceLocation> cir) {
+    public void add(K key, V value) {
+        this.computeIfAbsent(key, k -> new LinkedList<>()).add(value);
     }
 }

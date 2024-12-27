@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.spongepowered.vanilla.devlaunch;
+package org.spongepowered.bootstrap.dev;
 
 import java.nio.file.Files;
 import java.nio.file.Path;

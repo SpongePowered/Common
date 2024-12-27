@@ -63,7 +63,7 @@ public abstract class ServerPlayerGameModeMixin_Forge_Tracker {
         final ItemStack itemStack, final Level level, final BlockState state, final BlockPos pos,
         final Player player
     ) {
-        final PhaseContext<@NonNull ?> context = PhaseTracker.SERVER.getPhaseContext();
+        final PhaseContext<@NonNull ?> context = PhaseTracker.getWorldInstance(player.level()).getPhaseContext();
         final TransactionalCaptureSupplier transactor = context.getTransactor();
         // Log the prepare drops here because Forge rewrites
         // this method to call mine block before calling destroy block

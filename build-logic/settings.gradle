@@ -9,7 +9,14 @@ pluginManagement {
 
 dependencyResolutionManagement {
     repositoriesMode = RepositoriesMode.FAIL_ON_PROJECT_REPOS
-    repositories { pluginManagement.repositories.each { add(it) } }
+    repositories {
+        pluginManagement.repositories.each { add(it) }
+        maven {
+            url = "https://maven.architectury.dev/"
+            name = "architectury"
+        }
+    }
+
     versionCatalogs {
         libs {
             from files("../gradle/libs.versions.toml")

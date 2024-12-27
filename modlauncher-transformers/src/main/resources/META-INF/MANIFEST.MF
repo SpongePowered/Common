@@ -1,1 +1,1 @@
-Automatic-Module-Name: sponge.modlauncher.transformers
+Automatic-Module-Name: sponge.modlauncher_transformers

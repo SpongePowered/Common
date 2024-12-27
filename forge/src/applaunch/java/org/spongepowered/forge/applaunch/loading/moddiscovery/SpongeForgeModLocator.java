@@ -28,20 +28,23 @@ import com.google.common.collect.ImmutableMap;
 import cpw.mods.modlauncher.Environment;
 import cpw.mods.modlauncher.Launcher;
 import net.minecraftforge.fml.loading.FMLEnvironment;
-import net.minecraftforge.fml.loading.moddiscovery.AbstractModProvider;
 import net.minecraftforge.forgespi.locating.IModLocator;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.spongepowered.forge.applaunch.plugin.ForgePluginPlatform;
 
+import java.io.File;
 import java.net.URI;
 import java.net.URL;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.stream.Stream;
 
 public final class SpongeForgeModLocator extends AbstractModProvider implements IModLocator {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -49,7 +52,19 @@ public final class SpongeForgeModLocator extends AbstractModProvider implements 
     @Override
     public List<ModFileOrException> scanMods() {
         if (!FMLEnvironment.production) {
-            return List.of();
+            final List<ModFileOrException> resources = new ArrayList<>();
+            final String resourcesProp = System.getProperty("sponge.resources");
+            if (resourcesProp != null) {
+                for (final String entry : resourcesProp.split(File.pathSeparator)) {
+                    if (entry.isBlank()) {
+                        continue;
+                    }
+
+                    final Path[] paths = Stream.of(entry.split("&")).map(Path::of).toArray(Path[]::new);
+                    resources.add(new ModFileOrException(PluginFileParser.newModFile(this, true, paths), null));
+                }
+            }
+            return resources;
         }
 
         try {
@@ -66,7 +81,7 @@ public final class SpongeForgeModLocator extends AbstractModProvider implements 
                         } catch (Exception e) {
                             throw new RuntimeException(e);
                         }
-                    }).map(this::createMod).toList();
+                    }).map((path -> new ModFileOrException(PluginFileParser.newModFile(this, false, path), null))).toList();
         } catch (Exception e) {
             LOGGER.error("Failed to scan mod candidates", e);
         }

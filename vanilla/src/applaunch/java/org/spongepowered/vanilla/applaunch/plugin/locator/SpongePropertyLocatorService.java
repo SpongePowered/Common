@@ -28,6 +28,7 @@ import org.spongepowered.plugin.Environment;
 import org.spongepowered.plugin.builtin.jvm.JVMPluginResource;
 import org.spongepowered.plugin.builtin.jvm.locator.JVMPluginResourceLocatorService;
 
+import java.io.File;
 import java.net.URI;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
@@ -37,11 +38,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 
-public final class GameResourceLocatorService implements JVMPluginResourceLocatorService {
+public final class SpongePropertyLocatorService implements JVMPluginResourceLocatorService {
 
     @Override
     public String name() {
-        return "game";
+        return "sponge_resources";
     }
 
     @Override
@@ -49,9 +50,9 @@ public final class GameResourceLocatorService implements JVMPluginResourceLocato
         environment.logger().info("Locating '{}' resources...", this.name());
 
         final Set<JVMPluginResource> resources = new HashSet<>();
-        final String resourcesProp = System.getProperty("sponge.gameResources");
+        final String resourcesProp = System.getProperty("sponge.resources");
         if (resourcesProp != null) {
-            for (final String entry : resourcesProp.split(";")) {
+            for (final String entry : resourcesProp.split(File.pathSeparator)) {
                 if (entry.isBlank()) {
                     continue;
                 }

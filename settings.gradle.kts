@@ -70,6 +70,7 @@ includeBuild("SpongeAPI") {
 }
 include("modlauncher-transformers")
 include("library-manager")
+include("bootstrap-dev")
 include("generator")
 
 // Optional projects

@@ -36,6 +36,7 @@ import net.minecraftforge.fml.ModContainer;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.ModLoadingException;
 import net.minecraftforge.fml.ModLoadingStage;
+import net.minecraftforge.fml.config.IConfigEvent;
 import net.minecraftforge.fml.event.IModBusEvent;
 import net.minecraftforge.fml.javafmlmod.AutomaticEventSubscriber;
 import net.minecraftforge.forgespi.language.IModInfo;
@@ -47,7 +48,6 @@ import org.spongepowered.common.launch.Launch;
 import org.spongepowered.forge.launch.event.ForgeEventManager;
 import org.spongepowered.plugin.metadata.model.PluginDependency;
 
-import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 
 // Spongified FMLModContainer
@@ -66,7 +66,6 @@ public final class PluginModContainer extends ModContainer {
         this.scanResults = modFileScanResults;
         this.activityMap.put(ModLoadingStage.CONSTRUCT, this::constructPlugin);
         this.eventBus = BusBuilder.builder().setExceptionHandler(this::onEventFailed).setTrackPhases(false).markerType(IModBusEvent.class).useModLauncher().build();
-        this.configHandler = Optional.of(ce -> this.eventBus.post(ce.self()));
         this.contextExtension = () -> null;
         this.initializationLock = new CountDownLatch(1);
 
@@ -78,6 +77,11 @@ public final class PluginModContainer extends ModContainer {
             LOGGER.error(Logging.LOADING, "Failed to load class {}", className, e);
             throw new ModLoadingException(info, ModLoadingStage.CONSTRUCT, "fml.modloading.failedtoloadmodclass", e);
         }
+    }
+
+    @Override
+    public void dispatchConfigEvent(IConfigEvent event) {
+        this.eventBus.post(event.self());
     }
 
     private void onEventFailed(IEventBus iEventBus, Event event, IEventListener[] iEventListeners, int i, Throwable throwable) {

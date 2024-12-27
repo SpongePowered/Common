@@ -43,7 +43,6 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 import org.spongepowered.common.SpongeCommon;
 import org.spongepowered.common.bridge.world.entity.LivingEntityBridge;
 import org.spongepowered.common.event.tracking.PhaseTracker;
@@ -170,14 +169,10 @@ public abstract class LivingEntityMixin_Attack_Impl extends EntityMixin implemen
      * After calling #actuallyHurt (even when invulnerable), if cancelled return early or is still invulnerable
      * and reset {@link #lastHurt} and {@link #invulnerableTime}
      */
-    @Inject(method = "hurtServer", locals = LocalCapture.CAPTURE_FAILHARD, cancellable = true,
+    @Inject(method = "hurtServer", cancellable = true,
         at = @At(value = "INVOKE", shift = At.Shift.AFTER, ordinal = 0,
             target = "Lnet/minecraft/world/entity/LivingEntity;actuallyHurt(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/damagesource/DamageSource;F)V"))
-    private void attackImpl$afterActuallyHurt1(
-        final ServerLevel level, final DamageSource source, final float damageTaken,
-        final CallbackInfoReturnable<Boolean> cir, final float dealtDamage, final boolean isBlocked,
-        float $$5, boolean wasHurt
-    ) {
+    private void attackImpl$afterActuallyHurt1(final ServerLevel level, final DamageSource source, final float damageTaken, final CallbackInfoReturnable<Boolean> cir) {
         if (this.attackImpl$actuallyHurtCancelled || damageTaken <= this.lastHurt) {
             this.invulnerableTime = this.attackImpl$InvulnerableTime;
             this.lastHurt = this.attackImpl$lastHurt;

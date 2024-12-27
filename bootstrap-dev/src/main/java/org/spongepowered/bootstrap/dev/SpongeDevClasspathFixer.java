@@ -22,18 +22,16 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.spongepowered.vanilla.devlaunch;
+package org.spongepowered.bootstrap.dev;
 
 import net.minecraftforge.bootstrap.api.BootstrapClasspathModifier;
 
+import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -53,14 +51,16 @@ public class SpongeDevClasspathFixer implements BootstrapClasspathModifier {
     @Override
     public boolean process(final List<Path[]> classpath) {
         final Path spongeRoot = Paths.get(System.getProperty("sponge.dev.root")).toAbsolutePath();
-        final Set<String> bootLibs = Set.of(System.getProperty("sponge.dev.boot").split(";"));
-        final Set<String> gameShadedLibs = Set.of(System.getProperty("sponge.dev.gameShaded").split(";"));
+        final Set<String> ignoredLibs = Set.of("bootstrap-dev.jar");
+        final Set<String> bootLibs = Set.of(System.getProperty("sponge.dev.boot").split(File.pathSeparator));
+        final Set<String> gameShadedLibs = Set.of(System.getProperty("sponge.dev.gameShaded").split(File.pathSeparator));
 
-        final Map<String, List<Path>> bootSourceSets = new HashMap<>();
-        final Map<String, List<Path>> unknownProjects = new HashMap<>();
+        // boot layer
+        final Multimap<String, Path> bootUnions = new Multimap<>();
 
-        final List<Path> spongeImplUnion = new ArrayList<>();
-        final List<Path> gameLibs = new ArrayList<>();
+        // game or plugin layer
+        final Multimap<String, Path> unions = new Multimap<>();
+        final List<Path> libs = new ArrayList<>();
 
         final AtomicBoolean hasAPISourceSet = new AtomicBoolean(false);
 
@@ -69,7 +69,7 @@ public class SpongeDevClasspathFixer implements BootstrapClasspathModifier {
                 return false;
             }
 
-            final Path path = paths[0].toAbsolutePath();
+            final Path path = paths[0];
             final SourceSet sourceSet = SourceSet.identify(path);
             if (sourceSet != null) {
                 if (sourceSet.project().startsWith(spongeRoot)) {
@@ -79,8 +79,11 @@ public class SpongeDevClasspathFixer implements BootstrapClasspathModifier {
 
                     final String projectName = spongeRoot.relativize(sourceSet.project()).toString();
                     switch (projectName) {
-                        case "modlauncher-transformers":
-                            bootSourceSets.computeIfAbsent("transformers", k -> new LinkedList<>()).add(path);
+                        case "bootstrap-dev":
+                            // ignore
+                            break;
+                        case "modlauncher-transformers", "library-manager":
+                            bootUnions.add(projectName, path);
                             break;
                         case "SpongeAPI":
                             switch (sourceSet.name()) {
@@ -91,25 +94,25 @@ public class SpongeDevClasspathFixer implements BootstrapClasspathModifier {
                                     hasAPISourceSet.set(true);
                                     // no break
                                 default:
-                                    spongeImplUnion.add(path);
+                                    unions.add("sponge", path);
                                     break;
                             }
                             break;
-                        case "", "vanilla":
+                        case "", "vanilla", "forge":
                             switch (sourceSet.name()) {
-                                case "devlaunch":
-                                    // ignore
-                                    break;
                                 case "applaunch":
-                                    bootSourceSets.computeIfAbsent("applaunch", k -> new LinkedList<>()).add(path);
+                                    bootUnions.add("applaunch", path);
+                                    break;
+                                case "lang":
+                                    unions.add("lang", path);
                                     break;
                                 default:
-                                    spongeImplUnion.add(path);
+                                    unions.add("sponge", path);
                                     break;
                             }
                             break;
                         default:
-                            unknownProjects.computeIfAbsent(projectName, k -> new LinkedList<>()).add(path);
+                            unions.add(projectName, path);
                             break;
                     }
                 } else {
@@ -117,12 +120,19 @@ public class SpongeDevClasspathFixer implements BootstrapClasspathModifier {
                         System.out.println("External SourceSet (" + sourceSet + "): " + path);
                     }
 
-                    unknownProjects.computeIfAbsent(sourceSet.project().toString(), k -> new LinkedList<>()).add(path);
+                    unions.add(sourceSet.project().toString(), path);
                 }
                 return true;
             }
 
             final String fileName = path.getFileName().toString();
+
+            if (ignoredLibs.contains(fileName)) {
+                if (DEBUG) {
+                    System.out.println("Ignored: " + path);
+                }
+                return true;
+            }
 
             if (bootLibs.contains(fileName)) {
                 if (DEBUG) {
@@ -135,14 +145,14 @@ public class SpongeDevClasspathFixer implements BootstrapClasspathModifier {
                 if (DEBUG) {
                     System.out.println("Sponge: " + path);
                 }
-                spongeImplUnion.add(path);
+                unions.add("sponge", path);
                 return true;
             }
 
             if (DEBUG) {
                 System.out.println("Game: " + path);
             }
-            gameLibs.add(path);
+            libs.add(path);
             return true;
         });
 
@@ -150,12 +160,12 @@ public class SpongeDevClasspathFixer implements BootstrapClasspathModifier {
             return false;
         }
 
-        for (final List<Path> sourceSets : bootSourceSets.values()) {
+        for (final List<Path> sourceSets : bootUnions.values()) {
             classpath.add(sourceSets.toArray(Path[]::new));
         }
 
         if (hasAPISourceSet.get()) {
-            spongeImplUnion.removeIf((path) -> {
+            unions.get("sponge").removeIf((path) -> {
                 if (Files.isRegularFile(path)) {
                     final String fileName = path.getFileName().toString();
                     if (fileName.startsWith("spongeapi") && fileName.endsWith(".jar")) {
@@ -169,26 +179,23 @@ public class SpongeDevClasspathFixer implements BootstrapClasspathModifier {
             });
         }
 
-        final StringBuilder gameResourcesEnvBuilder = new StringBuilder();
-        for (final Path resource : gameLibs) {
-            gameResourcesEnvBuilder.append(resource).append(';');
+        final StringBuilder resourcesEnvBuilder = new StringBuilder();
+        for (final Path resource : libs) {
+            resourcesEnvBuilder.append(resource).append(File.pathSeparator);
         }
-        for (final List<Path> project : unknownProjects.values()) {
+        for (final List<Path> project : unions.values()) {
             for (final Path resource : project) {
-                gameResourcesEnvBuilder.append(resource).append('&');
+                resourcesEnvBuilder.append(resource).append('&');
             }
-            gameResourcesEnvBuilder.setCharAt(gameResourcesEnvBuilder.length() - 1, ';');
+            resourcesEnvBuilder.setCharAt(resourcesEnvBuilder.length() - 1, File.pathSeparatorChar);
         }
-        for (final Path resource : spongeImplUnion) {
-            gameResourcesEnvBuilder.append(resource).append('&');
-        }
-        gameResourcesEnvBuilder.setLength(gameResourcesEnvBuilder.length() - 1);
-        final String gameResourcesEnv = gameResourcesEnvBuilder.toString();
+        resourcesEnvBuilder.setLength(resourcesEnvBuilder.length() - 1);
+        final String resourcesEnv = resourcesEnvBuilder.toString();
 
         if (DEBUG) {
-            System.out.println("Game resources env: " + gameResourcesEnv);
+            System.out.println("Resources env: " + resourcesEnv);
         }
-        System.setProperty("sponge.gameResources", gameResourcesEnv);
+        System.setProperty("sponge.resources", resourcesEnv);
         return true;
     }
 }
