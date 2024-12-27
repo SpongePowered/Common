@@ -315,7 +315,7 @@ val vanillaManifest = java.manifest {
         "Specification-Vendor" to "SpongePowered",
         "Specification-Version" to apiVersion,
         "Implementation-Title" to project.name,
-        "Implementation-Version" to spongeImpl.generatePlatformBuildVersionString(apiVersion, minecraftVersion, recommendedVersion),
+        "Implementation-Version" to version,
         "Implementation-Vendor" to "SpongePowered"
     )
     // These two are included by most CI's
@@ -332,7 +332,7 @@ vanillaLaunch.apply {
     blossom.resources {
         property("apiVersion", apiVersion)
         property("minecraftVersion", minecraftVersion)
-        property("version", provider { project.version.toString() })
+        property("version", version.toString())
     }
 }
 vanillaInstaller.apply {

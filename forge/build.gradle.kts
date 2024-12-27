@@ -255,7 +255,7 @@ val forgeManifest = java.manifest {
             "Specification-Vendor" to "SpongePowered",
             "Specification-Version" to apiVersion,
             "Implementation-Title" to project.name,
-            "Implementation-Version" to spongeImpl.generatePlatformBuildVersionString(apiVersion, minecraftVersion, recommendedVersion, forgeVersion),
+            "Implementation-Version" to version,
             "Implementation-Vendor" to "SpongePowered"
     )
     // These two are included by most CI's
@@ -387,8 +387,10 @@ tasks {
 sourceSets {
     main {
         blossom.resources {
-            property("version", project.provider { project.version.toString() })
-            property("description", project.description.toString())
+            property("apiVersion", apiVersion)
+            property("version", version.toString())
+            property("description", description.toString())
+            property("forgeVersion", forgeVersion)
         }
     }
 }

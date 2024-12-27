@@ -41,14 +41,14 @@ description="The SpongeAPI implementation targeting vanilla Minecraft and 3rd pa
 [[dependencies.sponge]]
 modId="spongeapi"
 mandatory=true
-versionRange="[12.0.0,)"
+versionRange="[{{ apiVersion }},)"
 ordering="AFTER"
 side="BOTH"
 
 
 [[mods]]
 modId="spongeapi"
-version="12.0.0"
+version="{{ apiVersion }}"
 displayName="SpongeAPI"
 displayTest="IGNORE_SERVER_VERSION"
 credits="SpongePowered and Contributors"
