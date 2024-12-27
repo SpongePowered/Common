@@ -95,13 +95,13 @@ public abstract class AbstractFurnaceBlockEntityMixin_Neo extends BaseContainerB
         final Cause cause = PhaseTracker.getCauseStackManager().currentCause();
         if (entity.cookingProgress == 0) { // Start
             final CookingEvent.Start event = SpongeEventFactory.createCookingEventStart(cause, (FurnaceBlockEntity) entityIn, Optional.of(fuel),
-                Optional.of((CookingRecipe) recipe.value()), Optional.of((ResourceKey) (Object) recipe.id()));
+                Optional.of((CookingRecipe) recipe.value()), Optional.of((ResourceKey) (Object) recipe.id().location()));
             SpongeCommon.post(event);
             return !event.isCancelled();
         } else { // Tick up
             final ItemStackSnapshot cooking = ItemStackUtil.snapshotOf(entity.items.get(0));
             final CookingEvent.Tick event = SpongeEventFactory.createCookingEventTick(cause, (FurnaceBlockEntity) entityIn, cooking, Optional.of(fuel),
-                Optional.of((CookingRecipe) recipe.value()), Optional.of((ResourceKey) (Object) recipe.id()));
+                Optional.of((CookingRecipe) recipe.value()), Optional.of((ResourceKey) (Object) recipe.id().location()));
             SpongeCommon.post(event);
             return !event.isCancelled();
         }
@@ -181,7 +181,7 @@ public abstract class AbstractFurnaceBlockEntityMixin_Neo extends BaseContainerB
         }
         final Optional<ItemStackSnapshot> fuel = hasFuel && !slots.get(1).isEmpty() ? Optional.of(ItemStackUtil.snapshotOf(slots.get(1))) : Optional.empty();
         final CookingEvent.Finish event = SpongeEventFactory.createCookingEventFinish(cause, entity,
-            fuel, Optional.of((CookingRecipe) recipe.value()), Optional.of((ResourceKey) (Object) recipe.id()), Collections.unmodifiableList(transactions));
+            fuel, Optional.of((CookingRecipe) recipe.value()), Optional.of((ResourceKey) (Object) recipe.id().location()), Collections.unmodifiableList(transactions));
         SpongeCommon.post(event);
 
         for (final SlotTransaction transaction : transactions) {
