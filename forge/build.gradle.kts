@@ -1,6 +1,8 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import net.minecraftforge.gradle.userdev.UserDevExtension
+import org.gradle.internal.DefaultTaskExecutionRequest
 import org.spongepowered.gradle.impl.AWToAT
+import org.spongepowered.gradle.impl.IdeHelper
 
 buildscript {
     repositories {
@@ -381,6 +383,12 @@ tasks {
 
     assemble {
         dependsOn(universalJar)
+    }
+}
+
+if (IdeHelper.isIdeaSync()) {
+    afterEvaluate {
+        gradle.startParameter.taskRequests.add(DefaultTaskExecutionRequest(listOf(":SpongeForge:genIntellijRuns")))
     }
 }
 
