@@ -70,7 +70,7 @@ public abstract class AbstractFurnaceBlockEntityMixin_Neo extends BaseContainerB
 
     // @formatter:off
     @Shadow protected NonNullList<ItemStack> items;
-    @Shadow int cookingProgress;
+    @Shadow int cookingTimer;
     // @formatter:on
 
     private boolean neo$filledWaterBucket;
@@ -93,13 +93,13 @@ public abstract class AbstractFurnaceBlockEntityMixin_Neo extends BaseContainerB
         final ItemStackSnapshot fuel = ItemStackUtil.snapshotOf(slots.get(1));
 
         final Cause cause = PhaseTracker.getCauseStackManager().currentCause();
-        if (entity.cookingProgress == 0) { // Start
+        if (entity.cookingTimer == 0) { // Start
             final CookingEvent.Start event = SpongeEventFactory.createCookingEventStart(cause, (FurnaceBlockEntity) entityIn, Optional.of(fuel),
                 Optional.of((CookingRecipe) recipe.value()), Optional.of((ResourceKey) (Object) recipe.id().location()));
             SpongeCommon.post(event);
             return !event.isCancelled();
         } else { // Tick up
-            final ItemStackSnapshot cooking = ItemStackUtil.snapshotOf(entity.items.get(0));
+            final ItemStackSnapshot cooking = ItemStackUtil.snapshotOf(entity.items.getFirst());
             final CookingEvent.Tick event = SpongeEventFactory.createCookingEventTick(cause, (FurnaceBlockEntity) entityIn, cooking, Optional.of(fuel),
                 Optional.of((CookingRecipe) recipe.value()), Optional.of((ResourceKey) (Object) recipe.id().location()));
             SpongeCommon.post(event);
@@ -124,7 +124,7 @@ public abstract class AbstractFurnaceBlockEntityMixin_Neo extends BaseContainerB
             recipe.map(r -> (CookingRecipe) r.value()), recipe.map(r -> (ResourceKey) (Object) r.id()));
         SpongeCommon.post(event);
         if (event.isCancelled()) {
-            return entity.cookingProgress; // dont tick down
+            return entity.cookingTimer; // dont tick down
         }
 
         return clampedCookTime;
