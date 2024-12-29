@@ -5,7 +5,7 @@
     },
     "license": "MIT",
     "global": {
-        "version": "11.0.0",
+        "version": "{{ apiVersion }}",
         "links": {
             "homepage": "https://www.spongepowered.org",
             "source": "https://www.spongepowered.org/source",
@@ -20,7 +20,7 @@
         "dependencies": [
             {
                 "id": "spongeapi",
-                "version": "11.0.0"
+                "version": "{{ apiVersion }}"
             }
         ]
     },
@@ -202,14 +202,12 @@
         {
             "id": "maptest",
             "name": "MapTest",
-            "version": "1.0.0",
             "entrypoint": "org.spongepowered.test.map.MapTest",
             "description": "Tests map api"
         },
         {
             "id": "collidetest",
             "name": "CollideTest",
-            "version": "1.0.0",
             "entrypoint": "org.spongepowered.test.collide.CollideTest",
             "description": "Tests collide events"
         },
@@ -222,7 +220,6 @@
         {
             "id": "chunkmanagertest",
             "name": "Chunk Manager Test",
-            "version": "1.0.0",
             "entrypoint": "org.spongepowered.test.chunkmanager.ChunkManagerTest",
             "description": "Tests the Chunk Manager"
         },
@@ -354,7 +351,7 @@
             "dependencies": [
                 {
                     "id": "parentmoduletestplugin",
-                    "version": "12.0.0",
+                    "version": "{{ apiVersion }}",
                     "load-order": "BEFORE"
                 }
             ]
@@ -370,7 +367,7 @@
             "dependencies": [
                 {
                     "id": "childmoduletestplugin",
-                    "version": "12.0.0",
+                    "version": "{{ apiVersion }}",
                     "load-order": "AFTER"
                 }
             ]

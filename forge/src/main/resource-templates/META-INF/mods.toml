@@ -1,5 +1,5 @@
 modLoader="javafml"
-loaderVersion="[52,)"
+loaderVersion="[53,)"
 license="MIT License"
 
 issueTrackerURL="https://github.com/SpongePowered/Sponge/issues"
@@ -17,7 +17,7 @@ description = "{{ description }}"
 [[dependencies.spongeforge]]
 modId="forge"
 mandatory=true
-versionRange="[52,)"
+versionRange="[{{ forgeVersion }},)"
 ordering="AFTER"
 side="BOTH"
 
@@ -41,14 +41,14 @@ description="The SpongeAPI implementation targeting vanilla Minecraft and 3rd pa
 [[dependencies.sponge]]
 modId="spongeapi"
 mandatory=true
-versionRange="[12.0.0,)"
+versionRange="[{{ apiVersion }},)"
 ordering="AFTER"
 side="BOTH"
 
 
 [[mods]]
 modId="spongeapi"
-version="12.0.0"
+version="{{ apiVersion }}"
 displayName="SpongeAPI"
 displayTest="IGNORE_SERVER_VERSION"
 credits="SpongePowered and Contributors"

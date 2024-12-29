@@ -4,6 +4,19 @@
         "version": "1.0"
     },
     "license": "MIT",
+    "global": {
+        "links": {
+            "homepage": "https://www.spongepowered.org",
+            "source": "https://www.spongepowered.org/source",
+            "issues": "https://www.spongepowered.org/issues"
+        },
+        "contributors": [
+            {
+                "name": "SpongePowered",
+                "description": "Lead Developer"
+            }
+        ]
+    },
     "plugins": [
         {
             "id": "spongevanilla",
@@ -11,41 +24,19 @@
             "version": "{{ version }}",
             "entrypoint": "org.spongepowered.vanilla.SpongeVanilla",
             "description": "Vanilla Minecraft with Sponge",
-            "links": {
-                "homepage": "https://www.spongepowered.org",
-                "source": "https://www.spongepowered.org/source",
-                "issues": "https://www.spongepowered.org/issues"
-            },
-            "contributors": [
-                {
-                    "name": "SpongePowered",
-                    "description": "Lead Developer"
-                }
-            ],
             "dependencies": [
                 {
                     "id": "sponge",
-                    "version": "{{ minecraftVersion }}-{{ apiVersion }}"
+                    "version": "{{ version }}"
                 }
             ]
         },
         {
             "id": "sponge",
             "name": "Sponge",
-            "version": "{{ minecraftVersion }}-{{ apiVersion }}",
+            "version": "{{ version }}",
             "entrypoint": "org.spongepowered.common.SpongeCommon",
             "description": "The common Sponge implementation",
-            "links": {
-                "homepage": "https://www.spongepowered.org",
-                "source": "https://www.spongepowered.org/source",
-                "issues": "https://www.spongepowered.org/issues"
-            },
-            "contributors": [
-                {
-                    "name": "SpongePowered",
-                    "description": "Lead Developer"
-                }
-            ],
             "dependencies": [
                 {
                     "id": "minecraft",
@@ -62,18 +53,7 @@
             "name": "SpongeAPI",
             "version": "{{ apiVersion }}",
             "entrypoint": "org.spongepowered.api.Sponge",
-            "description": "The Minecraft API specification",
-            "links": {
-                "homepage": "https://www.spongepowered.org",
-                "source": "https://www.spongepowered.org/source",
-                "issues": "https://www.spongepowered.org/issues"
-            },
-            "contributors": [
-                {
-                    "name": "SpongePowered",
-                    "description": "Lead Developer"
-                }
-            ]
+            "description": "The Minecraft API specification"
         }
     ]
 }

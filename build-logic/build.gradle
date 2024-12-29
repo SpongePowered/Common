@@ -17,7 +17,7 @@ dependencies {
     implementation(libs.accessWidener)
 
     // arch-loom is used by SpongeNeo but must be declared here to avoid a classloader conflict with its transitive dependencies
-    api("dev.architectury:architectury-loom:1.6.411")
+    api("dev.architectury:architectury-loom:1.7.423")
 }
 
 indraSpotlessLicenser {

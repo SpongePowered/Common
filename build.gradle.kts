@@ -22,21 +22,21 @@ val recommendedVersion: String by project
 val organization: String by project
 val projectUrl: String by project
 
+version = spongeImpl.generateImplementationVersionString(apiVersion, minecraftVersion, recommendedVersion)
+
 val commonManifest = java.manifest {
     attributes(
         "Specification-Title" to "Sponge",
         "Specification-Vendor" to "SpongePowered",
         "Specification-Version" to apiVersion,
         "Implementation-Title" to project.name,
-        "Implementation-Version" to spongeImpl.generateImplementationVersionString(apiVersion, minecraftVersion, recommendedVersion),
+        "Implementation-Version" to version,
         "Implementation-Vendor" to "SpongePowered"
     )
     // These two are included by most CI's
     System.getenv()["GIT_COMMIT"]?.apply { attributes("Git-Commit" to this) }
     System.getenv()["GIT_BRANCH"]?.apply { attributes("Git-Branch" to this) }
 }
-
-version = spongeImpl.generateImplementationVersionString(apiVersion, minecraftVersion, recommendedVersion)
 
 // SpongeCommon configurations
 val applaunchConfig by configurations.register("applaunch")

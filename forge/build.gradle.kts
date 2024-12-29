@@ -1,6 +1,8 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import net.minecraftforge.gradle.userdev.UserDevExtension
+import org.gradle.internal.DefaultTaskExecutionRequest
 import org.spongepowered.gradle.impl.AWToAT
+import org.spongepowered.gradle.impl.IdeHelper
 
 buildscript {
     repositories {
@@ -255,7 +257,7 @@ val forgeManifest = java.manifest {
             "Specification-Vendor" to "SpongePowered",
             "Specification-Version" to apiVersion,
             "Implementation-Title" to project.name,
-            "Implementation-Version" to spongeImpl.generatePlatformBuildVersionString(apiVersion, minecraftVersion, recommendedVersion, forgeVersion),
+            "Implementation-Version" to version,
             "Implementation-Vendor" to "SpongePowered"
     )
     // These two are included by most CI's
@@ -384,11 +386,19 @@ tasks {
     }
 }
 
+if (IdeHelper.isIdeaSync()) {
+    afterEvaluate {
+        gradle.startParameter.taskRequests.add(DefaultTaskExecutionRequest(listOf(":SpongeForge:genIntellijRuns")))
+    }
+}
+
 sourceSets {
     main {
         blossom.resources {
-            property("version", project.provider { project.version.toString() })
-            property("description", project.description.toString())
+            property("apiVersion", apiVersion)
+            property("version", version.toString())
+            property("description", description.toString())
+            property("forgeVersion", forgeVersion)
         }
     }
 }
