@@ -32,6 +32,8 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.level.gameevent.GameEvent;
 import org.objectweb.asm.Opcodes;
+import org.spongepowered.api.entity.Entity;
+import org.spongepowered.api.event.entity.DamageEntityEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
@@ -43,29 +45,27 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.common.bridge.world.level.LevelBridge;
 import org.spongepowered.common.event.ShouldFire;
 import org.spongepowered.common.event.SpongeCommonEventFactory;
+import org.spongepowered.common.event.cause.entity.damage.SpongeDamageTracker;
 import org.spongepowered.common.event.tracking.PhaseTracker;
 import org.spongepowered.common.event.tracking.context.transaction.EffectTransactor;
 import org.spongepowered.common.mixin.core.world.entity.LivingEntityMixin;
-import org.spongepowered.common.util.DamageEventUtil;
 
 @Mixin(ArmorStand.class)
 public abstract class ArmorStandMixin extends LivingEntityMixin {
 
     // @formatter:off
-    @Shadow protected abstract void shadow$causeDamage(ServerLevel level, DamageSource damageSource, float damage); // damageArmorStand
-    @Shadow protected abstract void shadow$brokenByPlayer(final ServerLevel $$0, final DamageSource $$1);
-
+    @Shadow protected abstract void shadow$causeDamage(ServerLevel level, DamageSource source, float damage); // damageArmorStand
+    @Shadow protected abstract void shadow$brokenByPlayer(final ServerLevel level, final DamageSource source);
     // @formatter:on
 
     /**
      * The return value is set to false if the entity should not be completely destroyed.
      */
     private void impl$callDamageBeforeKill(final DamageSource source, final CallbackInfoReturnable<Boolean> cir) {
-        var event = DamageEventUtil.callSimpleDamageEntityEvent(source, (ArmorStand) (Object) this, Math.max(1000, this.shadow$getHealth()));
-        if (event.isCancelled()) {
+        final DamageEntityEvent.Post event = SpongeDamageTracker.callDamageEvents((Entity) this, source, this.shadow$getHealth());
+        if (event == null) {
             cir.setReturnValue(false);
-        }
-        if (event.finalDamage() < this.shadow$getHealth()) { // Deal reduced damage?
+        } else if (event.finalDamage() < this.shadow$getHealth()) { // Deal reduced damage?
             this.shadow$causeDamage((ServerLevel) this.shadow$level(), source, (float) event.finalDamage());
             cir.setReturnValue(false);
         }
@@ -78,7 +78,7 @@ public abstract class ArmorStandMixin extends LivingEntityMixin {
     @Inject(method = "hurtServer", cancellable = true,
             slice = @Slice(from = @At(value = "FIELD", target = "Lnet/minecraft/tags/DamageTypeTags;BYPASSES_INVULNERABILITY:Lnet/minecraft/tags/TagKey;")),
             at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/decoration/ArmorStand;kill(Lnet/minecraft/server/level/ServerLevel;)V", ordinal = 0))
-    private void impl$fireDamageEventOutOfWorld(final ServerLevel level, final DamageSource source, final float $$1, final CallbackInfoReturnable<Boolean> cir) {
+    private void impl$fireDamageEventOutOfWorld(final ServerLevel level, final DamageSource source, final float damage, final CallbackInfoReturnable<Boolean> cir) {
         this.impl$callDamageBeforeKill(source, cir);
     }
 
@@ -88,7 +88,7 @@ public abstract class ArmorStandMixin extends LivingEntityMixin {
     @Inject(method = "hurtServer", cancellable = true,
             slice = @Slice(from = @At(value = "FIELD", target = "Lnet/minecraft/tags/DamageTypeTags;IS_EXPLOSION:Lnet/minecraft/tags/TagKey;")),
             at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/decoration/ArmorStand;brokenByAnything(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/damagesource/DamageSource;)V"))
-    private void impl$fireDamageEventExplosion(final ServerLevel level, final DamageSource source, final float amount, final CallbackInfoReturnable<Boolean> cir) {
+    private void impl$fireDamageEventExplosion(final ServerLevel level, final DamageSource source, final float damage, final CallbackInfoReturnable<Boolean> cir) {
         this.impl$callDamageBeforeKill(source, cir);
     }
 
@@ -100,9 +100,9 @@ public abstract class ArmorStandMixin extends LivingEntityMixin {
     @Redirect(method = "hurtServer",
             slice = @Slice(from = @At(value = "FIELD", target = "Lnet/minecraft/tags/DamageTypeTags;IGNITES_ARMOR_STANDS:Lnet/minecraft/tags/TagKey;")),
             at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/decoration/ArmorStand;causeDamage(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/damagesource/DamageSource;F)V"))
-    private void impl$fireDamageEventDamage(final ArmorStand self, final ServerLevel level, final DamageSource source, final float amount) {
-        var event = DamageEventUtil.callSimpleDamageEntityEvent(source, self, amount);
-        if (!event.isCancelled()) {
+    private void impl$fireDamageEventDamage(final ArmorStand self, final ServerLevel level, final DamageSource source, final float damage) {
+        final DamageEntityEvent.Post event = SpongeDamageTracker.callDamageEvents((Entity) this, source, damage);
+        if (event != null) {
             this.shadow$causeDamage(level, source, (float) event.finalDamage());
         }
     }
@@ -113,7 +113,7 @@ public abstract class ArmorStandMixin extends LivingEntityMixin {
     @Inject(method = "hurtServer",
             slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/world/damagesource/DamageSource;isCreativePlayer()Z")),
             at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/decoration/ArmorStand;playBrokenSound()V"), cancellable = true)
-    private void impl$fireDamageEventCreativePunch(final ServerLevel level, final DamageSource source, final float amount, final CallbackInfoReturnable<Boolean> cir) {
+    private void impl$fireDamageEventCreativePunch(final ServerLevel level, final DamageSource source, final float damage, final CallbackInfoReturnable<Boolean> cir) {
         this.impl$callDamageBeforeKill(source, cir);
     }
 
@@ -123,17 +123,17 @@ public abstract class ArmorStandMixin extends LivingEntityMixin {
     @Inject(method = "hurtServer", cancellable = true,
             slice = @Slice(from = @At(value = "FIELD", target = "Lnet/minecraft/world/entity/decoration/ArmorStand;lastHit:J", opcode = Opcodes.GETFIELD)),
             at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;broadcastEntityEvent(Lnet/minecraft/world/entity/Entity;B)V"))
-    private void impl$fireDamageEventFirstPunch(final ServerLevel level, final DamageSource source, final float amount, final CallbackInfoReturnable<Boolean> cir) {
+    private void impl$fireDamageEventFirstPunch(final ServerLevel level, final DamageSource source, final float damage, final CallbackInfoReturnable<Boolean> cir) {
         // While this doesn't technically "damage" the armor stand, it feels like damage in other respects, so fire an event.
-        var event = DamageEventUtil.callSimpleDamageEntityEvent(source, (ArmorStand) (Object) this, 0);
-        if (event.isCancelled()) {
+        final DamageEntityEvent.Post event = SpongeDamageTracker.callDamageEvents((Entity) this, source, 0);
+        if (event == null) {
             cir.setReturnValue(false);
         }
     }
 
     @Inject(method = "hurtServer", cancellable = true, at = @At(value = "INVOKE",
         target = "Lnet/minecraft/world/entity/decoration/ArmorStand;brokenByPlayer(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/damagesource/DamageSource;)V"))
-    private void impl$beforeBrokenByPlayer(final ServerLevel level, final DamageSource $$0, final float $$1, final CallbackInfoReturnable<Boolean> cir) {
+    private void impl$beforeBrokenByPlayer(final ServerLevel level, final DamageSource source, final float damage, final CallbackInfoReturnable<Boolean> cir) {
         if (ShouldFire.DESTRUCT_ENTITY_EVENT && !((LevelBridge) this.shadow$level()).bridge$isFake()) {
             final var event = SpongeCommonEventFactory.callDestructEntityEventDeath((ArmorStand) (Object) this, null);
             if (event.isCancelled()) {
@@ -145,10 +145,9 @@ public abstract class ArmorStandMixin extends LivingEntityMixin {
 
     @Redirect(method = "hurtServer", at = @At(value = "INVOKE",
         target = "Lnet/minecraft/world/entity/decoration/ArmorStand;brokenByPlayer(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/damagesource/DamageSource;)V"))
-    public void impl$onBrokenByPlayer(final ArmorStand instance, final ServerLevel $$0, final DamageSource $$1)
-    {
-        try (final EffectTransactor ignored = PhaseTracker.getWorldInstance($$0).getPhaseContext().getTransactor().ensureEntityDropTransactionEffect((LivingEntity) (Object) this)) {
-            this.shadow$brokenByPlayer($$0, $$1);
+    public void impl$onBrokenByPlayer(final ArmorStand self, final ServerLevel level, final DamageSource source) {
+        try (final EffectTransactor ignored = PhaseTracker.getWorldInstance(level).getPhaseContext().getTransactor().ensureEntityDropTransactionEffect((LivingEntity) (Object) this)) {
+            this.shadow$brokenByPlayer(level, source);
         }
     }
 
@@ -157,21 +156,21 @@ public abstract class ArmorStandMixin extends LivingEntityMixin {
      */
     @Inject(method = "hurtServer", cancellable = true, at = @At(value = "INVOKE",
             target = "Lnet/minecraft/world/entity/decoration/ArmorStand;brokenByPlayer(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/damagesource/DamageSource;)V"))
-    private void impl$fireDamageEventSecondPunch(final ServerLevel level, final DamageSource source, final float amount, final CallbackInfoReturnable<Boolean> cir) {
+    private void impl$fireDamageEventSecondPunch(final ServerLevel level, final DamageSource source, final float damage, final CallbackInfoReturnable<Boolean> cir) {
         this.impl$callDamageBeforeKill(source, cir);
     }
 
     /**
-     * To avoid a loop between {@link #kill} and {@link ArmorStand#hurt},
-     * we make sure that any killing within the {@link ArmorStand#hurt}
+     * To avoid a loop between {@link #kill} and {@link ArmorStand#hurtServer},
+     * we make sure that any killing within the {@link ArmorStand#hurtServer}
      * method calls this instead of the {@link Overwrite}
      *
-     * @param target the killed stand
+     * @param self the killed stand
      */
     @Redirect(method = "hurtServer", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/decoration/ArmorStand;kill(Lnet/minecraft/server/level/ServerLevel;)V"))
-    private void impl$actuallyKill(final ArmorStand target, final ServerLevel level) {
-        target.remove(RemovalReason.KILLED);
-        target.gameEvent(GameEvent.ENTITY_DIE);
+    private void impl$actuallyKill(final ArmorStand self, final ServerLevel level) {
+        self.remove(RemovalReason.KILLED);
+        self.gameEvent(GameEvent.ENTITY_DIE);
     }
 
     /**
@@ -179,12 +178,12 @@ public abstract class ArmorStandMixin extends LivingEntityMixin {
      * we make sure that any killing within the {@link #shadow$causeDamage}
      * method calls this instead of the {@link Overwrite}
      *
-     * @param target the killed stand
+     * @param self the killed stand
      */
     @Redirect(method = "causeDamage", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/decoration/ArmorStand;kill(Lnet/minecraft/server/level/ServerLevel;)V"))
-    private void impl$actuallyKill2(final ArmorStand target, final ServerLevel level) {
-        target.remove(RemovalReason.KILLED);
-        target.gameEvent(GameEvent.ENTITY_DIE);
+    private void impl$actuallyKill2(final ArmorStand self, final ServerLevel level) {
+        self.remove(RemovalReason.KILLED);
+        self.gameEvent(GameEvent.ENTITY_DIE);
     }
 
     /**
@@ -192,7 +191,7 @@ public abstract class ArmorStandMixin extends LivingEntityMixin {
      * @reason EntityArmorStand "simplifies" this method to simply call {@link
      * #shadow$remove(RemovalReason)}. However, this ignores our custom event.
      * Instead, delegate to the superclass causing it to use
-     * {@link ArmorStand#hurt(DamageSource, float)} with {@link DamageTypes#GENERIC_KILL}
+     * {@link ArmorStand#hurtServer} with {@link DamageTypes#GENERIC_KILL}
      *
      * This needs to be reimplemented in {@link #impl$actuallyKill}!
      */

@@ -22,31 +22,22 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.spongepowered.common.mixin.core.world.entity;
+package org.spongepowered.vanilla.mixin.core.world.entity.player;
 
-import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.Slice;
-import org.spongepowered.common.util.DamageEventUtil;
+import org.spongepowered.vanilla.mixin.core.world.entity.LivingEntityMixin_Vanilla_Damage;
 
-// Forge and Vanilla
-@Mixin(value = LivingEntity.class, priority = 900)
-public class LivingEntityMixin_Shared_Attack_Impl {
+@Mixin(Player.class)
+public abstract class PlayerMixin_Vanilla_Damage extends LivingEntityMixin_Vanilla_Damage {
 
-    protected DamageEventUtil.DamageEventResult attackImpl$actuallyHurtResult;
-
-    /**
-     * Set absorbed damage after calling {@link LivingEntity#setAbsorptionAmount} in which we called the event
-     */
-    @ModifyVariable(method = "actuallyHurt", ordinal = 2,
-        slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;setAbsorptionAmount(F)V", ordinal = 0)),
-        at = @At(value = "STORE", ordinal = 0))
-    public float attackImpl$setAbsorbed(final float value) {
-        if (this.attackImpl$actuallyHurtResult.event().isCancelled()) {
-            return 0;
-        }
-        return this.attackImpl$actuallyHurtResult.damageAbsorbed().orElse(0f);
+    @ModifyVariable(method = "actuallyHurt", at = @At("LOAD"), argsOnly = true, slice = @Slice(
+        from = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;awardStat(Lnet/minecraft/resources/ResourceLocation;I)V"),
+        to = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;causeFoodExhaustion(F)V")))
+    private float damage$firePostEvent_Player(final float damage) {
+        return this.damage$firePostEvent(damage);
     }
 }

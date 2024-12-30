@@ -24,9 +24,12 @@
  */
 package org.spongepowered.test.damage;
 
+import static net.kyori.adventure.text.Component.text;
+
 import com.google.inject.Inject;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.spongepowered.api.ResourceKey;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.Command;
@@ -35,15 +38,14 @@ import org.spongepowered.api.command.parameter.CommandContext;
 import org.spongepowered.api.datapack.DataPacks;
 import org.spongepowered.api.entity.living.player.server.ServerPlayer;
 import org.spongepowered.api.event.Listener;
-import org.spongepowered.api.event.cause.entity.damage.DamageFunction;
-import org.spongepowered.api.event.cause.entity.damage.DamageModifier;
 import org.spongepowered.api.event.cause.entity.damage.DamageScalings;
+import org.spongepowered.api.event.cause.entity.damage.DamageStep;
 import org.spongepowered.api.event.cause.entity.damage.DamageType;
 import org.spongepowered.api.event.cause.entity.damage.DamageTypeTemplate;
 import org.spongepowered.api.event.cause.entity.damage.DamageTypes;
 import org.spongepowered.api.event.cause.entity.damage.source.DamageSource;
 import org.spongepowered.api.event.entity.AttackEntityEvent;
-import org.spongepowered.api.event.entity.DamageEntityEvent;
+import org.spongepowered.api.event.entity.DamageCalculationEvent;
 import org.spongepowered.api.event.filter.cause.Root;
 import org.spongepowered.api.event.lifecycle.RegisterCommandEvent;
 import org.spongepowered.api.event.lifecycle.RegisterDataPackValueEvent;
@@ -51,11 +53,13 @@ import org.spongepowered.api.registry.RegistryKey;
 import org.spongepowered.api.registry.RegistryTypes;
 import org.spongepowered.api.tag.DamageTypeTags;
 import org.spongepowered.api.tag.TagTemplate;
-import org.spongepowered.api.util.Tuple;
 import org.spongepowered.plugin.PluginContainer;
 import org.spongepowered.plugin.builtin.jvm.Plugin;
 import org.spongepowered.test.LoadableModule;
 
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.util.Locale;
 
 @Plugin("damagetest")
 public class DamageTest implements LoadableModule {
@@ -111,38 +115,41 @@ public class DamageTest implements LoadableModule {
     }
 
     private static class DamageListener {
-        @Listener
-        private void onAttack(final AttackEntityEvent event, @Root DamageSource damageSource) {
-            final Audience audience = Sponge.server();
-            audience.sendMessage(Component.text("------------AttackEntityEvent------------"));
-            audience.sendMessage(Component.text().content("entity: ").append(event.entity().displayName().get()).build());
-            audience.sendMessage(Component.text("damage type: " + damageSource.type().key(RegistryTypes.DAMAGE_TYPE)));
-            audience.sendMessage(Component.text("damage: " + event.originalDamage()));
-            audience.sendMessage(Component.text("modifiers:"));
-            for (final DamageFunction f : event.originalFunctions()) {
-                final DamageModifier modifier = f.modifier();
-                final Tuple<Double, Double> tuple = event.originalModifierDamage(modifier);
-                audience.sendMessage(Component.text(" " + ResourceKey.resolve(modifier.group()).value() + "/" + modifier.type().key(RegistryTypes.DAMAGE_MODIFIER_TYPE).value() + ": " + tuple.first() + " -> " + tuple.second()));
-            }
-            audience.sendMessage(Component.text("final damage: " + event.originalFinalDamage()));
-            audience.sendMessage(Component.text("-----------------------------------------"));
+        private static final DecimalFormat decimalFormat = new DecimalFormat("0.00", DecimalFormatSymbols.getInstance(Locale.ROOT));
+
+        private static String format(final double value) {
+            return DamageListener.decimalFormat.format(value);
         }
 
         @Listener
-        private void onDamage(final DamageEntityEvent event, @Root DamageSource damageSource) {
+        private void onDamagePre(final DamageCalculationEvent.Pre event, @Root final DamageSource damageSource) {
+            final Component eventName = event instanceof AttackEntityEvent ?
+                text("AttackEntityEvent", NamedTextColor.RED) : text("DamageEntityEvent", NamedTextColor.BLUE);
+
             final Audience audience = Sponge.server();
-            audience.sendMessage(Component.text("------------DamageEntityEvent------------"));
-            audience.sendMessage(Component.text().content("entity: ").append(event.entity().displayName().get()).build());
-            audience.sendMessage(Component.text("damage type: " + damageSource.type().key(RegistryTypes.DAMAGE_TYPE)));
-            audience.sendMessage(Component.text("damage: " + event.originalDamage()));
-            audience.sendMessage(Component.text("modifiers:"));
-            for (final DamageFunction f : event.originalFunctions()) {
-                final DamageModifier modifier = f.modifier();
-                final Tuple<Double, Double> tuple = event.originalModifierDamage(modifier);
-                audience.sendMessage(Component.text(" " + ResourceKey.resolve(modifier.group()).value() + "/" + modifier.type().key(RegistryTypes.DAMAGE_MODIFIER_TYPE).value() + ": " + tuple.first() + " -> " + tuple.second()));
+            audience.sendMessage(text().content("-------------").append(eventName, text(".Pre", NamedTextColor.YELLOW), text("---------------")));
+            audience.sendMessage(text().content(damageSource.type().key(RegistryTypes.DAMAGE_TYPE).value())
+                .color(NamedTextColor.GOLD).append(text(" -> ", NamedTextColor.WHITE), event.entity().displayName().get()));
+            audience.sendMessage(text("base damage: " + format(event.baseDamage())));
+            audience.sendMessage(text("-----------------------------------------------"));
+        }
+
+        @Listener
+        private void onDamagePost(final DamageCalculationEvent.Post event, @Root final DamageSource damageSource) {
+            final Component eventName = event instanceof AttackEntityEvent ?
+                text("AttackEntityEvent", NamedTextColor.RED) : text("DamageEntityEvent", NamedTextColor.BLUE);
+
+            final Audience audience = Sponge.server();
+            audience.sendMessage(text().content("-------------").append(eventName, text(".Post", NamedTextColor.GREEN), text("--------------")));
+            audience.sendMessage(text().content(damageSource.type().key(RegistryTypes.DAMAGE_TYPE).value())
+                .color(NamedTextColor.GOLD).append(text(" -> ", NamedTextColor.WHITE), event.entity().displayName().get()));
+            audience.sendMessage(text("base damage: " + format(event.baseDamage())));
+            audience.sendMessage(text("steps:"));
+            for (final DamageStep step : event.steps()) {
+                audience.sendMessage(text(" " + step.type().key(RegistryTypes.DAMAGE_STEP_TYPE).value() + ": " + format(step.damageBeforeStep()) + " -> " + format(step.damageAfterStep())));
             }
-            audience.sendMessage(Component.text("final damage: " + event.originalFinalDamage()));
-            audience.sendMessage(Component.text("-----------------------------------------"));
+            audience.sendMessage(text("final damage: " + format(event.originalFinalDamage())));
+            audience.sendMessage(text("-----------------------------------------------"));
         }
     }
 }

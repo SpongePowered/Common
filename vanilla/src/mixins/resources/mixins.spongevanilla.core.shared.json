@@ -5,8 +5,8 @@
     "priority": 1301,
     "mixins": [
         "server.level.ServerEntityMixin_Shared",
-        "world.entity.LivingEntityMixin_Shared_Attack_Impl",
-        "world.entity.player.PlayerMixin_Shared_Attack_Impl",
+        "world.entity.LivingEntityMixin_Shared_Damage",
+        "world.entity.player.PlayerMixin_Shared_Damage",
         "world.entity.projectile.FishingHookMixin_Shared"
     ],
     "overwrites": {

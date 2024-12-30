@@ -26,7 +26,6 @@ package org.spongepowered.common.mixin.core.world.entity.vehicle;
 
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.vehicle.MinecartTNT;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.spongepowered.api.data.Keys;
@@ -40,9 +39,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.common.bridge.explosives.ExplosiveBridge;
 import org.spongepowered.common.bridge.explosives.FusedExplosiveBridge;
 import org.spongepowered.common.bridge.world.level.LevelBridge;
+import org.spongepowered.common.event.cause.entity.damage.SpongeDamageTracker;
 import org.spongepowered.common.event.tracking.PhaseTracker;
 import org.spongepowered.common.util.Constants;
-import org.spongepowered.common.util.DamageEventUtil;
 
 import java.util.Optional;
 
@@ -150,8 +149,8 @@ public abstract class MinecartTNTMixin extends AbstractMinecartMixin implements 
 
     @Inject(method = "hurtServer", cancellable = true, at = @At(value = "INVOKE",
         target = "Lnet/minecraft/world/entity/vehicle/MinecartTNT;explode(Lnet/minecraft/world/damagesource/DamageSource;D)V"))
-    private void attackImpl$postOnAttackEntityFrom(final ServerLevel level, final DamageSource source, final float amount, final CallbackInfoReturnable<Boolean> cir) {
-        if (DamageEventUtil.callOtherAttackEvent((Entity) (Object) this, source, amount).isCancelled()) {
+    private void attackImpl$postOnAttackEntityFrom(final ServerLevel level, final DamageSource source, final float damage, final CallbackInfoReturnable<Boolean> cir) {
+        if (SpongeDamageTracker.callDamageEvents((org.spongepowered.api.entity.Entity) this, source, damage) == null) {
             cir.setReturnValue(true);
         }
     }
