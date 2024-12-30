@@ -26,9 +26,9 @@ package org.spongepowered.common.mixin.core.world.entity.projectile;
 
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.projectile.ShulkerBullet;
 import net.minecraft.world.phys.HitResult;
+import org.spongepowered.api.entity.Entity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -36,7 +36,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.common.bridge.world.level.LevelBridge;
 import org.spongepowered.common.event.SpongeCommonEventFactory;
-import org.spongepowered.common.util.DamageEventUtil;
+import org.spongepowered.common.event.cause.entity.damage.SpongeDamageTracker;
 
 @Mixin(ShulkerBullet.class)
 public abstract class ShulkerBulletMixin extends ProjectileMixin {
@@ -53,8 +53,8 @@ public abstract class ShulkerBulletMixin extends ProjectileMixin {
 
     @Inject(method = "hurtServer", cancellable = true, at = @At(value = "INVOKE",
             target = "Lnet/minecraft/world/entity/projectile/ShulkerBullet;playSound(Lnet/minecraft/sounds/SoundEvent;FF)V"))
-    private void attackImpl$onAttackEntityFrom(final ServerLevel level, final DamageSource source, final float amount, final CallbackInfoReturnable<Boolean> cir) {
-        if (DamageEventUtil.callOtherAttackEvent((Entity) (Object) this, source, amount).isCancelled()) {
+    private void attack$onHurt(final ServerLevel level, final DamageSource source, final float damage, final CallbackInfoReturnable<Boolean> cir) {
+        if (SpongeDamageTracker.callDamageEvents((Entity) this, source, damage) == null) {
             cir.setReturnValue(true);
         }
     }

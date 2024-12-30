@@ -39,10 +39,10 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.common.bridge.explosives.ExplosiveBridge;
 import org.spongepowered.common.bridge.world.entity.boss.enderdragon.EndCrystalBridge;
+import org.spongepowered.common.event.cause.entity.damage.SpongeDamageTracker;
 import org.spongepowered.common.event.tracking.PhaseTracker;
 import org.spongepowered.common.mixin.core.world.entity.EntityMixin;
 import org.spongepowered.common.util.Constants;
-import org.spongepowered.common.util.DamageEventUtil;
 
 import java.util.Optional;
 
@@ -92,8 +92,8 @@ public abstract class EndCrystalMixin extends EntityMixin implements ExplosiveBr
 
     @Inject(method = "hurtServer", cancellable = true, at = @At(value = "INVOKE",
             target = "Lnet/minecraft/world/entity/boss/enderdragon/EndCrystal;remove(Lnet/minecraft/world/entity/Entity$RemovalReason;)V"))
-    private void attackImpl$onAttackEntityFrom(final ServerLevel level, final DamageSource source, final float amount, final CallbackInfoReturnable<Boolean> cir) {
-        if (DamageEventUtil.callOtherAttackEvent((Entity) (Object) this, source, amount).isCancelled()) {
+    private void attack$onHurt(final ServerLevel level, final DamageSource source, final float damage, final CallbackInfoReturnable<Boolean> cir) {
+        if (SpongeDamageTracker.callDamageEvents((org.spongepowered.api.entity.Entity) this, source, damage) == null) {
             cir.setReturnValue(true);
         }
     }

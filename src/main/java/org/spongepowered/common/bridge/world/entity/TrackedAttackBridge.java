@@ -22,19 +22,18 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.spongepowered.common.event.cause.entity.damage;
+package org.spongepowered.common.bridge.world.entity;
 
-import org.spongepowered.api.ResourceKey;
-import org.spongepowered.api.event.cause.entity.damage.DamageModifierType;
-import org.spongepowered.api.registry.RegistryTypes;
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.spongepowered.common.event.cause.entity.damage.SpongeAttackTracker;
 
-public final class SpongeDamageModifierType implements DamageModifierType {
+public interface TrackedAttackBridge {
 
-    @Override
-    public String toString() {
-        return RegistryTypes.DAMAGE_MODIFIER_TYPE.get().findValueKey(this)
-                .map(ResourceKey::toString)
-                .map("DamageModifierType[%s]"::formatted)
-                .orElse(super.toString());
+    @Nullable
+    SpongeAttackTracker attack$tracker();
+
+    // Neo hook
+    default double attack$interactionRangeSquared() {
+        return 9;
     }
 }

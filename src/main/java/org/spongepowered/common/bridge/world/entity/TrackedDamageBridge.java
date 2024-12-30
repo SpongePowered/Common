@@ -22,12 +22,33 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.spongepowered.common.mixin.core.world.item.enchantment;
+package org.spongepowered.common.bridge.world.entity;
 
-import net.minecraft.world.item.enchantment.Enchantment;
-import org.spongepowered.asm.mixin.Mixin;
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.spongepowered.api.event.cause.entity.damage.DamageStepTypes;
+import org.spongepowered.common.event.cause.entity.damage.SpongeDamageTracker;
 
-@Mixin(Enchantment.class)
-public abstract class EnchantmentMixin {
+public interface TrackedDamageBridge {
 
+    @Nullable
+    SpongeDamageTracker damage$tracker();
+
+    default float damage$firePostEvent(float damage) {
+        final SpongeDamageTracker tracker = this.damage$tracker();
+        if (tracker == null) {
+            return damage;
+        }
+        damage = tracker.endStep(DamageStepTypes.ABSORPTION, damage);
+        damage = tracker.callDamagePostEvent((org.spongepowered.api.entity.Entity) this, damage);
+        this.damage$setContainerDamage(damage);
+        return damage;
+    }
+
+    // Neo hook
+    default void damage$setContainerDamage(final float damage) {}
+
+    // Neo hook
+    default float damage$getContainerDamage(final float damage) {
+        return damage;
+    }
 }

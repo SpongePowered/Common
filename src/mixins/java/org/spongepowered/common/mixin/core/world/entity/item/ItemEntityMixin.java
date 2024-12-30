@@ -26,10 +26,10 @@ package org.spongepowered.common.mixin.core.world.entity.item;
 
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
 import org.spongepowered.api.Sponge;
+import org.spongepowered.api.entity.Entity;
 import org.spongepowered.api.entity.Item;
 import org.spongepowered.api.event.Cause;
 import org.spongepowered.api.event.SpongeEventFactory;
@@ -48,10 +48,10 @@ import org.spongepowered.common.bridge.world.level.LevelBridge;
 import org.spongepowered.common.bridge.world.level.storage.PrimaryLevelDataBridge;
 import org.spongepowered.common.config.SpongeGameConfigs;
 import org.spongepowered.common.data.provider.entity.ItemData;
+import org.spongepowered.common.event.cause.entity.damage.SpongeDamageTracker;
 import org.spongepowered.common.event.tracking.PhaseTracker;
 import org.spongepowered.common.mixin.core.world.entity.EntityMixin;
 import org.spongepowered.common.util.Constants;
-import org.spongepowered.common.util.DamageEventUtil;
 
 @Mixin(ItemEntity.class)
 public abstract class ItemEntityMixin extends EntityMixin implements ItemEntityBridge {
@@ -147,9 +147,8 @@ public abstract class ItemEntityMixin extends EntityMixin implements ItemEntityB
 
     @Inject(method = "hurtServer", cancellable = true, at = @At(value = "INVOKE",
             target = "Lnet/minecraft/world/entity/item/ItemEntity;markHurt()V"))
-    private void attackImpl$onAttackEntityFrom(final ServerLevel level, final DamageSource source,
-                                               final float amount, final CallbackInfoReturnable<Boolean> cir) {
-        if (DamageEventUtil.callOtherAttackEvent((Entity) (Object) this, source, amount).isCancelled()) {
+    private void attack$onHurt(final ServerLevel level, final DamageSource source, final float damage, final CallbackInfoReturnable<Boolean> cir) {
+        if (SpongeDamageTracker.callDamageEvents((Entity) this, source, damage) == null) {
             cir.setReturnValue(true);
         }
     }
