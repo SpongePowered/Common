@@ -52,30 +52,31 @@ import java.util.stream.Collectors;
 public abstract class RecipeManagerMixin_API implements RecipeManager {
 
     // @formatter:off
-    @Shadow public abstract Optional<? extends net.minecraft.world.item.crafting.Recipe<?>> shadow$byKey(ResourceLocation recipeId);
+    @Shadow public abstract Optional<? extends net.minecraft.world.item.crafting.RecipeHolder<?>> shadow$byKey(ResourceLocation recipeId);
     @Shadow protected abstract <I extends RecipeInput, T extends net.minecraft.world.item.crafting.Recipe<I>> Collection<RecipeHolder<T>> shadow$byType(net.minecraft.world.item.crafting.RecipeType<T> recipeTypeIn);
-    @Shadow public abstract Collection<net.minecraft.world.item.crafting.Recipe<?>> shadow$getRecipes();
-    @Shadow public abstract <I extends RecipeInput, T extends net.minecraft.world.item.crafting.Recipe<I>> Optional<T> shadow$getRecipeFor(net.minecraft.world.item.crafting.RecipeType<T> recipeTypeIn, I inventoryIn, net.minecraft.world.level.Level worldIn);
+    @Shadow public abstract Collection<net.minecraft.world.item.crafting.RecipeHolder<?>> shadow$getRecipes();
+    @Shadow public abstract <I extends RecipeInput, T extends net.minecraft.world.item.crafting.Recipe<I>> Optional<RecipeHolder<T>> shadow$getRecipeFor(net.minecraft.world.item.crafting.RecipeType<T> recipeTypeIn, I inventoryIn, net.minecraft.world.level.Level worldIn);
 
     // @formatter:on
 
+    @SuppressWarnings({"DataFlowIssue", "unchecked"})
     @Override
     public Optional<Recipe<?>> byKey(final ResourceKey key) {
         Objects.requireNonNull(key);
-        return this.shadow$byKey((ResourceLocation) (Object) key).map(Recipe.class::cast);
+        return this.shadow$byKey((ResourceLocation) (Object) key).map(RecipeHolder::value).map(Recipe.class::cast);
     }
 
     @Override
     @SuppressWarnings(value = {"unchecked", "rawtypes"})
     public Collection<Recipe<?>> all() {
-        return (Collection) this.shadow$getRecipes();
+        return (Collection) this.shadow$getRecipes().stream().map(RecipeHolder::value).toList();
     }
 
     @Override
     @SuppressWarnings(value = {"unchecked", "rawtypes"})
     public <T extends Recipe<?>> Collection<T> allOfType(final RecipeType<T> type) {
         Objects.requireNonNull(type);
-        return this.shadow$byType((net.minecraft.world.item.crafting.RecipeType)type);
+        return this.shadow$byType((net.minecraft.world.item.crafting.RecipeType)type).stream().map(h -> ((RecipeHolder)h).value()).toList();
     }
 
     @Override
@@ -115,6 +116,6 @@ public abstract class RecipeManagerMixin_API implements RecipeManager {
         Objects.requireNonNull(ingredient);
 
         final SingleRecipeInput input = new SingleRecipeInput(ItemStackUtil.fromLikeToNative(ingredient));
-        return this.shadow$getRecipeFor((net.minecraft.world.item.crafting.RecipeType) type, input, null);
+        return this.shadow$getRecipeFor((net.minecraft.world.item.crafting.RecipeType) type, input, null).map(h -> ((RecipeHolder<?>)h).value());
     }
 }
