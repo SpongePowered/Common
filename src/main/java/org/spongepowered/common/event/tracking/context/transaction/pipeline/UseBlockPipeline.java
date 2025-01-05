@@ -76,7 +76,7 @@ public class UseBlockPipeline {
     }
 
     public InteractionResult processInteraction(PhaseContext<?> context) {
-        var interaction = InteractionResult.PASS;
+        InteractionResult interaction = InteractionResult.PASS;
         for (final var effect : this.effects) {
             try (final EffectTransactor ignored = context.getTransactor().pushEffect(effect)) {
                 final InteractionAtArgs args = new InteractionAtArgs(this.worldIn, this.player, this.hand, this.blockRaytraceResult, this.blockstate, this.copiedStack);

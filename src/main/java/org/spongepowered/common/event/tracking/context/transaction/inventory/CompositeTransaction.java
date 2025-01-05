@@ -35,8 +35,8 @@ import org.spongepowered.common.event.tracking.context.transaction.type.Transact
 
 import java.util.stream.Stream;
 
-public abstract class CompositeTransaction<E extends CompositeEvent> extends GameTransaction<E> {
-    protected CompositeTransaction(TransactionType<? extends E> transactionType) {
+public abstract class CompositeTransaction<E extends CompositeEvent<?>> extends GameTransaction<E> {
+    protected CompositeTransaction(TransactionType<? super E> transactionType) {
         super(transactionType);
     }
 

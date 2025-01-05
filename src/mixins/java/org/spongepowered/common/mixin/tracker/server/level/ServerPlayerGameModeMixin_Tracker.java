@@ -150,8 +150,8 @@ public abstract class ServerPlayerGameModeMixin_Tracker {
                 if (itemInteract instanceof InteractionResult.TryEmptyHandInteraction && handIn == InteractionHand.MAIN_HAND) {
                     final AbstractContainerMenu lastOpenContainer = playerIn.containerMenu; // Sponge
                     final var interaction = ((TrackedWorldBridge) level).bridge$startInteractionChange(worldIn, playerIn, handIn, blockRaytraceResultIn, blockstate, copiedStack);
-                    final InteractionResult result2 = interaction.processInteraction(phaseContext);
-                    if (result2.consumesAction()) {
+                    final var result = interaction.processInteraction(phaseContext);
+                    if (result.consumesAction()) {
                         // Sponge Start
                         if (lastOpenContainer != playerIn.containerMenu) {
                             final Vector3i pos = VecHelper.toVector3i(blockRaytraceResultIn.getBlockPos());
@@ -168,7 +168,7 @@ public abstract class ServerPlayerGameModeMixin_Tracker {
                         // Sponge End
 
                         CriteriaTriggers.DEFAULT_BLOCK_USE.trigger(playerIn, blockpos);
-                        return result2;
+                        return result;
                     }
 
                 }

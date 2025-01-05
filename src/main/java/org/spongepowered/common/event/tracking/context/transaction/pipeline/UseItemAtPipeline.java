@@ -75,7 +75,7 @@ public class UseItemAtPipeline {
     }
 
     public InteractionResult processInteraction(PhaseContext<?> context) {
-        var interaction = InteractionResult.PASS;
+        InteractionResult interaction = InteractionResult.PASS;
         for (final var effect : this.effects) {
             try (final EffectTransactor ignored = context.getTransactor().pushEffect(effect)) {
                 final var args = new UseItemAtArgs(this.worldIn, this.player, this.hand, this.blockRaytraceResult, this.copiedStack, this.creative);

@@ -24,12 +24,12 @@
  */
 package org.spongepowered.common.event.tracking.context.transaction.effect;
 
-import net.minecraft.world.ItemInteractionResult;
+import net.minecraft.world.InteractionResult;
 import org.spongepowered.common.event.tracking.context.transaction.EffectTransactor;
 import org.spongepowered.common.event.tracking.context.transaction.inventory.PlayerInventoryTransaction;
 import org.spongepowered.common.event.tracking.context.transaction.pipeline.UseItemOnBlockPipeline;
 
-public final class InteractionUseItemOnBlockEffect implements ProcessingSideEffect<UseItemOnBlockPipeline, ItemInteractionResult, InteractionAtArgs, ItemInteractionResult> {
+public final class InteractionUseItemOnBlockEffect implements ProcessingSideEffect<UseItemOnBlockPipeline, InteractionResult, InteractionAtArgs, InteractionResult> {
 
     private static final class Holder {
         static final InteractionUseItemOnBlockEffect INSTANCE = new InteractionUseItemOnBlockEffect();
@@ -40,15 +40,15 @@ public final class InteractionUseItemOnBlockEffect implements ProcessingSideEffe
     }
 
     @Override
-    public EffectResult<ItemInteractionResult> processSideEffect(
-        UseItemOnBlockPipeline pipeline, ItemInteractionResult oldState, InteractionAtArgs args
+    public EffectResult<InteractionResult> processSideEffect(
+        UseItemOnBlockPipeline pipeline, InteractionResult oldState, InteractionAtArgs args
     ) {
         final var player = args.player();
         final var hand = args.hand();
         final var world = args.world();
         final var blockRaytraceResult = args.blockRaytraceResult();
         final var blockstate = args.blockstate();
-        final ItemInteractionResult result = blockstate.useItemOn(args.copiedStack(), world, player, hand, blockRaytraceResult);
+        final InteractionResult result = blockstate.useItemOn(args.copiedStack(), world, player, hand, blockRaytraceResult);
         pipeline.transactor().logPlayerInventoryChange(args.player(), PlayerInventoryTransaction.EventCreator.STANDARD);
         try (EffectTransactor ignored = BroadcastInventoryChangesEffect.transact(pipeline.transactor())) {
             args.player().containerMenu.broadcastChanges();

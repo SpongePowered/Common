@@ -71,6 +71,7 @@ public final class TransactionTypes {
 
     public static final DefaultedRegistryReference<TransactionType<InteractBlockEvent.Secondary.Post>> INTERACT_BLOCK_SECONDARY = TransactionTypes.key(ResourceKey.sponge("interact_block_secondary"));
     public static final DefaultedRegistryReference<TransactionType<InteractItemEvent.Secondary.Post>> INTERACT_ITEM_SECONDARY = TransactionTypes.key(ResourceKey.sponge("interact_block_secondary"));
+    public static final DefaultedRegistryReference<TransactionType<SpawnEntityEvent>> SPAWN_ENTITY = TransactionTypes.key(ResourceKey.sponge("spawn_entity"));
 
     // SORTFIELDS:OFF
 

@@ -32,6 +32,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientboundExplodePacket;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.util.RandomSource;
@@ -66,6 +67,7 @@ import org.spongepowered.api.world.BlockChangeFlag;
 import org.spongepowered.api.world.LocatableBlock;
 import org.spongepowered.api.world.server.ServerWorld;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
@@ -406,6 +408,7 @@ public abstract class ServerLevelMixin_Tracker extends LevelMixin_Tracker implem
         this.tracker$apiExplosion = null;
     }
 
+    @Unique
     private void tracker$cancelExplosionEffects(final Entity entity) {
         // TODO cancel effects
         if (entity instanceof ExplosiveBridge explosiveBridge) {
@@ -440,6 +443,7 @@ public abstract class ServerLevelMixin_Tracker extends LevelMixin_Tracker implem
         return Optional.of(this.bridge$makePipeline(pos, currentState, newState, chunk, spongeFlag, Constants.World.DEFAULT_BLOCK_CHANGE_LIMIT));
     }
 
+    @Unique
     private WorldPipeline.Builder bridge$makePipeline(
         final BlockPos pos,
         final BlockState currentState,
@@ -516,12 +520,9 @@ public abstract class ServerLevelMixin_Tracker extends LevelMixin_Tracker implem
             return false;
         } else {
             // Sponge Start - Sanity check against the PhaseTracker for instances
-            if (this.bridge$isFake()) {
+            final var instance = this.tracker$validateServerThread();
+            if (instance == null) {
                 return super.destroyBlock(pos, doDrops, p_241212_3_, limit);
-            }
-            final PhaseTracker instance = PhaseTracker.getWorldInstance((ServerLevel) (Object) this);
-            if (!instance.onSidedThread()) {
-                throw new UnsupportedOperationException("Cannot perform a tracked Block Change on a ServerWorld while not on the main thread!");
             }
             final FluidState fluidstate = this.shadow$getFluidState(pos);
             final BlockState emptyBlock = fluidstate.createLegacyBlock();
@@ -585,16 +586,9 @@ public abstract class ServerLevelMixin_Tracker extends LevelMixin_Tracker implem
 
     @Override
     public UseItemOnBlockPipeline bridge$startInteractionUseOnChange(net.minecraft.world.level.Level worldIn, ServerPlayer playerIn, InteractionHand handIn, BlockHitResult blockRaytraceResultIn, BlockState blockstate, ItemStack copiedStack) {
-        if (this.shadow$isDebug()) { // isClientSide is always false since this is WorldServer
+        final var instance = this.tracker$validateServerThread();
+        if (instance == null) {
             return null;
-        }
-        if (this.bridge$isFake()) {
-            return null;
-        }
-
-        final var instance = PhaseTracker.getInstance();
-        if (instance.getSidedThread() != PhaseTracker.SERVER.getSidedThread() && instance != PhaseTracker.SERVER) {
-            throw new UnsupportedOperationException("Cannot perform a tracked Block Change on a ServerWorld while not on the main thread!");
         }
         return new UseItemOnBlockPipeline(
             (ServerLevel) worldIn,
@@ -610,16 +604,9 @@ public abstract class ServerLevelMixin_Tracker extends LevelMixin_Tracker implem
 
     @Override
     public UseBlockPipeline bridge$startInteractionChange(net.minecraft.world.level.Level worldIn, ServerPlayer playerIn, InteractionHand handIn, BlockHitResult blockRaytraceResultIn, BlockState blockstate, ItemStack copiedStack) {
-        if (this.shadow$isDebug()) { // isClientSide is always false since this is WorldServer
+        final var instance = this.tracker$validateServerThread();
+        if (instance == null) {
             return null;
-        }
-        if (this.bridge$isFake()) {
-            return null;
-        }
-
-        final var instance = PhaseTracker.getInstance();
-        if (instance.getSidedThread() != PhaseTracker.SERVER.getSidedThread() && instance != PhaseTracker.SERVER) {
-            throw new UnsupportedOperationException("Cannot perform a tracked Block Change on a ServerWorld while not on the main thread!");
         }
         return new UseBlockPipeline(
             (ServerLevel) worldIn,
@@ -631,18 +618,27 @@ public abstract class ServerLevelMixin_Tracker extends LevelMixin_Tracker implem
             instance.getPhaseContext().getTransactor()
         );
     }
-    @Override
-    public UseItemAtPipeline bridge$startItemInteractionChange(net.minecraft.world.level.Level worldIn, ServerPlayer playerIn, InteractionHand handIn, ItemStack copiedStack, BlockHitResult blockRaytraceResult, boolean creative) {
+
+    @Unique
+    private PhaseTracker tracker$validateServerThread() {
         if (this.shadow$isDebug()) { // isClientSide is always false since this is WorldServer
             return null;
         }
         if (this.bridge$isFake()) {
             return null;
         }
-
         final var instance = PhaseTracker.getInstance();
-        if (instance.getSidedThread() != PhaseTracker.SERVER.getSidedThread() && instance != PhaseTracker.SERVER) {
+        if (instance.getSidedThread() != PhaseTracker.getServerInstanceExplicitly().getSidedThread() && instance != PhaseTracker.getServerInstanceExplicitly()) {
             throw new UnsupportedOperationException("Cannot perform a tracked Block Change on a ServerWorld while not on the main thread!");
+        }
+        return instance;
+    }
+
+    @Override
+    public UseItemAtPipeline bridge$startItemInteractionChange(net.minecraft.world.level.Level worldIn, ServerPlayer playerIn, InteractionHand handIn, ItemStack copiedStack, BlockHitResult blockRaytraceResult, boolean creative) {
+        final var instance = this.tracker$validateServerThread();
+        if (instance == null) {
+            return null;
         }
         return new UseItemAtPipeline(
             (ServerLevel) worldIn,
@@ -655,17 +651,11 @@ public abstract class ServerLevelMixin_Tracker extends LevelMixin_Tracker implem
         );
     }
 
+    @Override
     public UseItemPipeline bridge$startItemInteractionUseChange(net.minecraft.world.level.Level worldIn, ServerPlayer playerIn, InteractionHand handIn, ItemStack copiedStack) {
-        if (this.shadow$isDebug()) { // isClientSide is always false since this is WorldServer
+        final var instance = this.tracker$validateServerThread();
+        if (instance == null) {
             return null;
-        }
-        if (this.bridge$isFake()) {
-            return null;
-        }
-
-        final var instance = PhaseTracker.getInstance();
-        if (instance.getSidedThread() != PhaseTracker.SERVER.getSidedThread() && instance != PhaseTracker.SERVER) {
-            throw new UnsupportedOperationException("Cannot perform a tracked Block Change on a ServerWorld while not on the main thread!");
         }
         return new UseItemPipeline(
             (ServerLevel) worldIn,
@@ -685,7 +675,7 @@ public abstract class ServerLevelMixin_Tracker extends LevelMixin_Tracker implem
      * <ul>
      *     <li>This world instance is managed and verified by Sponge</li>
      *     <li>This world must {@link LevelBridge#bridge$isFake()} return {@code false}</li>
-     *     <li>The {@link PhaseTracker#SERVER}'s {@link PhaseTracker#getSidedThread()} must be {@code ==} {@link Thread#currentThread()}</li
+     *     <li>The {@link PhaseTracker#getServerInstanceExplicitly}'s {@link PhaseTracker#getSidedThread()} must be {@code ==} {@link Thread#currentThread()}</li
      *     <li>The current {@link IPhaseState} must be allowing to record transactions with an applicable {@link org.spongepowered.common.event.tracking.context.transaction.TransactionalCaptureSupplier}</li>
      * </ul>
      * After which, we may be able to appropriately associate the {@link net.minecraft.world.level.block.entity.BlockEntity}

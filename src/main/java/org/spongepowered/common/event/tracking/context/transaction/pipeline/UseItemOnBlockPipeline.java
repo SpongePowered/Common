@@ -27,7 +27,7 @@ package org.spongepowered.common.event.tracking.context.transaction.pipeline;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.ItemInteractionResult;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
@@ -51,7 +51,7 @@ public final class UseItemOnBlockPipeline {
     private final BlockHitResult blockRaytraceResult;
     private final BlockState blockstate;
     private final ItemStack copiedStack;
-    private final List<ResultingTransactionBySideEffect<UseItemOnBlockPipeline, ItemInteractionResult, InteractionAtArgs, ItemInteractionResult>> effects;
+    private final List<ResultingTransactionBySideEffect<UseItemOnBlockPipeline, InteractionResult, InteractionAtArgs, InteractionResult>> effects;
     private final TransactionalCaptureSupplier transactor;
 
 
@@ -75,18 +75,18 @@ public final class UseItemOnBlockPipeline {
         this.transactor = transactor;
     }
 
-    public ItemInteractionResult processInteraction(PhaseContext<?> context) {
-        var interaction = ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+    public InteractionResult processInteraction(PhaseContext<?> context) {
+        InteractionResult interaction = InteractionResult.TRY_WITH_EMPTY_HAND;
         for (final var effect : this.effects) {
             try (final EffectTransactor ignored = context.getTransactor().pushEffect(effect)) {
                 final InteractionAtArgs args = new InteractionAtArgs(this.worldIn, this.player, this.hand, this.blockRaytraceResult, this.blockstate, this.copiedStack);
-                final EffectResult<ItemInteractionResult> result = effect.effect.processSideEffect(
+                final EffectResult<InteractionResult> result = effect.effect.processSideEffect(
                     this,
                     interaction,
                     args
                 );
                 if (result.hasResult) {
-                    final @Nullable ItemInteractionResult resultingState = result.resultingState;
+                    final @Nullable InteractionResult resultingState = result.resultingState;
                     interaction = Objects.requireNonNullElse(resultingState, interaction);
                 }
             }
