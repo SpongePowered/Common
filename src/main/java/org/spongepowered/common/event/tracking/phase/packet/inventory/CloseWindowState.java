@@ -34,23 +34,28 @@ import org.spongepowered.api.event.cause.entity.SpawnType;
 import org.spongepowered.api.event.cause.entity.SpawnTypes;
 import org.spongepowered.api.event.entity.SpawnEntityEvent;
 import org.spongepowered.api.util.Tuple;
+import org.spongepowered.common.event.tracking.PhaseTracker;
 import org.spongepowered.common.event.tracking.context.transaction.GameTransaction;
 import org.spongepowered.common.event.tracking.context.transaction.world.SpawnEntityTransaction;
-import org.spongepowered.common.event.tracking.phase.packet.BasicPacketContext;
-import org.spongepowered.common.event.tracking.phase.packet.BasicPacketState;
+import org.spongepowered.common.event.tracking.phase.packet.PacketState;
 
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-public final class CloseWindowState extends BasicPacketState {
+public final class CloseWindowState extends PacketState<CloseWindowContext> {
 
     @Override
-    public Supplier<SpawnType> getSpawnTypeForTransaction(final BasicPacketContext context, final Entity entityToSpawn) {
+    protected CloseWindowContext createNewContext(final PhaseTracker tracker) {
+        return new CloseWindowContext(this, tracker);
+    }
+
+    @Override
+    public Supplier<SpawnType> getSpawnTypeForTransaction(final CloseWindowContext context, final Entity entityToSpawn) {
         return SpawnTypes.DROPPED_ITEM;
     }
 
     @Override
-    public SpawnEntityEvent createSpawnEvent(final BasicPacketContext context, final @Nullable GameTransaction<@NonNull ?> parent,
+    public SpawnEntityEvent createSpawnEvent(final CloseWindowContext context, final @Nullable GameTransaction<@NonNull ?> parent,
             final ImmutableList<Tuple<Entity, SpawnEntityTransaction.DummySnapshot>> collect, final Cause currentCause) {
         return SpongeEventFactory.createDropItemEventClose(currentCause,
                 collect.stream()

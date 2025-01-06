@@ -30,12 +30,12 @@ import org.spongepowered.api.entity.living.player.server.ServerPlayer;
 import org.spongepowered.api.item.inventory.Container;
 import org.spongepowered.api.item.inventory.Inventory;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.common.bridge.world.inventory.container.ContainerBridge;
 import org.spongepowered.common.event.inventory.InventoryEventFactory;
 import org.spongepowered.common.event.tracking.PhaseContext;
 import org.spongepowered.common.event.tracking.PhaseTracker;
 import org.spongepowered.common.event.tracking.TrackingUtil;
-import org.spongepowered.common.event.tracking.context.transaction.EffectTransactor;
 import org.spongepowered.common.event.tracking.phase.packet.PacketPhase;
 import org.spongepowered.common.mixin.inventory.api.world.entity.player.PlayerMixin_Inventory_API;
 
@@ -43,6 +43,8 @@ import java.util.Optional;
 
 @Mixin(net.minecraft.server.level.ServerPlayer.class)
 public abstract class ServerPlayerMixin_Inventory_API extends PlayerMixin_Inventory_API implements ServerPlayer {
+
+    @Shadow public abstract void shadow$doCloseContainer();
 
     @Override
     public Optional<Container> openInventory() {
@@ -75,12 +77,10 @@ public abstract class ServerPlayerMixin_Inventory_API extends PlayerMixin_Invent
         try (final PhaseContext<@NonNull ?> ctx = PacketPhase.General.CLOSE_WINDOW.createPhaseContext(PhaseTracker.getWorldInstance(player.serverLevel()))
                 .source(this)
                 .packetPlayer(player)
+                .isClientSide(false)
         ) {
             ctx.buildAndSwitch();
-            try (final EffectTransactor ignored = ctx.getTransactor().logCloseInventory(player, false)) {
-                this.containerMenu.removed(player); // Drop & capture cursor item
-                this.containerMenu.broadcastChanges();
-            }
+            this.shadow$doCloseContainer();
 
             if (!TrackingUtil.processBlockCaptures(ctx)) {
                 return false;

@@ -368,6 +368,10 @@ public class PhaseContext<P extends PhaseContext<P>> implements PhaseStateProxy<
         return null;
     }
 
+    public boolean isClientSide() {
+        return false;
+    }
+
     protected boolean isRunaway(final PhaseContext<?> phaseContext) {
         return phaseContext.getClass() == this.getClass();
     }

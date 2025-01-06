@@ -36,12 +36,10 @@ import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.HorseInventoryMenu;
-import net.minecraft.world.inventory.InventoryMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.spongepowered.api.Sponge;
 import org.spongepowered.api.item.inventory.Inventory;
 import org.spongepowered.api.item.inventory.Slot;
 import org.spongepowered.api.item.inventory.equipment.EquipmentType;
@@ -60,7 +58,6 @@ import org.spongepowered.common.event.tracking.PhaseTracker;
 import org.spongepowered.common.event.tracking.context.transaction.EffectTransactor;
 import org.spongepowered.common.event.tracking.context.transaction.TransactionalCaptureSupplier;
 import org.spongepowered.common.event.tracking.context.transaction.inventory.PlayerInventoryTransaction;
-import org.spongepowered.common.event.tracking.phase.packet.PacketPhase;
 import org.spongepowered.common.event.tracking.phase.packet.inventory.SwapHandItemsState;
 import org.spongepowered.common.inventory.adapter.InventoryAdapter;
 import org.spongepowered.common.inventory.fabric.Fabric;
@@ -124,29 +121,6 @@ public abstract class ServerPlayerMixin_Inventory extends PlayerMixin_Inventory 
         }
     }
 
-    @Override
-    protected void inventory$switchToCloseWindowState(final InventoryMenu container, final Player player) {
-        // Corner case where the server is shutting down on the client, the server player is also being killed off.
-        if (Sponge.isServerAvailable() && Sponge.isClientAvailable()) {
-            container.removed(player);
-            return;
-        }
-        final ServerPlayer serverPlayer = (ServerPlayer) player;
-
-        try (final PhaseContext<@NonNull ?> ctx = PacketPhase.General.CLOSE_WINDOW.createPhaseContext(PhaseTracker.getWorldInstance(this.shadow$serverLevel()))
-            .source(serverPlayer)
-            .packetPlayer(serverPlayer)
-        ) {
-            ctx.buildAndSwitch();
-            try (final EffectTransactor ignored = ctx.getTransactor().logCloseInventory(player, true)) {
-                container.removed(player); // Drop & capture cursor item
-                container.broadcastChanges();
-            }
-        }
-        this.impl$onCloseMenu(); // Handle Viewers
-    }
-
-    @Override
     protected void inventory$onTouch(final Entity entity, final Player player) {
         if (entity instanceof ItemEntity) {
             entity.playerTouch(player); // ItemEntityMixin_Inventory creates transactions for pickup event
@@ -254,5 +228,16 @@ public abstract class ServerPlayerMixin_Inventory extends PlayerMixin_Inventory 
             return slotLens.getAdapter(fabric, (Inventory) inventory);
         }
         throw new IllegalStateException("Unknown Lens for Player Inventory: " + lens.getClass().getName());
+    }
+
+    @Redirect(method = "doCloseContainer",
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/inventory/AbstractContainerMenu;removed(Lnet/minecraft/world/entity/player/Player;)V"))
+    private void impl$onHandleContainerClose(final AbstractContainerMenu instance, final Player player) {
+        final PhaseContext<@NonNull ?> context = PhaseTracker.getWorldInstance((ServerLevel)player.level()).getPhaseContext();
+        final TransactionalCaptureSupplier transactor = context.getTransactor();
+        try (final EffectTransactor ignored = transactor.logCloseInventory(context, player)) {
+            instance.removed(player);
+            instance.broadcastChanges();
+        }
     }
 }

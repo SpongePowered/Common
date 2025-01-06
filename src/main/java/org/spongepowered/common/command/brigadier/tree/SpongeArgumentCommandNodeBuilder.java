@@ -43,6 +43,7 @@ public final class SpongeArgumentCommandNodeBuilder<T> extends ArgumentBuilder<C
     private final @Nullable String suffix;
     private final @Nullable ValueUsage usage;
     private final @Nullable ValueParameterModifier<T> modifier;
+    private final boolean isOptional;
 
     private static @Nullable ValueCompleter filterNativeCompleters(final ArgumentParser<?> parser, final ValueCompleter completer) {
         if (parser == completer && parser.hasClientNativeCompletions()) {
@@ -57,13 +58,15 @@ public final class SpongeArgumentCommandNodeBuilder<T> extends ArgumentBuilder<C
             final ValueCompleter completer,
             final @Nullable ValueParameterModifier<T> modifier,
             final @Nullable ValueUsage usage,
-            final @Nullable String suffix) {
+            final @Nullable String suffix,
+            final boolean isOptional) {
         this.key = key;
         this.type = type;
         this.completer = SpongeArgumentCommandNodeBuilder.filterNativeCompleters(type, completer);
         this.modifier = modifier;
         this.usage = usage;
         this.suffix = suffix;
+        this.isOptional = isOptional;
     }
 
     @Override
@@ -84,7 +87,8 @@ public final class SpongeArgumentCommandNodeBuilder<T> extends ArgumentBuilder<C
                 this.getRedirectModifier(),
                 this.isFork(),
                 this.suffix == null ? this.key.key() : this.key.key() + "_" + this.suffix,
-                this.modifier);
+                this.modifier,
+                this.isOptional);
         for (final CommandNode<CommandSourceStack> child : this.getArguments()) {
             node.addChild(child);
         }

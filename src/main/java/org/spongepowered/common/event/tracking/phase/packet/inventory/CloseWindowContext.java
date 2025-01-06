@@ -22,14 +22,38 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.spongepowered.common.event.tracking.phase.packet;
+package org.spongepowered.common.event.tracking.phase.packet.inventory;
 
 import org.spongepowered.common.event.tracking.PhaseTracker;
+import org.spongepowered.common.event.tracking.phase.packet.PacketContext;
+import org.spongepowered.common.event.tracking.phase.packet.PacketState;
 
-public class BasicPacketState extends PacketState<BasicPacketContext> {
+public final class CloseWindowContext extends PacketContext<CloseWindowContext> {
+
+    private boolean clientSide = true;
+
+    public CloseWindowContext(final PacketState<CloseWindowContext> state, final PhaseTracker tracker) {
+        super(state, tracker);
+    }
+
+    public CloseWindowContext isClientSide(final boolean clientSide) {
+        this.clientSide = clientSide;
+        return this;
+    }
 
     @Override
-    public BasicPacketContext createNewContext(final PhaseTracker tracker) {
-        return new BasicPacketContext(this, tracker);
+    public boolean hasCaptures() {
+        return true;
+    }
+
+    @Override
+    public boolean isClientSide() {
+        return this.clientSide;
+    }
+
+    @Override
+    protected void reset() {
+        super.reset();
+        this.clientSide = true;
     }
 }
