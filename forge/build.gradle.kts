@@ -189,6 +189,7 @@ dependencies {
     game(libs.javaxInject)
     game(platform(apiLibs.adventure.bom))
     game(libs.adventure.serializerConfigurate4)
+    game(libs.mixinextras.common)
 
     val serviceShadedLibraries = serviceShadedLibrariesConfig.name
     serviceShadedLibraries(project(transformersProject.path)) { isTransitive = false }
@@ -307,9 +308,9 @@ tasks {
     val emitDependencies by registering(org.spongepowered.gradle.impl.OutputDependenciesToJson::class) {
         group = "sponge"
         this.dependencies("main", gameManagedLibrariesConfig)
-        this.excludedDependencies(gameShadedLibrariesConfig)
+        this.excludeDependencies(gameShadedLibrariesConfig)
 
-        outputFile.set(installerResources.map { it.file("org/spongepowered/forge/applaunch/loading/moddiscovery/libraries.json") })
+        outputFile.set(installerResources.map { it.file("sponge-libraries.json") })
     }
     named(forgeAppLaunch.processResourcesTaskName).configure {
         dependsOn(emitDependencies)

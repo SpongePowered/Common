@@ -26,12 +26,19 @@ package org.spongepowered.common.mixin.api.minecraft.server.network;
 
 import net.minecraft.server.network.ServerConfigurationPacketListenerImpl;
 import org.spongepowered.api.network.ServerConnectionState;
+import org.spongepowered.api.network.ServerSideConnection;
 import org.spongepowered.api.profile.GameProfile;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.common.bridge.network.ConnectionBridge;
 import org.spongepowered.common.profile.SpongeGameProfile;
 
 @Mixin(ServerConfigurationPacketListenerImpl.class)
 public abstract class ServerConfigurationPacketListenerImplMixin_API extends ServerCommonPacketListenerImplMixin_API implements ServerConnectionState.Configuration {
+
+    @Override
+    public ServerSideConnection connection() {
+        return (ServerSideConnection) ((ConnectionBridge) this.connection).bridge$getEngineConnection();
+    }
 
     @Override
     public GameProfile profile() {

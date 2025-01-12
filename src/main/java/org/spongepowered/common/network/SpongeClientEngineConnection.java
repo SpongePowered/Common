@@ -25,11 +25,27 @@
 package org.spongepowered.common.network;
 
 import net.minecraft.network.Connection;
+import org.spongepowered.api.network.ClientConnectionState;
 import org.spongepowered.api.network.ClientSideConnection;
 
 public final class SpongeClientEngineConnection extends SpongeEngineConnection implements ClientSideConnection {
 
     public SpongeClientEngineConnection(final Connection connection) {
         super(connection);
+    }
+
+    @Override
+    protected ClientConnectionState.Intent createIntentState(final boolean transferred) {
+        return new ClientConnectionState.Intent() {
+            @Override
+            public ClientSideConnection connection() {
+                return SpongeClientEngineConnection.this;
+            }
+
+            @Override
+            public boolean transferred() {
+                return transferred;
+            }
+        };
     }
 }

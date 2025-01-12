@@ -24,6 +24,7 @@
  */
 package org.spongepowered.common.mixin.core.server.network;
 
+import com.llamalad7.mixinextras.sugar.Cancellable;
 import com.mojang.authlib.GameProfile;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.resource.ResourcePackCallback;
@@ -31,7 +32,6 @@ import net.kyori.adventure.resource.ResourcePackInfo;
 import net.kyori.adventure.resource.ResourcePackRequest;
 import net.kyori.adventure.resource.ResourcePackStatus;
 import net.minecraft.network.Connection;
-import net.minecraft.network.PacketSendListener;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.common.ClientboundResourcePackPopPacket;
@@ -54,6 +54,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.common.SpongeCommon;
 import org.spongepowered.common.adventure.SpongeAdventure;
@@ -85,18 +86,24 @@ public abstract class ServerCommonPacketListenerImplMixin implements ServerCommo
     private Map<UUID, ResourcePackInfo> impl$resourcePackInfos = new ConcurrentHashMap<>();
     private Map<UUID, ResourcePackCallback> impl$resourcePackCallbacks = new ConcurrentHashMap<>();
 
-    @Inject(
+    @ModifyVariable(
             method = "send(Lnet/minecraft/network/protocol/Packet;Lnet/minecraft/network/PacketSendListener;)V",
-            at = @At("HEAD")
+            at = @At("HEAD"),
+            argsOnly = true
     )
-    private void impl$onClientboundPacketSend(final Packet<?> packet, final PacketSendListener listener, final CallbackInfo ci) {
-        this.impl$modifyClientBoundPacket(packet);
+    private @Nullable Packet<?> impl$onClientboundPacketSend(final Packet<?> packet, @Cancellable CallbackInfo ci) {
+        final @Nullable Packet<?> modifiedPacket = this.impl$modifyClientBoundPacket(packet);
+        if (modifiedPacket == null) {
+            ci.cancel();
+        }
+        return modifiedPacket;
     }
 
-    public void impl$modifyClientBoundPacket(final Packet<?> packet) {
+    public @Nullable Packet<?> impl$modifyClientBoundPacket(final Packet<?> packet) {
         if (packet instanceof ClientboundResourcePackPushPacket packPacket) {
             this.impl$resourcePackInfos.put(packPacket.id(), ((ClientboundResourcePackPacketBridge) (Object) packPacket).bridge$getPackInfo());
         }
+        return packet;
     }
 
     @Inject(method = "handleResourcePackResponse", at = @At(

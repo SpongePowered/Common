@@ -38,6 +38,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -53,8 +54,14 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 public final class LibraryManager {
-    public static final String SPONGE_NEXUS_DOWNLOAD_URL = "https://repo.spongepowered.org/service/rest/v1/search/assets?sha512=%s"
-        + "&maven.groupId=%s&maven.artifactId=%s&maven.baseVersion=%s&maven.extension=jar";
+    public static final String SPONGE_NEXUS_DOWNLOAD_URL = "https://repo.spongepowered.org/service/rest/v1/search/assets?sha512=%s&maven.groupId=%s&maven.artifactId=%s&maven.baseVersion=%s&maven.extension=jar";
+
+    // This is the list of repositories we sort artifacts by when retrieving them via the library manager.
+    // The order of which is semi-important as we want to prefer the most authoritative repository for a given
+    // artifact.
+    private static final List<String> PREFERRED_REPOSITORY_ORDER = List.of(
+        "maven-central", "minecraft-proxy", "maven-releases", "maven-snapshots", "google-proxy",
+        "forge-proxy", "neoforge-releases", "neoforge-snapshots", "fabric-proxy");
 
     private final Logger logger;
     private final boolean checkLibraryHashes;
@@ -166,8 +173,16 @@ public final class LibraryManager {
                     failures.add("No data received from '" + requestUrl + "'!");
                     return null;
                 }
-
-                final SonatypeResponse.Item item = response.items().get(0);
+                // Sort the items based on the preferred repository order
+                final var item = response.items()
+                    .stream()
+                    .min(Comparator.comparingInt(i -> {
+                        if (!PREFERRED_REPOSITORY_ORDER.contains(i.repository())) {
+                            return Integer.MAX_VALUE;
+                        }
+                        return PREFERRED_REPOSITORY_ORDER.indexOf(i.repository());
+                    }))
+                    .get();
 
                 if (checkHashes) {
                     LibraryUtils.downloadAndVerifyDigest(this.logger, item.downloadUrl(), depFile, "SHA-512", item.checksum().sha512());

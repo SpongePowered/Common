@@ -33,6 +33,7 @@ import net.minecraft.network.protocol.game.ClientboundPlayerInfoRemovePacket;
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket;
 import net.minecraft.network.protocol.game.ClientboundTabListPacket;
 import net.minecraft.world.level.GameType;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.spongepowered.api.entity.living.player.gamemode.GameMode;
 import org.spongepowered.api.entity.living.player.server.ServerPlayer;
@@ -43,6 +44,7 @@ import org.spongepowered.common.adventure.SpongeAdventure;
 import org.spongepowered.common.profile.SpongeGameProfile;
 import org.spongepowered.common.util.Preconditions;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -205,18 +207,26 @@ public final class SpongeTabList implements TabList {
      * <p>This method should not be called manually, it is automatically
      * called in the player's network connection when the packet is sent.</p>
      *
+     * <p>We also filter out entries that the client does not see.</p>
+     *
      * @param packet The packet to process
      */
     @SuppressWarnings("ConstantConditions")
-    public void updateEntriesOnSend(final ClientboundPlayerInfoUpdatePacket packet) {
+    public @Nullable ClientboundPlayerInfoUpdatePacket updateEntriesOnSend(final ClientboundPlayerInfoUpdatePacket packet) {
+        @MonotonicNonNull List<ClientboundPlayerInfoUpdatePacket.Entry> filteredEntries = null;
         final EnumSet<ClientboundPlayerInfoUpdatePacket.Action> actions = packet.actions();
-        for (final ClientboundPlayerInfoUpdatePacket.Entry update : packet.entries()) {
+        for (int i = 0; i < packet.entries().size(); i++) {
+            final ClientboundPlayerInfoUpdatePacket.Entry update = packet.entries().get(i);
             if (actions.contains(ClientboundPlayerInfoUpdatePacket.Action.ADD_PLAYER)) {
                 // If an entry with the same id exists nothing will be done
                 this.addEntry(update);
             }
 
-            this.entry(update.profileId()).ifPresent(entry -> {
+            final @Nullable TabListEntry entry = this.entry(update.profileId()).orElse(null);
+            if (entry != null) {
+                if (filteredEntries != null) {
+                    filteredEntries.add(update);
+                }
                 if (actions.contains(ClientboundPlayerInfoUpdatePacket.Action.UPDATE_DISPLAY_NAME)) {
                     ((SpongeTabListEntry) entry).updateWithoutSend();
                     entry.setDisplayName(update.displayName() == null ? null : SpongeAdventure.asAdventure(update.displayName()));
@@ -233,8 +243,41 @@ public final class SpongeTabList implements TabList {
                     ((SpongeTabListEntry) entry).updateWithoutSend();
                     entry.setListed(update.listed());
                 }
-            });
+            } else if (filteredEntries == null) {
+                if (packet.entries().size() == 1) {
+                    return null;
+                }
+                filteredEntries = new ArrayList<>(packet.entries().subList(0, i));
+            }
         }
+        if (filteredEntries == null) {
+            return packet;
+        }
+        final var filteredPacket = new ClientboundPlayerInfoUpdatePacket(packet.actions(), List.of());
+        ((ClientboundPlayerInfoUpdatePacketAccessor)filteredPacket).accessor$entries(filteredEntries);
+        return filteredPacket;
+    }
+
+    public @Nullable ClientboundPlayerInfoRemovePacket updateEntriesOnSend(final ClientboundPlayerInfoRemovePacket packet) {
+        @MonotonicNonNull List<UUID> filteredProfileIds = null;
+        for (int i = 0; i < packet.profileIds().size(); i++) {
+            final UUID uniqueId = packet.profileIds().get(i);
+            final TabListEntry entry = this.entries.remove(uniqueId);
+            if (entry != null) {
+                if (filteredProfileIds != null) {
+                    filteredProfileIds.add(uniqueId);
+                }
+            } else if (filteredProfileIds == null) {
+                if (packet.profileIds().size() == 1) {
+                    return null;
+                }
+                filteredProfileIds = new ArrayList<>(packet.profileIds().subList(0, i));
+            }
+        }
+        if (filteredProfileIds == null) {
+            return packet;
+        }
+        return new ClientboundPlayerInfoRemovePacket(filteredProfileIds);
     }
 
     @Override

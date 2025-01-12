@@ -27,11 +27,13 @@ package org.spongepowered.common.mixin.api.minecraft.server.network;
 import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import org.spongepowered.api.entity.living.player.server.ServerPlayer;
 import org.spongepowered.api.network.ServerConnectionState;
+import org.spongepowered.api.network.ServerSideConnection;
 import org.spongepowered.api.profile.GameProfile;
 import org.spongepowered.asm.mixin.Implements;
 import org.spongepowered.asm.mixin.Interface;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.common.bridge.network.ConnectionBridge;
 import org.spongepowered.common.profile.SpongeGameProfile;
 
 @Mixin(ServerGamePacketListenerImpl.class)
@@ -41,6 +43,11 @@ public abstract class ServerGamePacketListenerImplMixin_API extends ServerCommon
     // @formatter:off
     @Shadow public net.minecraft.server.level.ServerPlayer player;
     // @formatter:on
+
+    @Override
+    public ServerSideConnection connection() {
+        return (ServerSideConnection) ((ConnectionBridge) this.connection).bridge$getEngineConnection();
+    }
 
     @Override
     public GameProfile profile() {

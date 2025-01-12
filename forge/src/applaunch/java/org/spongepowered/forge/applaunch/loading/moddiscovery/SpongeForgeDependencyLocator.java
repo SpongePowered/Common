@@ -80,8 +80,8 @@ public class SpongeForgeDependencyLocator extends AbstractModProvider implements
                 new Log4JLogger(LogManager.getLogger(LibraryManager.class)),
                 env.getProperty(SpongeForgeTransformationService.Keys.CHECK_LIBRARY_HASHES.get()).orElse(true),
                 env.getProperty(SpongeForgeTransformationService.Keys.LIBRARIES_DIRECTORY.get())
-                        .orElseThrow(() -> new IllegalStateException("no libraries available")),
-                SpongeForgeModLocator.class.getResource("libraries.json")
+                        .orElseThrow(() -> new IllegalStateException("No libraries directory available")),
+                SpongeForgeModLocator.class.getResource("/sponge-libraries.json")
         );
     }
 }

@@ -40,7 +40,6 @@ import org.gradle.api.provider.SetProperty;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Nested;
-import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.TaskAction;
 
@@ -109,12 +108,8 @@ public abstract class OutputDependenciesToJson extends DefaultTask {
     @Internal
     public abstract SetProperty<ResolvedArtifactResult> getExcludedDependencies();
 
-    @Input
-    @Optional
-    protected abstract SetProperty<ModuleComponentIdentifier> getExcludedDependenciesBuildInput();
-
-    public final void excludedDependencies(final NamedDomainObjectProvider<Configuration> config) {
-        this.getExcludedDependencies().set(config.flatMap(conf -> conf.getIncoming().getArtifacts().getResolvedArtifacts()));
+    public final void excludeDependencies(final NamedDomainObjectProvider<Configuration> config) {
+        this.getExcludedDependencies().addAll(config.flatMap(conf -> conf.getIncoming().getArtifacts().getResolvedArtifacts()));
     }
 
     /**
@@ -128,13 +123,6 @@ public abstract class OutputDependenciesToJson extends DefaultTask {
 
     public OutputDependenciesToJson() {
         this.getAllowedClassifiers().add("");
-        this.getExcludedDependenciesBuildInput().set(this.getExcludedDependencies().map(deps -> {
-            return deps.stream()
-              .map(res -> res.getId().getComponentIdentifier())
-              .filter(res -> res instanceof ModuleComponentIdentifier)
-              .map(res -> (ModuleComponentIdentifier) res)
-              .collect(Collectors.toSet());
-        }));
     }
 
     @TaskAction
@@ -219,19 +207,9 @@ public abstract class OutputDependenciesToJson extends DefaultTask {
             this.configuration = configuration.getIncoming().getArtifacts().getResolvedArtifacts();
         }
 
-        @Input
-        public Provider<Set<String>> getIds() {
-            return this.getArtifacts().map(set -> set.stream()
-              .map(art -> art.getId().getComponentIdentifier())
-              .filter(id -> id instanceof ModuleComponentIdentifier)
-              .map(ComponentIdentifier::getDisplayName)
-              .collect(Collectors.toSet()));
-        }
-
         @Internal
         public Provider<Set<ResolvedArtifactResult>> getArtifacts() {
             return this.configuration;
         }
     }
-
 }

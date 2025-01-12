@@ -24,13 +24,27 @@
  */
 package org.spongepowered.common.mixin.api.minecraft.server.network;
 
+import net.minecraft.network.Connection;
 import net.minecraft.server.network.ServerHandshakePacketListenerImpl;
 import org.spongepowered.api.network.ServerConnectionState;
+import org.spongepowered.api.network.ServerSideConnection;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.common.bridge.network.ConnectionBridge;
 import org.spongepowered.common.bridge.server.network.ServerHandshakePacketListenerImplBridge;
 
 @Mixin(ServerHandshakePacketListenerImpl.class)
 public abstract class ServerHandshakePacketListenerImplMixin_API implements ServerConnectionState.Intent {
+
+    // @formatter:off
+    @Shadow @Final private Connection connection;
+    // @formatter:on
+
+    @Override
+    public ServerSideConnection connection() {
+        return (ServerSideConnection) ((ConnectionBridge) this.connection).bridge$getEngineConnection();
+    }
 
     @Override
     public boolean transferred() {

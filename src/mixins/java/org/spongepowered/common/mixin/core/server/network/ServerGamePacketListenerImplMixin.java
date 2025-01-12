@@ -40,6 +40,7 @@ import net.minecraft.network.protocol.common.ServerboundCustomPayloadPacket;
 import net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket;
 import net.minecraft.network.protocol.game.ClientboundCommandSuggestionsPacket;
 import net.minecraft.network.protocol.game.ClientboundMoveVehiclePacket;
+import net.minecraft.network.protocol.game.ClientboundPlayerInfoRemovePacket;
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket;
 import net.minecraft.network.protocol.game.ServerboundChatCommandSignedPacket;
 import net.minecraft.network.protocol.game.ServerboundCommandSuggestionPacket;
@@ -141,11 +142,13 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
     private int impl$ignorePackets;
 
     @Override
-    public void impl$modifyClientBoundPacket(final Packet<?> packet) {
-        super.impl$modifyClientBoundPacket(packet);
-        if (packet instanceof ClientboundPlayerInfoUpdatePacket infoPacket) {
-            ((SpongeTabList) ((ServerPlayer) this.player).tabList()).updateEntriesOnSend(infoPacket);
+    public @Nullable Packet<?> impl$modifyClientBoundPacket(final Packet<?> packet) {
+        if (packet instanceof final ClientboundPlayerInfoUpdatePacket infoPacket) {
+            return ((SpongeTabList) ((ServerPlayer) this.player).tabList()).updateEntriesOnSend(infoPacket);
+        } else if (packet instanceof final ClientboundPlayerInfoRemovePacket removePacket) {
+            return ((SpongeTabList) ((ServerPlayer) this.player).tabList()).updateEntriesOnSend(removePacket);
         }
+        return super.impl$modifyClientBoundPacket(packet);
     }
 
     @Override
