@@ -28,9 +28,9 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.context.UseOnContext;
 import org.spongepowered.common.event.tracking.context.transaction.EffectTransactor;
 import org.spongepowered.common.event.tracking.context.transaction.inventory.PlayerInventoryTransaction;
-import org.spongepowered.common.event.tracking.context.transaction.pipeline.UseItemAtPipeline;
+import org.spongepowered.common.event.tracking.context.transaction.pipeline.InteractionPipeline;
 
-public class UseItemAtEffect implements ProcessingSideEffect.Simple<UseItemAtPipeline, UseItemAtArgs, InteractionResult> {
+public class UseItemAtEffect implements ProcessingSideEffect.Simple<InteractionPipeline<UseItemAtArgs>, UseItemAtArgs, InteractionResult> {
 
     private static final class Holder {
         static final UseItemAtEffect INSTANCE = new UseItemAtEffect();
@@ -45,7 +45,7 @@ public class UseItemAtEffect implements ProcessingSideEffect.Simple<UseItemAtPip
 
     @Override
     public EffectResult<InteractionResult> processSideEffect(
-        UseItemAtPipeline pipeline, InteractionResult oldState, UseItemAtArgs args
+        InteractionPipeline<UseItemAtArgs> pipeline, InteractionResult oldState, UseItemAtArgs args
     ) {
         final var stack = args.copiedStack();
         final InteractionResult result;

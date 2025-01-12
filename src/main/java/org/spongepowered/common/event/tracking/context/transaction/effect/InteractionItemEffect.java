@@ -27,9 +27,9 @@ package org.spongepowered.common.event.tracking.context.transaction.effect;
 import net.minecraft.world.InteractionResult;
 import org.spongepowered.common.event.tracking.context.transaction.EffectTransactor;
 import org.spongepowered.common.event.tracking.context.transaction.inventory.PlayerInventoryTransaction;
-import org.spongepowered.common.event.tracking.context.transaction.pipeline.UseBlockPipeline;
+import org.spongepowered.common.event.tracking.context.transaction.pipeline.InteractionPipeline;
 
-public final class InteractionItemEffect implements ProcessingSideEffect.Simple<UseBlockPipeline, InteractionAtArgs, InteractionResult> {
+public final class InteractionItemEffect implements ProcessingSideEffect.Simple<InteractionPipeline<InteractionAtArgs>, InteractionAtArgs, InteractionResult> {
 
     private static final class Holder {
         static final InteractionItemEffect INSTANCE = new InteractionItemEffect();
@@ -41,7 +41,7 @@ public final class InteractionItemEffect implements ProcessingSideEffect.Simple<
 
     @Override
     public EffectResult<InteractionResult> processSideEffect(
-        UseBlockPipeline pipeline, InteractionResult oldState, InteractionAtArgs args
+        InteractionPipeline<InteractionAtArgs> pipeline, InteractionResult oldState, InteractionAtArgs args
     ) {
         final var player = args.player();
         final var world = args.world();

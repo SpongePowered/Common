@@ -37,6 +37,7 @@ import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.ItemStack;
@@ -97,6 +98,9 @@ import org.spongepowered.common.event.tracking.context.transaction.block.ChangeB
 import org.spongepowered.common.event.tracking.context.transaction.block.RemoveBlockEntity;
 import org.spongepowered.common.event.tracking.context.transaction.effect.CheckBlockPostPlacementIsSameEffect;
 import org.spongepowered.common.event.tracking.context.transaction.effect.EffectResult;
+import org.spongepowered.common.event.tracking.context.transaction.effect.InteractionAtArgs;
+import org.spongepowered.common.event.tracking.context.transaction.effect.InteractionItemEffect;
+import org.spongepowered.common.event.tracking.context.transaction.effect.InteractionUseItemOnBlockEffect;
 import org.spongepowered.common.event.tracking.context.transaction.effect.NotifyClientEffect;
 import org.spongepowered.common.event.tracking.context.transaction.effect.NotifyNeighborSideEffect;
 import org.spongepowered.common.event.tracking.context.transaction.effect.PerformBlockDropsFromDestruction;
@@ -105,15 +109,16 @@ import org.spongepowered.common.event.tracking.context.transaction.effect.SetAnd
 import org.spongepowered.common.event.tracking.context.transaction.effect.UpdateConnectingBlocksEffect;
 import org.spongepowered.common.event.tracking.context.transaction.effect.UpdateLightSideEffect;
 import org.spongepowered.common.event.tracking.context.transaction.effect.UpdateWorldRendererEffect;
+import org.spongepowered.common.event.tracking.context.transaction.effect.UseItemArgs;
+import org.spongepowered.common.event.tracking.context.transaction.effect.UseItemAtArgs;
+import org.spongepowered.common.event.tracking.context.transaction.effect.UseItemAtEffect;
+import org.spongepowered.common.event.tracking.context.transaction.effect.UseItemEffect;
 import org.spongepowered.common.event.tracking.context.transaction.effect.WorldBlockChangeCompleteEffect;
 import org.spongepowered.common.event.tracking.context.transaction.effect.WorldDestroyBlockLevelEffect;
 import org.spongepowered.common.event.tracking.context.transaction.pipeline.ChunkPipeline;
+import org.spongepowered.common.event.tracking.context.transaction.pipeline.InteractionPipeline;
 import org.spongepowered.common.event.tracking.context.transaction.pipeline.PipelineCursor;
 import org.spongepowered.common.event.tracking.context.transaction.pipeline.TileEntityPipeline;
-import org.spongepowered.common.event.tracking.context.transaction.pipeline.UseBlockPipeline;
-import org.spongepowered.common.event.tracking.context.transaction.pipeline.UseItemAtPipeline;
-import org.spongepowered.common.event.tracking.context.transaction.pipeline.UseItemOnBlockPipeline;
-import org.spongepowered.common.event.tracking.context.transaction.pipeline.UseItemPipeline;
 import org.spongepowered.common.event.tracking.context.transaction.pipeline.WorldPipeline;
 import org.spongepowered.common.event.tracking.phase.general.GeneralPhase;
 import org.spongepowered.common.event.tracking.phase.tick.TickPhase;
@@ -585,36 +590,38 @@ public abstract class ServerLevelMixin_Tracker extends LevelMixin_Tracker implem
     }
 
     @Override
-    public UseItemOnBlockPipeline bridge$startInteractionUseOnChange(net.minecraft.world.level.Level worldIn, ServerPlayer playerIn, InteractionHand handIn, BlockHitResult blockRaytraceResultIn, BlockState blockstate, ItemStack copiedStack) {
+    public InteractionPipeline<InteractionAtArgs> bridge$startInteractionUseOnChange(
+        net.minecraft.world.level.Level worldIn, ServerPlayer playerIn, InteractionHand handIn,
+        BlockHitResult blockRaytraceResultIn, BlockState blockstate, ItemStack copiedStack
+    ) {
         final var instance = this.tracker$validateServerThread();
         if (instance == null) {
             return null;
         }
-        return new UseItemOnBlockPipeline(
-            (ServerLevel) worldIn,
-            playerIn,
-            handIn,
-            blockRaytraceResultIn,
-            blockstate,
-            copiedStack,
+        final var args = new InteractionAtArgs(worldIn, playerIn, handIn, blockRaytraceResultIn, blockstate, copiedStack);
+        return new InteractionPipeline<>(
+            args,
+            InteractionResult.TRY_WITH_EMPTY_HAND,
+            InteractionUseItemOnBlockEffect.getInstance(),
             instance.getPhaseContext().getTransactor()
-        );
+            );
     }
 
 
     @Override
-    public UseBlockPipeline bridge$startInteractionChange(net.minecraft.world.level.Level worldIn, ServerPlayer playerIn, InteractionHand handIn, BlockHitResult blockRaytraceResultIn, BlockState blockstate, ItemStack copiedStack) {
+    public InteractionPipeline<InteractionAtArgs> bridge$startInteractionChange(
+        net.minecraft.world.level.Level worldIn, ServerPlayer playerIn, InteractionHand handIn,
+        BlockHitResult blockRaytraceResultIn, BlockState blockstate, ItemStack copiedStack
+    ) {
         final var instance = this.tracker$validateServerThread();
         if (instance == null) {
             return null;
         }
-        return new UseBlockPipeline(
-            (ServerLevel) worldIn,
-            playerIn,
-            handIn,
-            blockRaytraceResultIn,
-            blockstate,
-            copiedStack,
+        final var args = new InteractionAtArgs(worldIn, playerIn, handIn, blockRaytraceResultIn, blockstate, copiedStack);
+        return new InteractionPipeline<InteractionAtArgs>(
+            args,
+            InteractionResult.PASS,
+            InteractionItemEffect.getInstance(),
             instance.getPhaseContext().getTransactor()
         );
     }
@@ -627,7 +634,7 @@ public abstract class ServerLevelMixin_Tracker extends LevelMixin_Tracker implem
         if (this.bridge$isFake()) {
             return null;
         }
-        final var instance = PhaseTracker.getInstance();
+        final var instance = PhaseTracker.getWorldInstance(this);
         if (instance.getSidedThread() != PhaseTracker.getServerInstanceExplicitly().getSidedThread() && instance != PhaseTracker.getServerInstanceExplicitly()) {
             throw new UnsupportedOperationException("Cannot perform a tracked Block Change on a ServerWorld while not on the main thread!");
         }
@@ -635,35 +642,31 @@ public abstract class ServerLevelMixin_Tracker extends LevelMixin_Tracker implem
     }
 
     @Override
-    public UseItemAtPipeline bridge$startItemInteractionChange(net.minecraft.world.level.Level worldIn, ServerPlayer playerIn, InteractionHand handIn, ItemStack copiedStack, BlockHitResult blockRaytraceResult, boolean creative) {
+    public InteractionPipeline<UseItemAtArgs> bridge$startItemInteractionChange(
+        net.minecraft.world.level.Level worldIn, ServerPlayer playerIn, InteractionHand handIn,
+        ItemStack copiedStack, BlockHitResult blockRaytraceResult, boolean creative
+    ) {
         final var instance = this.tracker$validateServerThread();
         if (instance == null) {
             return null;
         }
-        return new UseItemAtPipeline(
-            (ServerLevel) worldIn,
-            playerIn,
-            handIn,
-            copiedStack,
-            blockRaytraceResult,
-            creative,
+        final var args = new UseItemAtArgs(worldIn, playerIn,handIn, blockRaytraceResult, copiedStack, creative);
+        return new InteractionPipeline<>(
+            args,
+            InteractionResult.PASS,
+            UseItemAtEffect.getInstance(),
             instance.getPhaseContext().getTransactor()
         );
     }
 
     @Override
-    public UseItemPipeline bridge$startItemInteractionUseChange(net.minecraft.world.level.Level worldIn, ServerPlayer playerIn, InteractionHand handIn, ItemStack copiedStack) {
+    public InteractionPipeline<UseItemArgs> bridge$startItemInteractionUseChange(net.minecraft.world.level.Level worldIn, ServerPlayer playerIn, InteractionHand handIn, ItemStack copiedStack) {
         final var instance = this.tracker$validateServerThread();
         if (instance == null) {
             return null;
         }
-        return new UseItemPipeline(
-            (ServerLevel) worldIn,
-            playerIn,
-            handIn,
-            copiedStack,
-            instance.getPhaseContext().getTransactor()
-        );
+        final var args = new UseItemArgs(worldIn, playerIn, handIn, copiedStack, playerIn.gameMode);
+        return new InteractionPipeline<>(args, InteractionResult.PASS, UseItemEffect.getInstance(), instance.getPhaseContext().getTransactor());
     }
 
     /**

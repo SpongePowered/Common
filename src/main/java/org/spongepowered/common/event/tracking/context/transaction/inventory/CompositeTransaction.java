@@ -25,7 +25,6 @@
 package org.spongepowered.common.event.tracking.context.transaction.inventory;
 
 import com.google.common.collect.ImmutableList;
-import org.spongepowered.api.event.Cancellable;
 import org.spongepowered.api.event.CauseStackManager;
 import org.spongepowered.api.event.CompositeEvent;
 import org.spongepowered.api.event.Event;
@@ -48,7 +47,7 @@ public abstract class CompositeTransaction<E extends CompositeEvent<?>> extends 
     @Override
     public void finalizeSideEffects(E post) {
         // This finalizes the list to be immutable
-        ((AbstractCompositeEvent) post).postInit();
+        ((AbstractCompositeEvent<?>) post).postInit();
     }
 
     public void pushCause(CauseStackManager.StackFrame frame, E e) {
@@ -59,9 +58,12 @@ public abstract class CompositeTransaction<E extends CompositeEvent<?>> extends 
     public boolean markCancelledTransactions(
         final E event,
         final ImmutableList<? extends GameTransaction<E>> gameTransactions) {
+        if (!event.isCancelled()) {
+            return false;
+        }
         event.setCancelled(true);
         gameTransactions.forEach(GameTransaction::markCancelled);
-        return false;
+        return true;
     }
 
 }

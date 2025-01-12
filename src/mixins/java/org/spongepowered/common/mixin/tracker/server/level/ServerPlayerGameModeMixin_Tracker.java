@@ -68,7 +68,7 @@ import org.spongepowered.math.vector.Vector3i;
 public abstract class ServerPlayerGameModeMixin_Tracker {
 
     @Shadow @Final protected ServerPlayer player;
-    @Shadow protected net.minecraft.server.level.ServerLevel level;
+    @Shadow protected ServerLevel level;
     @Shadow private GameType gameModeForPlayer;
 
     @Shadow public abstract boolean shadow$isCreative();
@@ -119,6 +119,7 @@ public abstract class ServerPlayerGameModeMixin_Tracker {
                 final MenuProvider inamedcontainerprovider = blockstate.getMenuProvider(worldIn, blockpos);
                 if (inamedcontainerprovider != null) {
                     playerIn.openMenu(inamedcontainerprovider);
+                    // Sponge start - throw open container event
                     final Vector3i pos = VecHelper.toVector3i(blockRaytraceResultIn.getBlockPos());
                     final ServerLocation location = ServerLocation.of((ServerWorld) worldIn, pos);
                     try (final CauseStackManager.StackFrame blockHit = PhaseTracker.getCauseStackManager().pushCauseFrame()) {
@@ -129,7 +130,8 @@ public abstract class ServerPlayerGameModeMixin_Tracker {
                             return InteractionResult.SUCCESS;
                         }
                     }
-                    return InteractionResult.SUCCESS;
+                    // Sponge end
+                    return InteractionResult.CONSUME;
                 } else {
                     return InteractionResult.PASS;
                 }
@@ -148,11 +150,13 @@ public abstract class ServerPlayerGameModeMixin_Tracker {
                     return itemInteract;
                 }
                 if (itemInteract instanceof InteractionResult.TryEmptyHandInteraction && handIn == InteractionHand.MAIN_HAND) {
+                    // Sponge Start - use interaction pipeline
                     final AbstractContainerMenu lastOpenContainer = playerIn.containerMenu; // Sponge
                     final var interaction = ((TrackedWorldBridge) level).bridge$startInteractionChange(worldIn, playerIn, handIn, blockRaytraceResultIn, blockstate, copiedStack);
                     final var result = interaction.processInteraction(phaseContext);
+                    // Sponge end
                     if (result.consumesAction()) {
-                        // Sponge Start
+                        // Sponge Start - verify opened container is not changed, otherwise throw an event
                         if (lastOpenContainer != playerIn.containerMenu) {
                             final Vector3i pos = VecHelper.toVector3i(blockRaytraceResultIn.getBlockPos());
                             final ServerLocation location = ServerLocation.of((ServerWorld) worldIn, pos);
@@ -170,18 +174,19 @@ public abstract class ServerPlayerGameModeMixin_Tracker {
                         CriteriaTriggers.DEFAULT_BLOCK_USE.trigger(playerIn, blockpos);
                         return result;
                     }
-
                 }
             }
 
             if (!stackIn.isEmpty() && !playerIn.getCooldowns().isOnCooldown(stackIn)) {
-                // Sponge start
+                // Sponge start - verify event derived tristate
                 if (useItem == Tristate.FALSE) {
                     ((ServerPlayerGameModeBridge) this).bridge$setInteractBlockRightClickCancelled(true);
                     return InteractionResult.PASS;
                 }
+                // Sponge - run interaction through
                 final var interaction = ((TrackedWorldBridge) level).bridge$startItemInteractionChange(worldIn, playerIn, handIn, copiedStack, blockRaytraceResultIn, this.shadow$isCreative());
                 final var result = interaction.processInteraction(phaseContext);
+                // Sponge end
 
 
                 if (result.consumesAction()) {
