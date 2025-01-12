@@ -55,6 +55,8 @@ val gameManagedLibrariesConfig: NamedDomainObjectProvider<Configuration> = confi
 val serviceShadedLibrariesConfig: NamedDomainObjectProvider<Configuration> = configurations.register("serviceShadedLibraries")
 val gameShadedLibrariesConfig: NamedDomainObjectProvider<Configuration> = configurations.register("gameShadedLibraries")
 
+val productionExcludedLibrariesConfig: NamedDomainObjectProvider<Configuration> = configurations.register("productionExcludedLibraries")
+
 // ModLauncher layers
 val bootLayerConfig: NamedDomainObjectProvider<Configuration> = configurations.register("bootLayer") {
     extendsFrom(bootLibrariesConfig.get())
@@ -198,6 +200,12 @@ dependencies {
     val gameShadedLibraries = gameShadedLibrariesConfig.name
     gameShadedLibraries("org.spongepowered:spongeapi:$apiVersion") { isTransitive = false }
 
+    val gameManaged = gameManagedLibrariesConfig.name
+    gameManaged(libs.mixinextras.forge) // prod only
+
+    val productionExcluded = productionExcludedLibrariesConfig.name
+    productionExcluded(libs.mixinextras.common) // dev only
+
     afterEvaluate {
         spongeImpl.copyModulesExcludingProvided(serviceLibrariesConfig.get(), bootLayerConfig.get(), serviceShadedLibrariesConfig.get())
         spongeImpl.copyModulesExcludingProvided(gameLibrariesConfig.get(), serviceLayerConfig.get(), gameManagedLibrariesConfig.get())
@@ -309,6 +317,7 @@ tasks {
         group = "sponge"
         this.dependencies("main", gameManagedLibrariesConfig)
         this.excludeDependencies(gameShadedLibrariesConfig)
+        this.excludeDependencies(productionExcludedLibrariesConfig)
 
         outputFile.set(installerResources.map { it.file("sponge-libraries.json") })
     }
