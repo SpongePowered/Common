@@ -590,7 +590,7 @@ public abstract class ServerLevelMixin_Tracker extends LevelMixin_Tracker implem
     }
 
     @Override
-    public InteractionPipeline<InteractionAtArgs> bridge$startInteractionUseOnChange(
+    public InteractionPipeline<@NonNull InteractionAtArgs> bridge$startInteractionUseOnChange(
         net.minecraft.world.level.Level worldIn, ServerPlayer playerIn, InteractionHand handIn,
         BlockHitResult blockRaytraceResultIn, BlockState blockstate, ItemStack copiedStack
     ) {
@@ -609,7 +609,7 @@ public abstract class ServerLevelMixin_Tracker extends LevelMixin_Tracker implem
 
 
     @Override
-    public InteractionPipeline<InteractionAtArgs> bridge$startInteractionChange(
+    public InteractionPipeline<@NonNull InteractionAtArgs> bridge$startInteractionChange(
         net.minecraft.world.level.Level worldIn, ServerPlayer playerIn, InteractionHand handIn,
         BlockHitResult blockRaytraceResultIn, BlockState blockstate, ItemStack copiedStack
     ) {
@@ -618,7 +618,7 @@ public abstract class ServerLevelMixin_Tracker extends LevelMixin_Tracker implem
             return null;
         }
         final var args = new InteractionAtArgs(worldIn, playerIn, handIn, blockRaytraceResultIn, blockstate, copiedStack);
-        return new InteractionPipeline<InteractionAtArgs>(
+        return new InteractionPipeline<>(
             args,
             InteractionResult.PASS,
             InteractionItemEffect.getInstance(),
@@ -642,7 +642,7 @@ public abstract class ServerLevelMixin_Tracker extends LevelMixin_Tracker implem
     }
 
     @Override
-    public InteractionPipeline<UseItemAtArgs> bridge$startItemInteractionChange(
+    public InteractionPipeline<@NonNull UseItemAtArgs> bridge$startItemInteractionChange(
         net.minecraft.world.level.Level worldIn, ServerPlayer playerIn, InteractionHand handIn,
         ItemStack copiedStack, BlockHitResult blockRaytraceResult, boolean creative
     ) {

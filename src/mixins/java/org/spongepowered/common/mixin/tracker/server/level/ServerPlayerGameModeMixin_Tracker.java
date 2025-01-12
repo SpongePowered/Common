@@ -138,21 +138,20 @@ public abstract class ServerPlayerGameModeMixin_Tracker {
             }
             final boolean flag = !playerIn.getMainHandItem().isEmpty() || !playerIn.getOffhandItem().isEmpty();
             final boolean flag1 = playerIn.isSecondaryUseActive() && flag;
-            final ItemStack copiedStack = stackIn.copy();
             if (useBlock != Tristate.FALSE && !flag1) { // Sponge check useBlock
-                final var useInteraction = ((TrackedWorldBridge) level).bridge$startInteractionUseOnChange(worldIn, playerIn, handIn, blockRaytraceResultIn, blockstate, copiedStack);
+                final var useInteraction = ((TrackedWorldBridge) level).bridge$startInteractionUseOnChange(worldIn, playerIn, handIn, blockRaytraceResultIn, blockstate, stackIn);
                 if (useInteraction == null) {
                     return InteractionResult.FAIL;
                 }
                 final InteractionResult itemInteract = useInteraction.processInteraction(phaseContext);
                 if (itemInteract.consumesAction()) {
-                    CriteriaTriggers.ITEM_USED_ON_BLOCK.trigger(playerIn, blockpos, copiedStack);
+                    CriteriaTriggers.ITEM_USED_ON_BLOCK.trigger(playerIn, blockpos, stackIn);
                     return itemInteract;
                 }
                 if (itemInteract instanceof InteractionResult.TryEmptyHandInteraction && handIn == InteractionHand.MAIN_HAND) {
                     // Sponge Start - use interaction pipeline
                     final AbstractContainerMenu lastOpenContainer = playerIn.containerMenu; // Sponge
-                    final var interaction = ((TrackedWorldBridge) level).bridge$startInteractionChange(worldIn, playerIn, handIn, blockRaytraceResultIn, blockstate, copiedStack);
+                    final var interaction = ((TrackedWorldBridge) level).bridge$startInteractionChange(worldIn, playerIn, handIn, blockRaytraceResultIn, blockstate, stackIn);
                     final var result = interaction.processInteraction(phaseContext);
                     // Sponge end
                     if (result.consumesAction()) {
@@ -184,13 +183,13 @@ public abstract class ServerPlayerGameModeMixin_Tracker {
                     return InteractionResult.PASS;
                 }
                 // Sponge - run interaction through
-                final var interaction = ((TrackedWorldBridge) level).bridge$startItemInteractionChange(worldIn, playerIn, handIn, copiedStack, blockRaytraceResultIn, this.shadow$isCreative());
+                final var interaction = ((TrackedWorldBridge) level).bridge$startItemInteractionChange(worldIn, playerIn, handIn, stackIn, blockRaytraceResultIn, this.shadow$isCreative());
                 final var result = interaction.processInteraction(phaseContext);
                 // Sponge end
 
 
                 if (result.consumesAction()) {
-                    CriteriaTriggers.ITEM_USED_ON_BLOCK.trigger(playerIn, blockpos, copiedStack);
+                    CriteriaTriggers.ITEM_USED_ON_BLOCK.trigger(playerIn, blockpos, stackIn);
                 }
 
                 return result;
