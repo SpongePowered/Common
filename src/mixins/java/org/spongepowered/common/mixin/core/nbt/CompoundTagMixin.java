@@ -24,8 +24,8 @@
  */
 package org.spongepowered.common.mixin.core.nbt;
 
-import com.google.common.base.Function;
 import com.google.common.collect.Maps;
+import net.minecraft.Util;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import org.apache.logging.log4j.Level;
@@ -39,6 +39,7 @@ import org.spongepowered.common.SpongeCommon;
 import org.spongepowered.common.util.PrettyPrinter;
 
 import java.util.Map;
+import java.util.function.Function;
 
 /**
  * @author Zidane - Minecraft 1.14.4
@@ -56,38 +57,42 @@ public abstract class CompoundTagMixin {
     @Shadow @Final private Map<String, Tag> tags;
     // @formatter:on
 
-    @Redirect(method = "copy()Lnet/minecraft/nbt/CompoundTag;", at = @At(value = "INVOKE", target = "Lcom/google/common/collect/Maps;transformValues(Ljava/util/Map;Lcom/google/common/base/Function;)Ljava/util/Map;"))
+    @Redirect(method = "copy()Lnet/minecraft/nbt/CompoundTag;",
+        at = @At(value = "INVOKE",
+            target ="Lnet/minecraft/Util;mapValues(Ljava/util/Map;Ljava/util/function/Function;)Ljava/util/Map;"))
     private Map<String, Tag> impl$checkForOverflowOnCopy(Map<String, Tag> fromMap, Function<? super Tag, Tag> function) {
-        return Maps.transformValues(fromMap, (tag) -> {try {
-            return tag == null ? null : tag.copy();
-        } catch (StackOverflowError e) {
-            final PrettyPrinter printer = new PrettyPrinter(60)
-                .add("StackOverflow from trying to copy this compound")
-                .centre()
-                .hr();
-            printer.addWrapped(70, "Sponge caught a stack overflow error, printing out some special"
-                                   + " handling and printouts to assist in finding out where this"
-                                   + " recursion is coming from.");
-            printer.add();
+        return Util.mapValues(fromMap, (tag) -> {
             try {
-                printer.addWrapped(80, "%s : %s", "This compound", this);
-            } catch (final Throwable error) {
-                printer.addWrapped(80, "Unable to get the string of this compound. Printing out some of the entries to better assist");
+                return tag == null ? null : tag.copy();
+            } catch (StackOverflowError e) {
+                final PrettyPrinter printer = new PrettyPrinter(60)
+                    .add("StackOverflow from trying to copy this compound")
+                    .centre()
+                    .hr();
+                printer.addWrapped(70, "Sponge caught a stack overflow error, printing out some special"
+                                       + " handling and printouts to assist in finding out where this"
+                                       + " recursion is coming from.");
+                printer.add();
+                try {
+                    printer.addWrapped(80, "%s : %s", "This compound", this);
+                } catch (final Throwable error) {
+                    printer.addWrapped(80, "Unable to get the string of this compound. Printing out some of the entries to better assist");
 
-                for (final Map.Entry<String, Tag> entry : this.tags.entrySet()) {
-                    try {
-                        printer.addWrapped(80, "%s : %s", entry.getKey(), entry.getValue());
-                    } catch (final Throwable throwable) {
-                        printer.add();
-                        printer.addWrapped(80, "The offending key entry is belonging to " + entry.getKey());
-                        break;
+                    for (final Map.Entry<String, Tag> entry : this.tags.entrySet()) {
+                        try {
+                            printer.addWrapped(80, "%s : %s", entry.getKey(), entry.getValue());
+                        } catch (final Throwable throwable) {
+                            printer.add();
+                            printer.addWrapped(80, "The offending key entry is belonging to " + entry.getKey());
+                            break;
+                        }
                     }
                 }
+                printer.add();
+                printer.log(SpongeCommon.logger(), Level.ERROR);
+                return null;
             }
-            printer.add();
-            printer.log(SpongeCommon.logger(), Level.ERROR);
-            return null;
-        }});
+        });
     }
 
     @ModifyArg(method = "copy()Lnet/minecraft/nbt/CompoundTag;", at = @At(value = "INVOKE", target = "Lnet/minecraft/nbt/CompoundTag;<init>(Ljava/util/Map;)V"))

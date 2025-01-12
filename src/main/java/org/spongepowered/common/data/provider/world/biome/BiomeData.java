@@ -25,6 +25,7 @@
 package org.spongepowered.common.data.provider.world.biome;
 
 import net.minecraft.core.Holder;
+import net.minecraft.util.random.Weighted;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.BiomeGenerationSettings;
@@ -148,13 +149,36 @@ public final class BiomeData {
         return map;
     }
 
+    public record WeightedSpanwer(Weighted<MobSpawnSettings.SpawnerData> data) implements NaturalSpawner {
+
+        @Override
+        public EntityType<?> type() {
+            return (EntityType<?>) this.data.value().type();
+        }
+
+        @Override
+        public int min() {
+            return this.data.value().minCount();
+        }
+
+        @Override
+        public int max() {
+            return this.data.value().maxCount();
+        }
+
+        @Override
+        public int weight() {
+            return this.data.weight();
+        }
+    }
+
     private static Optional<List<NaturalSpawner>> naturalSpawner(Biome biome, MobCategory cat) {
-        final List<MobSpawnSettings.SpawnerData> unwrap = biome.getMobSettings().getMobs(cat).unwrap();
+        final List<Weighted<MobSpawnSettings.SpawnerData>> unwrap = biome.getMobSettings().getMobs(cat).unwrap();
         if (unwrap.isEmpty()) {
             return Optional.empty();
         }
         final List<NaturalSpawner> result = new ArrayList<>();
-        unwrap.forEach(data -> result.add((NaturalSpawner) data));
+        unwrap.forEach(data -> result.add(new WeightedSpanwer(data)));
         return Optional.of(result);
     }
 

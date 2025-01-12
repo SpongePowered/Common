@@ -22,20 +22,17 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.spongepowered.common.accessor.server.level;
+package org.spongepowered.common.accessor.world.entity.animal.horse;
 
-import net.minecraft.server.level.TicketType;
+import net.minecraft.world.entity.EntityReference;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.animal.horse.AbstractHorse;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.gen.Invoker;
-import org.spongepowered.common.UntransformedInvokerError;
+import org.spongepowered.asm.mixin.gen.Accessor;
 
-import java.util.Comparator;
+@Mixin(AbstractHorse.class)
+public interface AbstractHorseAccessor {
 
-@Mixin(TicketType.class)
-public interface TicketTypeAccessor<T> {
+    @Accessor("owner") void accessor$setOwner(EntityReference<LivingEntity> owner);
 
-    @Invoker("<init>")
-    static <T> TicketType<T> accessor$createInstance(final String name, final Comparator<T> comparator, final long lifetime) {
-        throw new UntransformedInvokerError();
-    }
 }

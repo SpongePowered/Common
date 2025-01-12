@@ -49,7 +49,6 @@ import net.minecraft.world.RandomSequences;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.ai.village.poi.PoiManager;
 import net.minecraft.world.entity.ai.village.poi.PoiType;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
@@ -147,7 +146,6 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerLevel
     @Shadow protected abstract void shadow$saveLevelData(final boolean $$0);
     @Shadow @Final private MinecraftServer server;
 
-    @Shadow public abstract void levelEvent(@Nullable Player $$0, int $$1, BlockPos $$2, int $$3);
     @Shadow @Nullable private EndDragonFight dragonFight;
     @Shadow @Final private List<ServerPlayer> players;
 
@@ -339,11 +337,14 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerLevel
         return (WorldData) this.shadow$getLevelData();
     }
 
-    @Redirect(method = "setDefaultSpawnPos", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerChunkCache;addRegionTicket(Lnet/minecraft/server/level/TicketType;Lnet/minecraft/world/level/ChunkPos;ILjava/lang/Object;)V"))
-    private void impl$respectKeepSpawnLoaded(final ServerChunkCache serverChunkProvider, final TicketType<Object> p_217228_1_, final ChunkPos p_217228_2_,
-            final int p_217228_3_, final Object p_217228_4_) {
+    @Redirect(method = "setDefaultSpawnPos",
+        at = @At(
+            value = "INVOKE",
+            target = "Lnet/minecraft/server/level/ServerChunkCache;addTicketWithRadius(Lnet/minecraft/server/level/TicketType;Lnet/minecraft/world/level/ChunkPos;I)V"
+        ))
+    private void impl$respectKeepSpawnLoaded(ServerChunkCache serverChunkProvider, TicketType type, ChunkPos pos, int radius) {
         if ((((ServerWorldProperties) this.shadow$getLevelData()).performsSpawnLogic())) {
-            serverChunkProvider.addRegionTicket(p_217228_1_, p_217228_2_, p_217228_3_, p_217228_4_);
+            serverChunkProvider.addTicketWithRadius(type, pos, radius);
         }
     }
 
@@ -494,7 +495,7 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerLevel
     }
 
     @Inject(method = "levelEvent", at = @At("HEAD"), cancellable = true)
-    private void impl$throwBroadcastEvent(final Player player, final int eventID, final BlockPos pos, final int dataID, CallbackInfo ci) {
+    private void impl$throwBroadcastEvent(final Entity player, final int eventID, final BlockPos pos, final int dataID, CallbackInfo ci) {
         if(eventID == Constants.WorldEvents.PLAY_RECORD_EVENT && ShouldFire.PLAY_SOUND_EVENT_FROM_JUKEBOX) {
             try (final CauseStackManager.StackFrame frame = Sponge.server().causeStackManager().pushCauseFrame()) {
                 final BlockEntity tileEntity = this.shadow$getBlockEntity(pos);
@@ -527,7 +528,7 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerLevel
         }
     }
 
-    @Redirect(method = "lambda$onBlockStateChange$14",
+    @Redirect(method = "lambda$updatePOIOnBlockStateChange$14",
         at = @At(
             value = "INVOKE",
             target = "Lnet/minecraft/world/entity/ai/village/poi/PoiManager;add(Lnet/minecraft/core/BlockPos;Lnet/minecraft/core/Holder;)V"

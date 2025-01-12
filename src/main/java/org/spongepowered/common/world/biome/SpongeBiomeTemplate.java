@@ -68,6 +68,7 @@ import org.spongepowered.api.world.generation.feature.PlacedFeature;
 import org.spongepowered.common.SpongeCommon;
 import org.spongepowered.common.data.SpongeDataManager;
 import org.spongepowered.common.data.provider.DataProviderLookup;
+import org.spongepowered.common.data.provider.world.biome.BiomeData;
 import org.spongepowered.common.util.AbstractDataPackEntryBuilder;
 
 import java.io.IOException;
@@ -203,7 +204,8 @@ public record SpongeBiomeTemplate(ResourceKey key, Biome representedBiome, DataP
             final MobSpawnSettings.Builder spawnerBuilder = new MobSpawnSettings.Builder()
                     .creatureGenerationProbability(spawnChance.floatValue());
             spawners.forEach((cat, spawner) -> spawner.forEach(sp -> {
-                spawnerBuilder.addSpawn((MobCategory) (Object) cat, (MobSpawnSettings.SpawnerData) sp);
+                final var data = ((BiomeData.WeightedSpanwer) sp).data();
+                spawnerBuilder.addSpawn((MobCategory) (Object) cat, data.weight(), data.value());
             }));
             spawnerCosts.forEach((type, cost) -> spawnerBuilder.addMobCharge((net.minecraft.world.entity.EntityType<?>) (Object) type, cost.budget(),
                     cost.charge()));

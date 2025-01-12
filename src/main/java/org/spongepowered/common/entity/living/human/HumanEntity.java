@@ -294,11 +294,9 @@ public final class HumanEntity extends PathfinderMob implements TeamMember, Rang
     }
 
     @Override
-    protected float tickHeadTurn(final float p_110146_1_, final float p_110146_2_) {
-        final float retValue = super.tickHeadTurn(p_110146_1_, p_110146_2_);
+    protected void tickHeadTurn(final float p_110146_1_) {
         // Make the body rotation follow head rotation
         this.setYRot(this.getYHeadRot());
-        return retValue;
     }
 
     private void setProfileName(final net.minecraft.network.chat.@Nullable Component newName) {
@@ -394,7 +392,11 @@ public final class HumanEntity extends PathfinderMob implements TeamMember, Rang
 
     private void respawnOnClient() {
         this.pushPackets(new ClientboundRemoveEntitiesPacket(this.getId()), this.createPlayerListPacket(EnumSet.allOf(ClientboundPlayerInfoUpdatePacket.Action.class)));
-        this.pushPackets(this.getAddEntityPacket(new ServerEntity((ServerLevel) this.level(), this, 1, true, packet -> {})));
+        this.pushPackets(this.getAddEntityPacket(new ServerEntity(
+            (ServerLevel) this.level(),
+            this, 1, true, packet -> {},
+            (packet, list) -> {}
+        )));
     }
 
     /**

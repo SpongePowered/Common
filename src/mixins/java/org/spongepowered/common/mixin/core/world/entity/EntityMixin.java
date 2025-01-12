@@ -743,7 +743,7 @@ public abstract class EntityMixin implements EntityBridge, PlatformEntityBridge,
 
     }
 
-    @Redirect(method = "checkInsideBlocks(Ljava/util/List;Ljava/util/Set;)V",
+    @Redirect(method = "checkInsideBlocks(Ljava/util/List;Ljava/util/List;)V",
             at = @At(value = "INVOKE",
                     target = "Lnet/minecraft/world/level/block/state/BlockState;entityInside(Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/entity/Entity;)V"
             )

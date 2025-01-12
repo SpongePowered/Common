@@ -40,6 +40,7 @@ public final class UpdateOrCreateNewTileEntityPostPlacementEffect implements Pro
     private static final class Holder {
         static final UpdateOrCreateNewTileEntityPostPlacementEffect INSTANCE = new UpdateOrCreateNewTileEntityPostPlacementEffect();
     }
+
     UpdateOrCreateNewTileEntityPostPlacementEffect() {
     }
 
@@ -49,13 +50,23 @@ public final class UpdateOrCreateNewTileEntityPostPlacementEffect implements Pro
 
     @SuppressWarnings("deprecation")
     @Override
-    public EffectResult processSideEffect(final BlockPipeline pipeline, final PipelineCursor oldState, final BlockState newState,
+    public EffectResult processSideEffect(
+        final BlockPipeline pipeline, final PipelineCursor oldState, final BlockState newState,
         final SpongeBlockChangeFlag flag, final int limit
     ) {
+        final var pos = oldState.pos();
         final ServerLevel serverWorld = pipeline.getServerWorld();
         final LevelChunk chunk = pipeline.getAffectedChunk();
+        final var block = newState.getBlock();
         if (((BlockStateBridge) newState).bridge$hasTileEntity()) {
-        final @Nullable BlockEntity maybeNewTileEntity = chunk.getBlockEntity(oldState.pos(), LevelChunk.EntityCreationType.CHECK);
+             var maybeNewTileEntity = chunk.getBlockEntity(oldState.pos(), LevelChunk.EntityCreationType.CHECK);
+            if (maybeNewTileEntity != null && !maybeNewTileEntity.isValidBlockState(newState)) {
+                LevelChunkAccessor.accessor$LOGGER().warn(
+                    "Found mismatched block entity @ {}: type = {}, state = {}", pos, maybeNewTileEntity.getType().builtInRegistryHolder().key().location(), newState
+                );
+                chunk.removeBlockEntity(pos);
+                maybeNewTileEntity = null;
+            }
             if (maybeNewTileEntity == null) {
                 // var15 = ((EntityBlock)var12).newBlockEntity(var1, var2); // Vanilla
                 // tileentity1 = state.createTileEntity(this.world); // Forge

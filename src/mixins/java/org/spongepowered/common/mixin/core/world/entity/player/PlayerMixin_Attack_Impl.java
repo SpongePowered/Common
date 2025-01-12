@@ -146,9 +146,11 @@ public abstract class PlayerMixin_Attack_Impl extends LivingEntityMixin_Attack_I
     @Redirect(method = "attack",
             slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;isSprinting()Z", ordinal = 0),
                            to = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/Item;getAttackDamageBonus(Lnet/minecraft/world/entity/Entity;FLnet/minecraft/world/damagesource/DamageSource;)F")),
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;playSound(Lnet/minecraft/world/entity/player/Player;DDDLnet/minecraft/sounds/SoundEvent;Lnet/minecraft/sounds/SoundSource;FF)V"))
-    public void attackImpl$preventSprintingAttackSound(final Level instance, final Player $$0, final double $$1, final double $$2, final double $$3, final SoundEvent $$4,
-            final SoundSource $$5, final float $$6, final float $$7) {
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;playSound(Lnet/minecraft/world/entity/Entity;DDDLnet/minecraft/sounds/SoundEvent;Lnet/minecraft/sounds/SoundSource;FF)V"))
+    public void attackImpl$preventSprintingAttackSound(
+        final Level instance, final Entity $$0, final double $$1, final double $$2, final double $$3,
+        final SoundEvent $$4, final SoundSource $$5, final float $$6, final float $$7
+    ) {
         // prevent sound
         this.attackImpl$isStrongSprintAttack = true;
     }
@@ -233,8 +235,8 @@ public abstract class PlayerMixin_Attack_Impl extends LivingEntityMixin_Attack_I
      */
     @Redirect(method = "attack",
             slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;causeFoodExhaustion(F)V")),
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;playSound(Lnet/minecraft/world/entity/player/Player;DDDLnet/minecraft/sounds/SoundEvent;Lnet/minecraft/sounds/SoundSource;FF)V"))
-    public void attackImpl$onNoDamageSound(final Level instance, final Player $$0, final double $$1, final double $$2, final double $$3,
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;playSound(Lnet/minecraft/world/entity/Entity;DDDLnet/minecraft/sounds/SoundEvent;Lnet/minecraft/sounds/SoundSource;FF)V"))
+    public void attackImpl$onNoDamageSound(final Level instance, final Entity $$0, final double $$1, final double $$2, final double $$3,
             final SoundEvent $$4, final SoundSource $$5, final float $$6, final float $$7) {
         if (!this.attackImpl$attackEvent.isCancelled()) {
             this.impl$playAttackSound((Player) (Object) this, SoundEvents.PLAYER_ATTACK_NODAMAGE);
@@ -285,9 +287,11 @@ public abstract class PlayerMixin_Attack_Impl extends LivingEntityMixin_Attack_I
      * Redirect {@link LivingEntity#knockback} to use modified event knockback
      */
     @Redirect(method = "attack",
-            slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;getEntitiesOfClass(Ljava/lang/Class;Lnet/minecraft/world/phys/AABB;)Ljava/util/List;"),
-                           to = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;hurt(Lnet/minecraft/world/damagesource/DamageSource;F)V")),
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;knockback(DDD)V"))
+        slice = @Slice(from = @At(value = "INVOKE",
+            target = "Lnet/minecraft/world/entity/LivingEntity;hurtServer(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/damagesource/DamageSource;F)Z"),
+            to = @At(value = "INVOKE",
+                target = "Lnet/minecraft/world/item/enchantment/EnchantmentHelper;doPostAttackEffects(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/damagesource/DamageSource;)V")),
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;knockback(DDD)V"))
     public void attackImpl$modifyKnockback(final LivingEntity instance, final double $$0, final double $$1, final double $$2) {
         instance.knockback($$0 * this.attackImpl$attackEvent.knockbackModifier(), $$1, $$2);
     }

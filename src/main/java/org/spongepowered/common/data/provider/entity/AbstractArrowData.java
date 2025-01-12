@@ -27,6 +27,7 @@ package org.spongepowered.common.data.provider.entity;
 import net.minecraft.world.entity.projectile.AbstractArrow;
 import org.spongepowered.api.data.Keys;
 import org.spongepowered.api.data.type.PickupRule;
+import org.spongepowered.common.accessor.world.entity.projectile.AbstractArrowAccessor;
 import org.spongepowered.common.bridge.world.entity.projectile.AbstractArrowBridge;
 import org.spongepowered.common.data.provider.DataProviderRegistrator;
 
@@ -40,7 +41,7 @@ public final class AbstractArrowData {
         registrator
                 .asMutable(AbstractArrow.class)
                     .create(Keys.ATTACK_DAMAGE)
-                        .get(AbstractArrow::getBaseDamage)
+                        .get(a -> ((AbstractArrowAccessor) a).accessor$baseDamage())
                         .set(AbstractArrow::setBaseDamage)
                     .create(Keys.IS_CRITICAL_HIT)
                         .get(AbstractArrow::isCritArrow)

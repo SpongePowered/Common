@@ -202,8 +202,9 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
         at = @At(value = "INVOKE", target = "Lnet/minecraft/network/protocol/game/ServerboundMovePlayerPacket;getYRot(F)F"),
         cancellable = true,
         slice = @Slice(
-            from = @At(value = "INVOKE", target = "Lnet/minecraft/server/network/ServerGamePacketListenerImpl;updateAwaitingTeleport()Z"),
-            to = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerPlayer;isPassenger()Z")))
+            // TODO - confirm we are injecting at the right spot given the subtle changes
+            from = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerPlayer;hasClientLoaded()Z"),
+            to = @At(value = "INVOKE", target = "Lnet/minecraft/server/network/ServerGamePacketListenerImpl;updateAwaitingTeleport()Z")))
     private void impl$callMoveEntityEvent(final ServerboundMovePlayerPacket packetIn, final CallbackInfo ci) {
         final boolean fireMoveEvent = packetIn.hasPosition();
         final boolean fireRotationEvent = packetIn.hasRotation();

@@ -30,7 +30,6 @@ import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.gen.Invoker;
@@ -82,8 +81,6 @@ public interface LivingEntityAccessor {
     @Accessor("lastHurt") float accessor$lastHurt();
 
     @Accessor("lastHurt") void accessor$lastHurt(final float lastHurt);
-
-    @Accessor("lastHurtByMob") @Nullable LivingEntity accessor$lastHurtByMob();
 
     @Accessor("autoSpinAttackTicks") int accessor$autoSpinAttackTicks();
     @Accessor("autoSpinAttackTicks") void accessor$autoSpinAttackTicks(final int autoSpinAttackTicks);

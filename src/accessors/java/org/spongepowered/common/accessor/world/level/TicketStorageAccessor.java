@@ -22,21 +22,18 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.spongepowered.common.accessor.network.chat;
+package org.spongepowered.common.accessor.world.level;
 
-import net.minecraft.core.Holder;
-import net.minecraft.core.component.DataComponentPatch;
-import net.minecraft.network.chat.HoverEvent;
-import net.minecraft.world.item.Item;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+import net.minecraft.server.level.Ticket;
+import net.minecraft.world.level.TicketStorage;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.gen.Invoker;
-import org.spongepowered.common.UntransformedInvokerError;
+import org.spongepowered.asm.mixin.gen.Accessor;
 
-@Mixin(HoverEvent.ItemStackInfo.class)
-public interface HoverEvent_ItemStackInfoAccessor {
+import java.util.List;
 
-    @Invoker("<init>")
-    static HoverEvent.ItemStackInfo invoker$new(final Holder<Item> item, final int count, final DataComponentPatch patch) {
-        throw new UntransformedInvokerError();
-    }
+@Mixin(TicketStorage.class)
+public interface TicketStorageAccessor {
+
+    @Accessor("tickets") Long2ObjectOpenHashMap<List<Ticket>> accessor$tickets();
 }

@@ -43,6 +43,7 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.block.state.properties.ChestType;
 import net.minecraft.world.level.block.state.properties.ComparatorMode;
+import net.minecraft.world.level.block.state.properties.CreakingHeartState;
 import net.minecraft.world.level.block.state.properties.DoorHingeSide;
 import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.minecraft.world.level.block.state.properties.DripstoneThickness;
@@ -148,6 +149,7 @@ public class BlockStatePropertiesGenerator implements Generator {
         vanillaEnumTypeMapping.put(ComparatorMode.class, BlockStatePropertiesGenerator.inDataTypePkg("ComparatorMode"));
         vanillaEnumTypeMapping.put(TrialSpawnerState.class, BlockStatePropertiesGenerator.inDataTypePkg("TrialSpawnerState"));
         vanillaEnumTypeMapping.put(VaultState.class, BlockStatePropertiesGenerator.inDataTypePkg("VaultState"));
+        vanillaEnumTypeMapping.put(CreakingHeartState.class, BlockStatePropertiesGenerator.inDataTypePkg("CreakingHeartState"));
 
         // Custom Mapping required see StateHolderMixin_API
         final ClassName portionTypeClass = BlockStatePropertiesGenerator.inDataTypePkg("PortionType");

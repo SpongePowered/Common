@@ -24,6 +24,7 @@
  */
 package org.spongepowered.common.data.provider.entity;
 
+import net.minecraft.world.entity.EntityReference;
 import net.minecraft.world.entity.animal.Fox;
 import org.spongepowered.api.data.Keys;
 import org.spongepowered.api.data.type.FoxType;
@@ -42,8 +43,8 @@ public final class FoxData {
         registrator
                 .asMutable(Fox.class)
                     .create(Keys.FIRST_TRUSTED)
-                        .get(h -> h.getEntityData().get(FoxAccessor.accessor$DATA_TRUSTED_ID_0()).orElse(null))
-                        .set((h, v) -> h.getEntityData().set(FoxAccessor.accessor$DATA_TRUSTED_ID_0(), Optional.ofNullable(v)))
+                        .get(h -> h.getEntityData().get(FoxAccessor.accessor$DATA_TRUSTED_ID_0()).map(EntityReference::getUUID).orElse(null))
+                        .set((h, v) -> h.getEntityData().set(FoxAccessor.accessor$DATA_TRUSTED_ID_0(), Optional.ofNullable(v).map(EntityReference::new)))
                     .create(Keys.FOX_TYPE)
                         .get(h -> (FoxType) (Object) h.getVariant())
                         .set((h, v) -> h.setVariant((Fox.Variant) (Object) v))
@@ -66,8 +67,8 @@ public final class FoxData {
                         .get(Fox::isSleeping)
                         .set((h, v) -> ((FoxAccessor) h).invoker$setSleeping(v))
                     .create(Keys.SECOND_TRUSTED)
-                        .get(h -> h.getEntityData().get(FoxAccessor.accessor$DATA_TRUSTED_ID_1()).orElse(null))
-                        .set((h, v) -> h.getEntityData().set(FoxAccessor.accessor$DATA_TRUSTED_ID_1(), Optional.ofNullable(v)));
+                        .get(h -> h.getEntityData().get(FoxAccessor.accessor$DATA_TRUSTED_ID_1()).map(EntityReference::getUUID).orElse(null))
+                        .set((h, v) -> h.getEntityData().set(FoxAccessor.accessor$DATA_TRUSTED_ID_1(), Optional.ofNullable(v).map(EntityReference::new)));
     }
     // @formatter:on
 }

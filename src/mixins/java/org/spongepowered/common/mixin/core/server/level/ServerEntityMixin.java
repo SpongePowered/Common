@@ -47,6 +47,7 @@ import org.spongepowered.common.entity.living.human.HumanEntity;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
@@ -79,10 +80,11 @@ public abstract class ServerEntityMixin {
      */
     @Inject(method = "<init>", at = @At("TAIL"))
     private void impl$wrapConsumer(final ServerLevel serverLevel, final Entity entity, final int trackingRange,
-        final boolean trackMovementDeltas, final Consumer<Packet<?>> broadcaster, final CallbackInfo ci) {
+                                   final boolean trackMovementDeltas, final Consumer<Packet<?>> broadcaster,
+                                   final BiConsumer<?, ?> filter, final CallbackInfo ci) {
         this.broadcast = (packet)  -> {
-            if (this.entity instanceof VanishableBridge) {
-                if (!((VanishableBridge) this.entity).bridge$vanishState().invisible()) {
+            if (this.entity instanceof VanishableBridge bridge) {
+                if (!bridge.bridge$vanishState().invisible()) {
                     broadcaster.accept(packet);
                 }
             }

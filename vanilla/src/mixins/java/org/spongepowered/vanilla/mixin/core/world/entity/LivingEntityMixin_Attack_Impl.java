@@ -26,6 +26,7 @@ package org.spongepowered.vanilla.mixin.core.world.entity;
 
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.EntityReference;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.TamableAnimal;
 import net.minecraft.world.entity.animal.Wolf;
@@ -53,9 +54,9 @@ public abstract class LivingEntityMixin_Attack_Impl {
     }
 
     @Redirect(method = "resolvePlayerResponsibleForDamage",
-        at = @At(value = "INVOKE" , target = "Lnet/minecraft/world/entity/animal/Wolf;getOwner()Lnet/minecraft/world/entity/LivingEntity;"))
-    private LivingEntity attackImpl$onWolfGetOwner(@Coerce final Object instance) {
-        return ((TamableAnimal)instance).getOwner();
+        at = @At(value = "INVOKE" , target = "Lnet/minecraft/world/entity/animal/Wolf;getOwnerReference()Lnet/minecraft/world/entity/EntityReference;"))
+    private EntityReference<LivingEntity> attackImpl$onWolfGetOwner(@Coerce final Object instance) {
+        return ((TamableAnimal)instance).getOwnerReference();
     }
 
     /**

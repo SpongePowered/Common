@@ -80,7 +80,7 @@ public abstract class LevelChunkMixin_Tracker extends ChunkAccessMixin_Tracker i
     private @MonotonicNonNull PhaseContext<@NonNull ?> tracker$postProcessContext = null;
 
     @Inject(method = "setBlockState", at = @At("HEAD"), cancellable = true)
-    private void tracker$sanityCheckServerWorldSetBlockState(final BlockPos pos, final BlockState state, final boolean isMoving,
+    private void tracker$sanityCheckServerWorldSetBlockState(final BlockPos pos, final BlockState state, final int flag,
         final CallbackInfoReturnable<BlockState> cir
     ) {
         if (!((LevelBridge) this.level).bridge$isFake()) {

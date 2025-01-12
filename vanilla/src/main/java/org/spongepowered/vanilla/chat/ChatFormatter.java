@@ -73,11 +73,13 @@ public final class ChatFormatter {
 
             final String displayUrl = s.substring(start, end);
             String url = displayUrl;
+            final URI toOpen;
 
             try {
                 if (new URI(url).getScheme() == null) {
                     url = ChatFormatter.DEFAULT_SCHEME + url;
                 }
+                toOpen = new URI(url);
             } catch (final URISyntaxException e) {
                 continue; // Invalid URL so just ignore it
             }
@@ -93,7 +95,7 @@ public final class ChatFormatter {
             pos = end;
 
             final MutableComponent link = Component.literal(displayUrl);
-            link.setStyle(link.getStyle().withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, url)));
+            link.setStyle(link.getStyle().withClickEvent(new ClickEvent.OpenUrl(toOpen)));
 
             if (result == null) {
                 result = Component.literal("");

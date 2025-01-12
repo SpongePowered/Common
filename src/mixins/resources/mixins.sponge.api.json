@@ -367,7 +367,6 @@
         "minecraft.world.level.biome.Climate_ParameterPointMixin_API",
         "minecraft.world.level.biome.FixedBiomeSourceMixin_API",
         "minecraft.world.level.biome.MobSpawnSettings_MobSpawnCostMixin_API",
-        "minecraft.world.level.biome.MobSpawnSettings_SpawnerDataMixin_API",
         "minecraft.world.level.biome.MultiNoiseBiomeSourceMixin_API",
         "minecraft.world.level.biome.TheEndBiomeSourceMixin_API",
         "minecraft.world.level.block.MirrorMixin_API",

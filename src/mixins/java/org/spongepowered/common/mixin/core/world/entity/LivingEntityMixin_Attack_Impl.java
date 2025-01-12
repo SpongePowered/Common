@@ -146,8 +146,8 @@ public abstract class LivingEntityMixin_Attack_Impl extends EntityMixin implemen
     /**
      * Capture the old values to reset if we end up cancelling or blocking.
      */
-    @Inject(method = "hurtServer", at = @At(value = "FIELD",
-        target = "Lnet/minecraft/world/entity/LivingEntity;walkAnimation:Lnet/minecraft/world/entity/WalkAnimationState;"))
+    @Inject(method = "hurtServer", at = @At(value = "INVOKE",
+        target = "Ljava/lang/Float;isNaN(F)Z"))
     private void attackImpl$beforeActuallyHurt(final ServerLevel level, final DamageSource source, final float damageTaken, final CallbackInfoReturnable<Boolean> cir) {
         // Save old values
         this.attackImpl$lastHurt = this.lastHurt;

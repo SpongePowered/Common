@@ -104,13 +104,13 @@ public final class DamageEventUtil {
      * LivingEntity#getDamageAfterMagicAbsorb
      */
     public static DamageFunction createResistanceModifier(final LivingEntity living) {
-        final var effect = living.getEffect(MobEffects.DAMAGE_RESISTANCE);
+        final var effect = living.getEffect(MobEffects.RESISTANCE);
         var modifier = DamageEventUtil.buildDamageReductionModifier(DamageModifierTypes.DEFENSIVE_POTION_EFFECT, effect);
         return new DamageFunction(modifier, DamageEventUtil.createResistanceFunction(living));
     }
 
     public static DoubleUnaryOperator createResistanceFunction(final LivingEntity living) {
-        final var effect = living.getEffect(MobEffects.DAMAGE_RESISTANCE);
+        final var effect = living.getEffect(MobEffects.RESISTANCE);
         final int base = effect == null ? 0 : (effect.getAmplifier() + 1) * 5;
         final int modifier = 25 - base;
         return damage -> Math.max(((damage * modifier) / 25.0F), 0.0f);

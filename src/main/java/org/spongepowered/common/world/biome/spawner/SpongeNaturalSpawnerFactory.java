@@ -24,14 +24,16 @@
  */
 package org.spongepowered.common.world.biome.spawner;
 
+import net.minecraft.util.random.Weighted;
 import net.minecraft.world.level.biome.MobSpawnSettings;
 import org.spongepowered.api.entity.EntityType;
 import org.spongepowered.api.world.biome.spawner.NaturalSpawner;
+import org.spongepowered.common.data.provider.world.biome.BiomeData;
 
 public class SpongeNaturalSpawnerFactory implements NaturalSpawner.Factory {
 
     @Override
     public NaturalSpawner of(final EntityType<?> type, final int weight, final int min, final int max) {
-        return (NaturalSpawner) new MobSpawnSettings.SpawnerData((net.minecraft.world.entity.EntityType<?>) type, weight, min, max);
+        return new BiomeData.WeightedSpanwer(new Weighted<>(new MobSpawnSettings.SpawnerData((net.minecraft.world.entity.EntityType<?>) type, min, max), weight));
     }
 }

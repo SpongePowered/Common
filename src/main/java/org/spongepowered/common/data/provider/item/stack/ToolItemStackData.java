@@ -32,6 +32,7 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.Tool;
 import net.minecraft.world.level.block.Block;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.spongepowered.api.block.BlockType;
 import org.spongepowered.api.data.Keys;
 import org.spongepowered.api.data.type.ToolRule;
@@ -53,40 +54,40 @@ public final class ToolItemStackData {
                 .asMutable(ItemStack.class)
                     .create(Keys.EFFICIENCY)
                         .get(h -> {
-                            final Tool tool = h.get(DataComponents.TOOL);
+                            final @Nullable Tool tool = h.get(DataComponents.TOOL);
                             if (tool != null) {
                                 return (double) tool.defaultMiningSpeed();
                             }
                             return null;
                         })
                         .set((h, v) -> {
-                            final Tool tool = h.get(DataComponents.TOOL);
+                            final @Nullable Tool tool = h.get(DataComponents.TOOL);
                             if (tool != null) {
-                                h.set(DataComponents.TOOL, new Tool(tool.rules(), v.floatValue(), tool.damagePerBlock()));
+                                h.set(DataComponents.TOOL, new Tool(tool.rules(), v.floatValue(), tool.damagePerBlock(), tool.canDestroyBlocksInCreative()));
                                 return;
                             }
-                            h.set(DataComponents.TOOL, new Tool(List.of(), v.floatValue(), 1));
+                            h.set(DataComponents.TOOL, new Tool(List.of(), v.floatValue(), 1, true));
                         })
                         .delete(h -> h.remove(DataComponents.TOOL))
                 .create(Keys.TOOL_DAMAGE_PER_BLOCK)
                     .get(h -> {
-                        final Tool tool = h.get(DataComponents.TOOL);
+                        final @Nullable Tool tool = h.get(DataComponents.TOOL);
                         if (tool != null) {
                             return tool.damagePerBlock();
                         }
                         return null;
                     })
                     .set((h, v) -> {
-                        final Tool tool = h.get(DataComponents.TOOL);
+                        final @Nullable Tool tool = h.get(DataComponents.TOOL);
                         if (tool != null) {
-                            h.set(DataComponents.TOOL, new Tool(tool.rules(), tool.defaultMiningSpeed(), v));
+                            h.set(DataComponents.TOOL, new Tool(tool.rules(), tool.defaultMiningSpeed(), v, tool.canDestroyBlocksInCreative()));
                             return;
                         }
-                        h.set(DataComponents.TOOL, new Tool(List.of(), 1f, v));
+                        h.set(DataComponents.TOOL, new Tool(List.of(), 1f, v, true));
                     })
                 .create(Keys.TOOL_RULES)
                     .get(h -> {
-                        final Tool tool = h.get(DataComponents.TOOL);
+                        final @Nullable Tool tool = h.get(DataComponents.TOOL);
                         if (tool == null) {
                             return null;
                         }
@@ -94,17 +95,17 @@ public final class ToolItemStackData {
                     })
                     .set((h, v) -> {
                         var mcValue = v.stream().map(Tool.Rule.class::cast).toList();
-                        final Tool tool = h.get(DataComponents.TOOL);
+                        final @Nullable Tool tool = h.get(DataComponents.TOOL);
                         if (tool != null) {
-                            h.set(DataComponents.TOOL, new Tool(mcValue, tool.defaultMiningSpeed(), tool.damagePerBlock()));
+                            h.set(DataComponents.TOOL, new Tool(mcValue, tool.defaultMiningSpeed(), tool.damagePerBlock(), tool.canDestroyBlocksInCreative()));
                             return;
                         }
-                        h.set(DataComponents.TOOL, new Tool(mcValue, 1f, 1));
+                        h.set(DataComponents.TOOL, new Tool(mcValue, 1f, 1, true));
                     })
                     .delete(h -> {
-                        final Tool tool = h.get(DataComponents.TOOL);
+                        final @Nullable Tool tool = h.get(DataComponents.TOOL);
                         if (tool != null) {
-                            h.set(DataComponents.TOOL, new Tool(List.of(), tool.defaultMiningSpeed(), tool.damagePerBlock()));
+                            h.set(DataComponents.TOOL, new Tool(List.of(), tool.defaultMiningSpeed(), tool.damagePerBlock(), tool.canDestroyBlocksInCreative()));
                         }
                     })
                 .create(Keys.CAN_HARVEST)

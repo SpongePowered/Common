@@ -25,22 +25,24 @@
 package org.spongepowered.common.mixin.optimization.world.entity;
 
 import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.world.entity.EntityReference;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.TamableAnimal;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.common.mixin.core.world.entity.AgableMobMixin;
 
 import java.util.Optional;
-import java.util.UUID;
 
 @Mixin(TamableAnimal.class)
 public abstract class TamableAnimalMixin_Optimization_Owner extends AgableMobMixin {
 
-    @Shadow @Final protected static EntityDataAccessor<Optional<UUID>> DATA_OWNERUUID_ID;
-    @Nullable private UUID cachedOwner$OwnerId;
+    @Shadow @Final protected static EntityDataAccessor<Optional<EntityReference<LivingEntity>>> DATA_OWNERUUID_ID;
+    @Nullable @Unique private EntityReference<LivingEntity> cachedOwner$OwnerId;
 
     /**
      * @author gabizou - July 26th, 2016
@@ -50,11 +52,24 @@ public abstract class TamableAnimalMixin_Optimization_Owner extends AgableMobMix
      */
     @Nullable
     @Overwrite
-    public UUID getOwnerUUID() {
+    public EntityReference<LivingEntity> getOwnerReference() {
         if (this.cachedOwner$OwnerId == null) {
             this.cachedOwner$OwnerId = this.entityData.get(TamableAnimalMixin_Optimization_Owner.DATA_OWNERUUID_ID).orElse(null);
         }
         return this.cachedOwner$OwnerId;
+    }
+
+    /**
+     * @author gabizou - January 12th, 2025
+     * @reason stores the cached owner id to save constant lookups from the data watcher
+     *
+     * @param entity The entity to set as the owner
+     */
+    @Overwrite
+    public void setOwner(final @javax.annotation.Nullable LivingEntity entity) {
+        final var reference = Optional.ofNullable(entity).map(EntityReference::new);
+        this.cachedOwner$OwnerId = reference.orElse(null);
+        this.entityData.set(DATA_OWNERUUID_ID, reference);
     }
 
     /**
@@ -64,7 +79,7 @@ public abstract class TamableAnimalMixin_Optimization_Owner extends AgableMobMix
      * @param ownerUuid The owner id to set
      */
     @Overwrite
-    public void setOwnerUUID(@Nullable final UUID ownerUuid) {
+    public void setOwnerReference(@Nullable final EntityReference<LivingEntity> ownerUuid) {
         this.cachedOwner$OwnerId = ownerUuid;
         this.entityData.set(TamableAnimalMixin_Optimization_Owner.DATA_OWNERUUID_ID, Optional.ofNullable(ownerUuid));
     }

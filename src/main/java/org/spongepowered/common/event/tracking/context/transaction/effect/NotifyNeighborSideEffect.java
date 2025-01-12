@@ -50,10 +50,15 @@ public final class NotifyNeighborSideEffect implements ProcessingSideEffect {
         final ServerLevel world = pipeline.getServerWorld();
 
         // Vanilla isClientSide is redundant
-        // if (!this.isClientSide && (flags & 1) != 0) {
+        // if (($$2 & 1) != 0) {
+        //    this.updateNeighborsAt($$0, $$6.getBlock());
+        //    if (!this.isClientSide && $$1.hasAnalogOutputSignal()) {
+        //        this.updateNeighbourForOutputSignal($$0, $$5);
+        //    }
+        //}
         if (flag.updateNeighbors()) {
             // this.notifyNeighbors(pos, originalState.getBlock());
-            world.blockUpdated(oldState.pos(), oldState.state().getBlock());
+            world.updateNeighborsAt(oldState.pos(), oldState.state().getBlock());
             if (newState.hasAnalogOutputSignal()) {
                 // this.updateComparatorOutputLevel(pos, block);
                 world.updateNeighbourForOutputSignal(oldState.pos(), newState.getBlock());

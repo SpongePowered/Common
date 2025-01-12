@@ -31,6 +31,7 @@ import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.item.crafting.SmithingRecipeInput;
 import net.minecraft.world.item.crafting.SmithingTransformRecipe;
+import net.minecraft.world.item.crafting.TransmuteResult;
 import org.spongepowered.api.datapack.DataPack;
 import org.spongepowered.api.item.recipe.Recipe;
 import org.spongepowered.api.item.recipe.RecipeRegistration;
@@ -69,7 +70,11 @@ public class SpongeSmithingRecipeRegistration extends SpongeRecipeRegistration<S
     public Recipe recipe() {
         this.ensureCached();
         if (SpongeRecipeRegistration.isVanillaSerializer(this.spongeResult, this.resultFunction, null, List.of(this.template, this.base, this.addition))) {
-            return (SmithingRecipe) new SmithingTransformRecipe(Optional.of(this.template), Optional.of(this.base), Optional.of(this.addition), this.spongeResult);
+            return (SmithingRecipe) new SmithingTransformRecipe(Optional.of(this.template), Optional.of(this.base), Optional.of(this.addition), new TransmuteResult(
+                this.spongeResult.getItemHolder(),
+                this.spongeResult.getCount(),
+                this.spongeResult.getComponentsPatch()
+            ));
 
         }
         return (SmithingRecipe) new SpongeSmithingRecipe(Optional.ofNullable(this.template), Optional.ofNullable(this.base), Optional.ofNullable(this.addition),

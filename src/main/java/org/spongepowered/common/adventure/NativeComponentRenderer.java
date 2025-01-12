@@ -78,7 +78,7 @@ public abstract class NativeComponentRenderer<C> {
     /**
      * Gets a message format from a key and context.
      *
-     * @param key a translation key
+     * @param key     a translation key
      * @param context a context
      * @return a message format or {@code null} to skip translation
      */
@@ -93,26 +93,29 @@ public abstract class NativeComponentRenderer<C> {
 
 
         final net.minecraft.network.chat.HoverEvent hover = component.getStyle().getHoverEvent();
-        if (hover != null)  {
+        if (hover != null) {
             component.setStyle(component.getStyle().withHoverEvent(this.renderHoverEvent(hover, context)));
         }
         return component;
     }
 
     private HoverEvent renderHoverEvent(final HoverEvent input, final @NonNull C context) {
-        final HoverEvent.Action<?> action = input.getAction();
-        if (action == HoverEvent.Action.SHOW_TEXT) {
-            final Component original = input.getValue(HoverEvent.Action.SHOW_TEXT);
-            return new HoverEvent(HoverEvent.Action.SHOW_TEXT, this.render(original.copy(), context));
-        } else if (action == HoverEvent.Action.SHOW_ENTITY) {
-           final HoverEvent.EntityTooltipInfo data = input.getValue(HoverEvent.Action.SHOW_ENTITY);
-           if (data.name.isPresent()) {
-               final Component rendered = this.render(data.name.get().copy(), context);
-               return new HoverEvent(HoverEvent.Action.SHOW_ENTITY, new HoverEvent.EntityTooltipInfo(data.type, data.id, rendered));
-           }
-        }
-
-        return input;
+        return switch (input) {
+            case HoverEvent.ShowText st -> {
+                final Component original = st.text();
+                yield new HoverEvent.ShowText(this.render(original.copy(), context));
+            }
+            case HoverEvent.ShowEntity se -> {
+                final HoverEvent.EntityTooltipInfo original = se.entity();
+                if (original.name.isPresent()) {
+                    final Component rendered = this.render(original.name.get().copy(), context);
+                    final var info = new HoverEvent.EntityTooltipInfo(original.type, original.uuid, rendered);
+                    yield new HoverEvent.ShowEntity(info);
+                }
+                yield input;
+            }
+            default -> input;
+        };
     }
 
     protected @NonNull MutableComponent renderTranslatable(final MutableComponent component, final @NonNull TranslatableContents contents, final @NonNull C context) {
@@ -135,7 +138,7 @@ public abstract class NativeComponentRenderer<C> {
         final Object[] args = contents.getArgs();
         final MutableComponent result;
         // no arguments makes this render very simple
-        if(args.length == 0) {
+        if (args.length == 0) {
             result = Component.literal(format.format(null, new StringBuffer(), null).toString());
         } else {
             result = Component.literal("");

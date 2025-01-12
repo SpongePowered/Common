@@ -50,10 +50,10 @@ import net.minecraft.world.entity.npc.CatSpawner;
 import net.minecraft.world.entity.npc.WanderingTraderSpawner;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.CustomSpawner;
-import net.minecraft.world.level.ForcedChunksSavedData;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelSettings;
+import net.minecraft.world.level.TicketStorage;
 import net.minecraft.world.level.WorldDataConfiguration;
 import net.minecraft.world.level.biome.BiomeManager;
 import net.minecraft.world.level.chunk.ChunkGenerator;
@@ -140,7 +140,8 @@ public abstract class SpongeWorldManager implements WorldManager {
     private final Path defaultWorldDirectory, customWorldsDirectory;
     private final Map<net.minecraft.resources.ResourceKey<Level>, ServerLevel> worlds;
 
-    private static final TicketType<ResourceLocation> SPAWN_CHUNKS = TicketType.create("spawn_chunks", ResourceLocation::compareTo);
+    // TODO - pending https://github.com/SpongePowered/SpongeAPI/issues/2574 - 25w02a
+    private static final TicketType SPAWN_CHUNKS = TicketType.FORCED;
 
     public SpongeWorldManager(final MinecraftServer server) {
         this.server = server;
@@ -708,7 +709,7 @@ public abstract class SpongeWorldManager implements WorldManager {
         SpongeCommon.post(unloadWorldEvent);
 
         final BlockPos spawnPoint = world.getSharedSpawnPos();
-        world.getChunkSource().removeRegionTicket(SpongeWorldManager.SPAWN_CHUNKS, new ChunkPos(spawnPoint), 11, registryKey.location());
+        world.getChunkSource().removeTicketWithRadius(SpongeWorldManager.SPAWN_CHUNKS, new ChunkPos(spawnPoint), 11);
 
         ((PrimaryLevelDataBridge) world.getLevelData()).bridge$configAdapter().save();
 
@@ -974,7 +975,7 @@ public abstract class SpongeWorldManager implements WorldManager {
         final int diameter = ((borderRadius - 1) * 2) + 1;
         final int spawnChunks = diameter * diameter;
 
-        serverChunkProvider.addRegionTicket(SpongeWorldManager.SPAWN_CHUNKS, chunkPos, borderRadius, world.dimension().location());
+        serverChunkProvider.addTicketWithRadius(SpongeWorldManager.SPAWN_CHUNKS, chunkPos, borderRadius);
         final CompletableFuture<ServerLevel> generationFuture = new CompletableFuture<>();
         Sponge.asyncScheduler().submit(
                 Task.builder().plugin(Launch.instance().platformPlugin())
@@ -996,7 +997,7 @@ public abstract class SpongeWorldManager implements WorldManager {
 
             // Sponge Start - Release the chunk ticket if spawn is not set to be kept loaded...
             if (!((PrimaryLevelDataBridge) world.getLevelData()).bridge$performsSpawnLogic()) {
-                serverChunkProvider.removeRegionTicket(SpongeWorldManager.SPAWN_CHUNKS, chunkPos, 11, world.dimension().location());
+                serverChunkProvider.removeTicketWithRadius(SpongeWorldManager.SPAWN_CHUNKS, chunkPos, 11);
             }
             return world;
         });
@@ -1010,7 +1011,7 @@ public abstract class SpongeWorldManager implements WorldManager {
         final ServerChunkCache serverChunkProvider = world.getChunkSource();
 //        serverChunkProvider.getLightEngine().setTaskPerBatch(500);
         ((MinecraftServerAccessor) this.server).accessor$nextTickTimeNanos(Util.getNanos());
-        serverChunkProvider.addRegionTicket(SpongeWorldManager.SPAWN_CHUNKS, chunkPos, 11, world.dimension().location());
+        serverChunkProvider.addTicketWithRadius(SpongeWorldManager.SPAWN_CHUNKS, chunkPos, 11);
 
         while (serverChunkProvider.getTickingGenerated() != 441) {
             ((MinecraftServerAccessor) this.server).accessor$nextTickTimeNanos(Util.getNanos() + 10L * TimeUtil.NANOSECONDS_PER_MILLISECOND);
@@ -1029,14 +1030,14 @@ public abstract class SpongeWorldManager implements WorldManager {
 
         // Sponge Start - Release the chunk ticket if spawn is not set to be kept loaded...
         if (!((PrimaryLevelDataBridge) world.getLevelData()).bridge$performsSpawnLogic()) {
-            serverChunkProvider.removeRegionTicket(SpongeWorldManager.SPAWN_CHUNKS, chunkPos, 11, world.dimension().location());
+            serverChunkProvider.removeTicketWithRadius(SpongeWorldManager.SPAWN_CHUNKS, chunkPos, 11);
         }
     }
 
     private void updateForcedChunks(final ServerLevel world, final ServerChunkCache serverChunkProvider) {
-        final ForcedChunksSavedData forcedChunksSaveData = world.getDataStorage().get(ForcedChunksSavedData.factory(), "chunks");
+        final @Nullable TicketStorage forcedChunksSaveData = world.getDataStorage().get(TicketStorage.factory(), "chunks");
         if (forcedChunksSaveData != null) {
-            final LongIterator longIterator = forcedChunksSaveData.getChunks().iterator();
+            final LongIterator longIterator = forcedChunksSaveData.getForceLoadedChunks().iterator();
 
             while (longIterator.hasNext()) {
                 final long i = longIterator.nextLong();

@@ -24,7 +24,7 @@
  */
 package org.spongepowered.common.mixin.api.minecraft.world.level.levelgen.structure;
 
-import net.minecraft.util.random.WeightedRandomList;
+import net.minecraft.util.random.WeightedList;
 import net.minecraft.world.level.biome.MobSpawnSettings;
 import net.minecraft.world.level.levelgen.structure.StructureSpawnOverride;
 import org.spongepowered.api.world.biome.spawner.NaturalSpawner;
@@ -32,6 +32,7 @@ import org.spongepowered.api.world.generation.structure.Structure.StructureNatur
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.common.data.provider.world.biome.BiomeData;
 
 import java.util.List;
 
@@ -40,7 +41,7 @@ public abstract class StructureSpawnOverrideMixin_API implements StructureNatura
 
     // @formatter:off
     @Shadow @Final private StructureSpawnOverride.BoundingBoxType boundingBox;
-    @Shadow @Final private WeightedRandomList<MobSpawnSettings.SpawnerData> spawns;
+    @Shadow @Final private WeightedList<MobSpawnSettings.SpawnerData> spawns;
     // @formatter:on
 
     @Override
@@ -50,6 +51,6 @@ public abstract class StructureSpawnOverrideMixin_API implements StructureNatura
 
     @Override
     public List<NaturalSpawner> spawners() {
-        return (List) this.spawns.unwrap();
+        return this.spawns.unwrap().stream().<NaturalSpawner>map(BiomeData.WeightedSpanwer::new).toList();
     }
 }

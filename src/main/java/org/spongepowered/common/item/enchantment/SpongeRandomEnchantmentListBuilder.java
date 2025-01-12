@@ -115,7 +115,7 @@ public final class SpongeRandomEnchantmentListBuilder implements Enchantment.Ran
         // Same code as net.minecraft.enchantment.EnchantmentHelper#selectEnchantment
         if (!list1.isEmpty())
         {
-            WeightedRandom.getRandomItem(randomIn, list1).ifPresent(list::add);
+            WeightedRandom.getRandomItem(randomIn, list1, EnchantmentInstance::weight).ifPresent(list::add);
 
             while (randomIn.nextInt(50) <= this.level)
             {
@@ -126,7 +126,7 @@ public final class SpongeRandomEnchantmentListBuilder implements Enchantment.Ran
                     break;
                 }
 
-                WeightedRandom.getRandomItem(randomIn, list1).ifPresent(list::add);
+                WeightedRandom.getRandomItem(randomIn, list1, EnchantmentInstance::weight).ifPresent(list::add);
                 this.level /= 2;
             }
         }
@@ -135,7 +135,7 @@ public final class SpongeRandomEnchantmentListBuilder implements Enchantment.Ran
     }
 
     public static List<Enchantment> fromNative(final List<EnchantmentInstance> list) {
-        return list.stream().map(data -> Enchantment.of(((EnchantmentType) (Object) data.enchantment.value()), data.level)).collect(Collectors.toList());
+        return list.stream().map(data -> Enchantment.of(((EnchantmentType) (Object) data.enchantment().value()), data.level())).collect(Collectors.toList());
     }
 
     public static List<EnchantmentInstance> toNative(final List<Enchantment> list) {

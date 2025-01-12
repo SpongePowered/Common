@@ -28,7 +28,6 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.spongepowered.api.util.Ticks;
 import org.spongepowered.api.world.server.TicketType;
-import org.spongepowered.common.accessor.server.level.TicketTypeAccessor;
 import org.spongepowered.common.util.Constants;
 
 import java.util.Comparator;
@@ -78,9 +77,10 @@ public final class SpongeTicketTypeBuilder<T> implements TicketType.Builder<T> {
         if (this.comparator == null) {
             this.comparator = (v1, v2) -> 0;
         }
-
-        return (TicketType<T>) TicketTypeAccessor.accessor$createInstance(this.name, this.comparator, this.lifetime.isInfinite()
-                ? Constants.ChunkTicket.INFINITE_TIMEOUT
-                : this.lifetime.ticks());
+        final var timeout = this.lifetime.isInfinite() ? Constants.ChunkTicket.INFINITE_TIMEOUT : this.lifetime.ticks();
+        return (TicketType<T>) (Object) new net.minecraft.server.level.TicketType(
+            timeout,
+            false, // TODO - Do we determine if a ticket type should be stored?
+            net.minecraft.server.level.TicketType.TicketUse.LOADING_AND_SIMULATION);
     }
 }

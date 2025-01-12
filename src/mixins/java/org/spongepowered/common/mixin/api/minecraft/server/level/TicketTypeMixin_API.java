@@ -36,14 +36,14 @@ import org.spongepowered.common.util.Constants;
 public abstract class TicketTypeMixin_API<T> implements TicketType<T> {
 
     // @formatter:off
-    @Shadow @Final private String name;
     @Shadow @Final private long timeout;
 
     // @formatter:on
 
     @Override
     public String name() {
-        return this.name;
+        // TODO - change this out
+        return "";
     }
 
     @Override

@@ -328,6 +328,7 @@ public final class MetadataPanel extends ScrollPanel implements NarratableEntry 
             lastEnd = end;
             String url = string.substring(start, end);
             final MutableComponent link = Component.literal(url);
+            final URI toOpen;
 
             try {
                 // Add schema so client doesn't crash.
@@ -340,8 +341,9 @@ public final class MetadataPanel extends ScrollPanel implements NarratableEntry 
                         }
                         continue;
                     }
-                    url = "http://" + url;
+                    url = "https://" + url;
                 }
+                toOpen = new URI(url);
             } catch (final URISyntaxException e) {
                 // Bad syntax bail out!
                 if (ichat == null) {
@@ -353,7 +355,7 @@ public final class MetadataPanel extends ScrollPanel implements NarratableEntry 
             }
 
             // Set the click event and append the link.
-            final ClickEvent click = new ClickEvent(ClickEvent.Action.OPEN_URL, url);
+            final ClickEvent click = new ClickEvent.OpenUrl(toOpen);
             link.withStyle(style -> style.withClickEvent(click)
                         .withUnderlined(true)
                         .withColor(ChatFormatting.BLUE));

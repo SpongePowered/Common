@@ -169,14 +169,14 @@ public abstract class LivingEntityMixin_Tracker extends EntityMixin_Tracker {
         method = "tickEffects",
         at = @At(
             value = "INVOKE",
-            target = "Lnet/minecraft/world/effect/MobEffectInstance;tick(Lnet/minecraft/world/entity/LivingEntity;Ljava/lang/Runnable;)Z"
+            target = "Lnet/minecraft/world/effect/MobEffectInstance;tickServer(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/LivingEntity;Ljava/lang/Runnable;)Z"
         )
     )
     private boolean impl$wrapEffectWithFrame(
-        final MobEffectInstance instance, final LivingEntity thisEntity, final Runnable runnable) {
+        final MobEffectInstance instance, final ServerLevel level, final LivingEntity thisEntity, final Runnable runnable) {
         try {
             PhaseTracker.getInstance().pushCause(instance); // push the PotionEffect
-            return instance.tick(thisEntity, runnable);
+            return instance.tickServer(level, thisEntity, runnable);
         } finally {
             PhaseTracker.getInstance().popCause();
         }

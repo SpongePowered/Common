@@ -50,8 +50,11 @@ import org.spongepowered.common.mixin.core.block.BlockMixin;
 public abstract class NoteBlockMixin extends BlockMixin {
 
     @SuppressWarnings("ConstantConditions")
-    @Inject(method = "trigge    rEvent",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;playSeededSound(Lnet/minecraft/world/entity/player/Player;DDDLnet/minecraft/core/Holder;Lnet/minecraft/sounds/SoundSource;FFJ)V"),
+    @Inject(method = "triggerEvent",
+            at = @At(
+                value = "INVOKE",
+                target = "Lnet/minecraft/world/level/Level;playSeededSound(Lnet/minecraft/world/entity/Entity;DDDLnet/minecraft/core/Holder;Lnet/minecraft/sounds/SoundSource;FFJ)V"
+            ),
             cancellable = true)
     // TODO mixin earlier to cancel tuning particles
     private void impl$throwNoteBlockSoundEvent(BlockState state, Level worldIn, BlockPos pos, int id, int param, CallbackInfoReturnable<Boolean> callbackInfo) {

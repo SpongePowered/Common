@@ -231,11 +231,11 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerBri
         },
         at = @At(
             value = "INVOKE",
-            target = "Lnet/minecraft/world/level/Level;playSound(Lnet/minecraft/world/entity/player/Player;DDDLnet/minecraft/sounds/SoundEvent;Lnet/minecraft/sounds/SoundSource;FF)V"
+            target = "Lnet/minecraft/world/level/Level;playSound(Lnet/minecraft/world/entity/Entity;DDDLnet/minecraft/sounds/SoundEvent;Lnet/minecraft/sounds/SoundSource;FF)V"
         )
     )
     private void impl$ignoreExperienceLevelSoundsWhileVanished(final Level world,
-        final net.minecraft.world.entity.player.Player player, final double x, final double y, final double z,
+        final Entity player, final double x, final double y, final double z,
         final SoundEvent sound, final SoundSource category, final float volume, final float pitch
     ) {
         if (!this.bridge$vanishState().createsSounds()) {

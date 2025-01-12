@@ -71,6 +71,7 @@ import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.WorldDataConfiguration;
 import net.minecraft.world.level.block.entity.trialspawner.TrialSpawnerState;
 import net.minecraft.world.level.block.state.properties.BambooLeaves;
+import net.minecraft.world.level.block.state.properties.CreakingHeartState;
 import net.minecraft.world.level.block.state.properties.DripstoneThickness;
 import net.minecraft.world.level.block.state.properties.NoteBlockInstrument;
 import net.minecraft.world.level.block.state.properties.SculkSensorPhase;
@@ -371,6 +372,13 @@ public final class GeneratorMain {
                 Explosion.BlockInteraction.class,
                 "name",
                 "sponge"
+            ),
+            new EnumEntriesValidator<>(
+              "data.type",
+              "CreakingHeartStates",
+              CreakingHeartState.class,
+              "getSerializedName",
+              "sponge"
             ),
             new RegistryEntriesGenerator<>(
                 "data.type",

@@ -46,17 +46,60 @@ public final class OldBlockOnReplaceEffect implements ProcessingSideEffect {
         final BlockPipeline pipeline, final PipelineCursor oldState, final BlockState newState,
         final SpongeBlockChangeFlag flag, final int limit
     ) {
-        // Normally, vanilla does this:
-        // boolean var14 = var11.hasBlockEntity();
-        // if (!this.level.isClientSide) {
-        //     var11.onRemove(this.level, var1, var2, var3);
-        // } else if (!var11.is(var12) && var14) {
-        //     this.removeBlockEntity(var1);
-        // }
-        // However, since we know we're not on the client (ChunkPipeline is not
-        // used outside of server world context)
-        // we can safely just do oldState.onRemove(this.level, var1, var2, var3).
-        oldState.state().onRemove(pipeline.getServerWorld(), oldState.pos(), newState, flag.movingBlocks());
+        // This replaces LevelChunk#setBlockState block:
+        /*
+
+        if ($$14) {
+            if (this.level instanceof ServerLevel $$17) {
+            // -- this block is this side effect
+                if (hasBlockEntity && $$16) {
+                    BlockEntity $$18 = this.level.getBlockEntity($$0);
+                    if ($$18 != null) {
+                        $$18.preRemoveSideEffects($$0, $$9, $$15);
+                    }
+                }
+
+                if (hasBlockEntity) {
+                    this.removeBlockEntity($$0);
+                }
+
+                if (($$2 & 1) != 0) {
+                    $$9.affectNeighborsAfterRemoval($$17, $$0, $$15);
+                }
+                // -- end of side effect
+            } else if (hasBlockEntity) {
+                this.removeBlockEntity($$0);
+            }
+        }
+        Notes:
+        Since we know we're on the server context, we eliminate
+        if (this.level instanceof ServerLevel $$17) {
+        And likewise the check if hasBlockEntity, so we just fast forward into
+        the checks for physics flags
+         */
+        boolean hasBlockEntity = oldState.state().hasBlockEntity();
+
+        final var pos = oldState.pos();
+
+        if (!oldState.state().is(newState.getBlock())) {
+            return EffectResult.NULL_PASS;
+        }
+        // Spogne adds the block physics flag
+        if (hasBlockEntity && !flag.structurePlacement() && flag.performBlockPhysics()) {
+            final var blockEntity = oldState.tileEntity();
+            if (blockEntity != null) {
+                blockEntity.preRemoveSideEffects(pos, newState, flag.movingBlocks());
+            }
+        }
+
+        if (hasBlockEntity) {
+            pipeline.getAffectedChunk().removeBlockEntity(pos);
+        }
+
+        if (flag.updateNeighbors()) {
+            oldState.state().affectNeighborsAfterRemoval(pipeline.getServerWorld(), pos, flag.movingBlocks());
+        }
+
         return EffectResult.NULL_PASS;
     }
 }

@@ -24,8 +24,10 @@
  */
 package org.spongepowered.common.data.provider.entity;
 
+import net.minecraft.world.entity.EntityReference;
 import net.minecraft.world.entity.animal.horse.AbstractHorse;
 import org.spongepowered.api.data.Keys;
+import org.spongepowered.common.accessor.world.entity.animal.horse.AbstractHorseAccessor;
 import org.spongepowered.common.bridge.world.entity.animal.horse.AbstractHorseBridge;
 import org.spongepowered.common.data.provider.DataProviderRegistrator;
 
@@ -42,10 +44,18 @@ public final class AbstractHorseData {
                         .get(AbstractHorse::isTamed)
                         .set(AbstractHorse::setTamed)
                     .create(Keys.OWNER)
-                        .get(AbstractHorse::getOwnerUUID)
+                        .get(h -> {
+                            final var owner = h.getOwnerReference();
+                            if (owner == null) {
+                                return null;
+                            }
+                            return owner.getUUID();
+                        })
                         .set((h, v) -> {
-                            h.setOwnerUUID(v);
-                            h.setTamed(v != null);
+                            ((AbstractHorseAccessor) h).accessor$setOwner(new EntityReference<>(v));
+                        })
+                        .delete(h -> {
+                            h.setOwner(null);
                         })
                 .asMutable(AbstractHorseBridge.class)
                     .create(Keys.IS_SADDLED)

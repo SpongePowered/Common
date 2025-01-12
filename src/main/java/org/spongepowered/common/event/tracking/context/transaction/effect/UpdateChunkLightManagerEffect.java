@@ -24,6 +24,7 @@
  */
 package org.spongepowered.common.event.tracking.context.transaction.effect;
 
+import net.minecraft.core.SectionPos;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunkSection;
 import org.spongepowered.common.event.tracking.context.transaction.pipeline.BlockPipeline;
@@ -47,11 +48,24 @@ public final class UpdateChunkLightManagerEffect implements ProcessingSideEffect
         final SpongeBlockChangeFlag flag,
         final int limit
     ) {
+        /*
+        Continuing from LevelChunk.setBlockState
+
+        boolean $$11 = $$4.hasOnlyAir();
+        if ($$5 != $$11) {
+            this.level.getChunkSource().getLightEngine().updateSectionStatus($$0, $$11);
+            this.level.getChunkSource().onSectionEmptinessChanged(this.chunkPos.x, SectionPos.blockToSectionCoord($$3), this.chunkPos.z, $$11);
+        }
+
+         */
+        final var chunk = pipeline.getAffectedChunk();
+        final var blockY = oldState.pos().getY();
         final LevelChunkSection chunkSection = pipeline.getAffectedSection();
         final boolean wasEmpty = pipeline.wasEmpty();
         final boolean isStillEmpty = chunkSection.hasOnlyAir();
         if (wasEmpty != isStillEmpty) {
             pipeline.getServerWorld().getChunkSource().getLightEngine().updateSectionStatus(oldState.pos(), isStillEmpty);
+            pipeline.getServerWorld().getChunkSource().onSectionEmptinessChanged(chunk.getPos().x, SectionPos.blockToSectionCoord(blockY), chunk.getPos().z, isStillEmpty);
         }
         return EffectResult.NULL_PASS;
     }

@@ -34,6 +34,6 @@ public interface TicketBridge {
 
     <T> org.spongepowered.api.world.server.Ticket<T> bridge$retrieveAppropriateTicket();
 
-    void bridge$setParentTicket(Ticket<?> parentTicket);
+    void bridge$setParentTicket(Ticket parentTicket);
 
 }

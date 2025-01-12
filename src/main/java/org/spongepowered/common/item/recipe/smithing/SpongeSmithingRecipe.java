@@ -34,6 +34,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.SmithingRecipeInput;
 import net.minecraft.world.item.crafting.SmithingTransformRecipe;
+import net.minecraft.world.item.crafting.TransmuteResult;
 import org.spongepowered.common.bridge.world.item.crafting.RecipeResultBridge;
 import org.spongepowered.common.bridge.world.item.crafting.SmithingRecipeBridge;
 import org.spongepowered.common.item.recipe.ResultFunctionRecipe;
@@ -66,7 +67,7 @@ public class SpongeSmithingRecipe extends SmithingTransformRecipe implements Res
 
     public SpongeSmithingRecipe(final Optional<Ingredient> template, final Optional<Ingredient> base,
             final Optional<Ingredient> addition, final ItemStack spongeResult, final String resultFunctionId) {
-        super(template, base, addition, spongeResult);
+        super(template, base, addition, new TransmuteResult(spongeResult.getItemHolder(), spongeResult.getCount(), spongeResult.getComponentsPatch()));
         this.resultFunctionId = resultFunctionId;
     }
 

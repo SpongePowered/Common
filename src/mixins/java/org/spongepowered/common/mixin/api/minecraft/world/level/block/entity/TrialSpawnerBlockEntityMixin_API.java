@@ -58,7 +58,7 @@ public abstract class TrialSpawnerBlockEntityMixin_API extends BlockEntityMixin_
                 spawnerData.accessor$totalMobsSpawned(spawnerData.accessor$totalMobsSpawned() + 1);
                 spawnerData.accessor$nextMobSpawnsAt(this.level.getGameTime() + (long) spawnerConfig.ticksBetweenSpawn());
                 spawnerConfig.spawnPotentialsDefinition().getRandom(this.level.getRandom()).ifPresent(next -> {
-                    spawnerData.accessor$nextSpawnData(Optional.of(next.data()));
+                    spawnerData.accessor$nextSpawnData(Optional.of(next));
                     spawner.markUpdated();
                 });
             });

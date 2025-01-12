@@ -122,7 +122,6 @@ public abstract class ServerLevelMixin_API extends LevelMixin_API<org.spongepowe
     @Shadow public abstract void shadow$unload(LevelChunk p_217466_1_);
     @Shadow public abstract ServerChunkCache shadow$getChunkSource();
     @NonNull @Shadow public abstract MinecraftServer shadow$getServer();
-    @Nullable @Shadow public abstract Entity shadow$getEntity(UUID p_217461_1_);
     @Shadow public abstract List<net.minecraft.server.level.ServerPlayer> shadow$players();
     @Shadow public abstract Raids shadow$getRaids();
     @Nullable @Shadow public abstract Raid shadow$getRaidAt(BlockPos p_217475_1_);
@@ -284,7 +283,7 @@ public abstract class ServerLevelMixin_API extends LevelMixin_API<org.spongepowe
 
     @Override
     public Optional<org.spongepowered.api.entity.Entity> entity(final UUID uniqueId) {
-        return Optional.ofNullable((org.spongepowered.api.entity.Entity) this.shadow$getEntity(Objects.requireNonNull(uniqueId, "uniqueId")));
+        return Optional.ofNullable((org.spongepowered.api.entity.Entity) ((ServerLevel) (Object) this).getEntity(Objects.requireNonNull(uniqueId, "uniqueId")));
     }
 
     // MutableBlockEntityVolume

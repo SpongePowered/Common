@@ -76,7 +76,6 @@ import net.minecraft.nbt.TagParser;
 import net.minecraft.network.chat.ChatType;
 import net.minecraft.network.chat.ComponentContents;
 import net.minecraft.network.chat.HoverEvent.Action;
-import net.minecraft.network.chat.HoverEvent.ItemStackInfo;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.contents.BlockDataSource;
 import net.minecraft.network.chat.contents.EntityDataSource;
@@ -104,7 +103,6 @@ import org.spongepowered.api.entity.Entity;
 import org.spongepowered.api.registry.DefaultedRegistryReference;
 import org.spongepowered.api.util.Tristate;
 import org.spongepowered.common.SpongeCommon;
-import org.spongepowered.common.accessor.network.chat.HoverEvent_ItemStackInfoAccessor;
 import org.spongepowered.common.accessor.network.chat.StyleAccessor;
 import org.spongepowered.common.bridge.adventure.BossBarBridge;
 import org.spongepowered.common.bridge.adventure.ComponentBridge;
@@ -113,6 +111,9 @@ import org.spongepowered.common.bridge.world.BossEventBridge;
 import org.spongepowered.common.launch.Launch;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -352,7 +353,7 @@ public final class SpongeAdventure {
 
     // no caching
     public static Style asAdventure(final net.minecraft.network.chat.Style mcStyle) {
-        final net.kyori.adventure.text.format.Style.Builder builder = net.kyori.adventure.text.format.Style.style();
+        final Style.Builder builder = Style.style();
         final StyleAccessor $access = (StyleAccessor) mcStyle;
 
         builder.font(SpongeAdventure.asAdventure($access.accessor$font())); // font
@@ -370,7 +371,7 @@ public final class SpongeAdventure {
         }
         final net.minecraft.network.chat.ClickEvent clickEvent = mcStyle.getClickEvent();
         if (clickEvent != null) {
-            builder.clickEvent(ClickEvent.clickEvent(SpongeAdventure.asAdventure(clickEvent.getAction()), clickEvent.getValue()));
+            builder.clickEvent(SpongeAdventure.asAdventure(clickEvent));
         }
         builder.insertion(mcStyle.getInsertion()); // insertion
         return builder.build();
@@ -500,36 +501,78 @@ public final class SpongeAdventure {
 
     @SuppressWarnings("ConstantConditions")
     public static HoverEvent<?> asAdventure(final net.minecraft.network.chat.HoverEvent event) {
-        final Action<?> action = event.getAction();
-        if (action == Action.SHOW_TEXT) {
-            return HoverEvent.showText(SpongeAdventure.asAdventure(event.getValue(Action.SHOW_TEXT)));
-        } else if (action == Action.SHOW_ENTITY) {
-            final net.minecraft.network.chat.HoverEvent.EntityTooltipInfo value = event.getValue(
-                Action.SHOW_ENTITY);
-            final Registry<EntityType<?>> entityTypeRegistry = SpongeCommon.vanillaRegistry(Registries.ENTITY_TYPE);
-            return HoverEvent.showEntity(
-                SpongeAdventure.asAdventure(entityTypeRegistry.getKey(value.type)),
-                value.id,
-                SpongeAdventure.asAdventure(value.name)
-            );
-        } else if (action == Action.SHOW_ITEM) {
-            final ItemStackInfo value = event.getValue(Action.SHOW_ITEM);
-            final Registry<Item> itemRegistry = SpongeCommon.vanillaRegistry(Registries.ITEM);
-            final ItemStack itemStack = value.getItemStack();
-            return HoverEvent.showItem(
-                SpongeAdventure.asAdventure(itemRegistry.getKey(itemStack.getItem())),
-                itemStack.getCount(),
-                SpongeAdventure.asAdventure(itemStack.getComponentsPatch())
-            );
+        return switch (event) {
+            case net.minecraft.network.chat.HoverEvent.ShowItem si:
+                final var stack = si.item();
+                final Registry<Item> itemRegistry = SpongeCommon.vanillaRegistry(Registries.ITEM);
+                yield HoverEvent.showItem(
+                    SpongeAdventure.asAdventure(stack.getItemHolder().unwrap().map(ResourceKey::location, itemRegistry::getKey)),
+                    stack.getCount(),
+                    SpongeAdventure.asAdventure(stack.getComponentsPatch())
+                );
+            case net.minecraft.network.chat.HoverEvent.ShowEntity se:
+                final net.minecraft.network.chat.HoverEvent.EntityTooltipInfo value = se.entity();
+                final Registry<EntityType<?>> entityTypeRegistry = SpongeCommon.vanillaRegistry(Registries.ENTITY_TYPE);
+                yield HoverEvent.showEntity(
+                    SpongeAdventure.asAdventure(entityTypeRegistry.getKey(value.type)),
+                    value.uuid,
+                    SpongeAdventure.asAdventure(value.name)
+                );
+            case net.minecraft.network.chat.HoverEvent.ShowText st:
+                yield HoverEvent.showText(SpongeAdventure.asAdventure(st.text()));
+            default:
+                throw new IllegalStateException("Unexpected value: " + event);
+        };
+    }
+
+    public static @Nullable ClickEvent asAdventure(final  net.minecraft.network.chat.@Nullable ClickEvent ce) {
+        if (ce == null) {
+            return null;
         }
-        throw new IllegalArgumentException(event.toString());
+        return switch (ce) {
+            case net.minecraft.network.chat.ClickEvent.OpenUrl ou -> {
+                try {
+                    yield ClickEvent.openUrl(ou.uri().toURL());
+                } catch (MalformedURLException e) {
+                    throw new IllegalArgumentException("Invalid URL: " + ou.uri(), e);
+                }
+            }
+            case net.minecraft.network.chat.ClickEvent.OpenFile of -> ClickEvent.openFile(of.file().getPath());
+            case net.minecraft.network.chat.ClickEvent.RunCommand rc -> ClickEvent.runCommand(rc.command());
+            case net.minecraft.network.chat.ClickEvent.SuggestCommand sc -> ClickEvent.suggestCommand(sc.command());
+            case net.minecraft.network.chat.ClickEvent.ChangePage cp -> ClickEvent.changePage(cp.page());
+            default -> throw new IllegalStateException("Unexpected value: " + ce);
+        };
     }
 
     public static net.minecraft.network.chat.@Nullable ClickEvent asVanillaNullable(final @Nullable ClickEvent event) {
         if (event == null) {
             return null;
         }
-        return new net.minecraft.network.chat.ClickEvent(SpongeAdventure.asVanilla(event.action()), event.value());
+       return switch (event.action()) {
+           case OPEN_URL ->{
+               URI page;
+               try {
+                   page = new URI(event.value());
+               } catch (final URISyntaxException e) {
+                   throw new IllegalArgumentException("Invalid url: " + event.value(), e);
+               }
+               yield new net.minecraft.network.chat.ClickEvent.OpenUrl(page);
+           }
+           case COPY_TO_CLIPBOARD -> new net.minecraft.network.chat.ClickEvent.CopyToClipboard(event.value());
+           case RUN_COMMAND -> new net.minecraft.network.chat.ClickEvent.RunCommand(event.value());
+           case SUGGEST_COMMAND -> new net.minecraft.network.chat.ClickEvent.SuggestCommand(event.value());
+           case CHANGE_PAGE ->{
+               int page;
+               try {
+                   page = Integer.parseInt(event.value());
+               } catch (final NumberFormatException e) {
+                   throw new IllegalArgumentException("Invalid page number: " + event.value(), e);
+               }
+               yield new net.minecraft.network.chat.ClickEvent.ChangePage(page);
+           }
+           default -> throw new IllegalArgumentException("Unknown click action: " + event.action());
+       };
     }
 
     public static net.minecraft.network.chat.@Nullable HoverEvent asVanillaNullable(final @Nullable HoverEvent<?> event) {
@@ -538,15 +581,11 @@ public final class SpongeAdventure {
         }
         final HoverEvent.Action<?> action = event.action();
         if (action == HoverEvent.Action.SHOW_TEXT) {
-            return new net.minecraft.network.chat.HoverEvent(
-                Action.SHOW_TEXT,
-                SpongeAdventure.asVanilla((Component) event.value())
-            );
+            return new net.minecraft.network.chat.HoverEvent.ShowText(SpongeAdventure.asVanilla((Component) event.value()));
         } else if (action == HoverEvent.Action.SHOW_ENTITY) {
             final HoverEvent.ShowEntity value = (HoverEvent.ShowEntity) event.value();
             final Registry<EntityType<?>> entityTypeRegistry = SpongeCommon.vanillaRegistry(Registries.ENTITY_TYPE);
-            return new net.minecraft.network.chat.HoverEvent(
-                Action.SHOW_ENTITY,
+            return new net.minecraft.network.chat.HoverEvent.ShowEntity(
                 new net.minecraft.network.chat.HoverEvent.EntityTooltipInfo(
                     entityTypeRegistry.getValue(SpongeAdventure.asVanilla(value.type())),
                     value.id(),
@@ -556,19 +595,14 @@ public final class SpongeAdventure {
         } else if (action == HoverEvent.Action.SHOW_ITEM) {
             final HoverEvent.ShowItem value = (HoverEvent.ShowItem) event.value();
             final Registry<Item> itemRegistry = SpongeCommon.vanillaRegistry(Registries.ITEM);
-            return new net.minecraft.network.chat.HoverEvent(
-                Action.SHOW_ITEM,
-                HoverEvent_ItemStackInfoAccessor.invoker$new(
-                    Holder.direct(itemRegistry.getValue(SpongeAdventure.asVanilla(value.item()))),
-                    value.count(),
-                    SpongeAdventure.asVanilla(value.dataComponents())
-                )
-            );
+            final var item = Holder.direct(itemRegistry.getValue(SpongeAdventure.asVanilla(value.item())));
+            final var stack = new ItemStack(item, value.count(), SpongeAdventure.asVanilla(value.dataComponents()));
+            return new net.minecraft.network.chat.HoverEvent.ShowItem(stack);
         }
         throw new IllegalArgumentException(event.toString());
     }
 
-    public static Action<?> asVanilla(final HoverEvent.Action<?> action) {
+    public static Action asVanilla(final HoverEvent.Action<?> action) {
         if (action == HoverEvent.Action.SHOW_TEXT) {
             return Action.SHOW_TEXT;
         } else if (action == HoverEvent.Action.SHOW_ITEM) {

@@ -47,6 +47,7 @@ public final class SpongeBlockChangeFlag implements BlockChangeFlag {
     private final boolean lighting;
     private final boolean pathfindingUpdates;
     private final boolean neighborDrops;
+    private final boolean structurePlacement;
     private final int rawFlag;
 
     public SpongeBlockChangeFlag(final int flag) {
@@ -58,6 +59,7 @@ public final class SpongeBlockChangeFlag implements BlockChangeFlag {
         this.neighborDrops = (flag & Constants.BlockChangeFlags.NEIGHBOR_DROPS) == 0; // 32
         this.blockMoving = (flag & Constants.BlockChangeFlags.BLOCK_MOVING) != 0; // 64
         this.lighting = (flag & Constants.BlockChangeFlags.LIGHTING_UPDATES) == 0; // 128 vanilla check
+        this.structurePlacement = (flag & Constants.BlockChangeFlags.STRUCTURE_PLACEMENT) == 0; // 256 vanilla check
         this.performBlockPhysics = (flag & Constants.BlockChangeFlags.PHYSICS_MASK) == 0; // sponge
         this.pathfindingUpdates = (flag & Constants.BlockChangeFlags.PATHFINDING_UPDATES) == 0; // sponge
         this.rawFlag = flag;
@@ -96,6 +98,11 @@ public final class SpongeBlockChangeFlag implements BlockChangeFlag {
     @Override
     public boolean ignoreRender() {
         return this.ignoreRender;
+    }
+
+    @Override
+    public boolean structurePlacement() {
+        return this.structurePlacement;
     }
 
     @Override
@@ -351,6 +358,26 @@ public final class SpongeBlockChangeFlag implements BlockChangeFlag {
                 | (this.performBlockPhysics ? 0 : Constants.BlockChangeFlags.PHYSICS_MASK)
                 | (this.lighting ? 0 : Constants.BlockChangeFlags.LIGHTING_UPDATES)
                 | (this.pathfindingUpdates ? 0 : Constants.BlockChangeFlags.PATHFINDING_UPDATES);
+        return BlockChangeFlagManager.fromNativeInt(maskedFlag);
+    }
+
+    @Override
+    public BlockChangeFlag withStructurePlacement(boolean structurePlacement) {
+        if (this.structurePlacement == structurePlacement) {
+            return this;
+        }
+        final int maskedFlag =
+            (this.updateNeighbors ? Constants.BlockChangeFlags.BLOCK_UPDATED : 0)
+            | (this.notifyClients ? Constants.BlockChangeFlags.NOTIFY_CLIENTS : 0)
+            | (this.ignoreRender ? Constants.BlockChangeFlags.IGNORE_RENDER : 0)
+            | (this.forceReRender ? Constants.BlockChangeFlags.FORCE_RE_RENDER : 0)
+            | (this.updateNeighborShapes ? 0 : Constants.BlockChangeFlags.DENY_NEIGHBOR_SHAPE_UPDATE)
+            | (this.neighborDrops ? 0 : Constants.BlockChangeFlags.NEIGHBOR_DROPS)
+            | (this.blockMoving ? Constants.BlockChangeFlags.BLOCK_MOVING : 0)
+            | (this.performBlockPhysics ? 0 : Constants.BlockChangeFlags.PHYSICS_MASK)
+            | (this.lighting ? 0 : Constants.BlockChangeFlags.LIGHTING_UPDATES)
+            | (this.pathfindingUpdates ? 0 : Constants.BlockChangeFlags.PATHFINDING_UPDATES)
+            | (structurePlacement ? Constants.BlockChangeFlags.STRUCTURE_PLACEMENT : 0);
         return BlockChangeFlagManager.fromNativeInt(maskedFlag);
     }
 

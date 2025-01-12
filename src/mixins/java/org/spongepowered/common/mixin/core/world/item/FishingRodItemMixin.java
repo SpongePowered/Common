@@ -41,6 +41,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.Slice;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.common.SpongeCommon;
 import org.spongepowered.common.event.tracking.PhaseTracker;
@@ -48,19 +49,27 @@ import org.spongepowered.common.event.tracking.PhaseTracker;
 @Mixin(FishingRodItem.class)
 public abstract class FishingRodItemMixin {
 
-    @Nullable private FishingHook impl$fishHook;
+    @Nullable
+    private FishingHook impl$fishHook;
 
     @Inject(method = "use", at = @At(value = "INVOKE", shift = At.Shift.AFTER,
-            target = "Lnet/minecraft/world/entity/projectile/FishingHook;retrieve(Lnet/minecraft/world/item/ItemStack;)I"), cancellable = true)
+        target = "Lnet/minecraft/world/entity/projectile/FishingHook;retrieve(Lnet/minecraft/world/item/ItemStack;)I"), cancellable = true)
     private void cancelHookRetraction(Level world, Player player, InteractionHand hand, CallbackInfoReturnable<InteractionResult> cir) {
         if (player.fishing != null) {
             cir.setReturnValue(InteractionResult.SUCCESS); // Event was cancelled
         }
     }
 
-    @Inject(method = "use", at = @At(value = "INVOKE",
-            target = "Lnet/minecraft/world/level/Level;playSound(Lnet/minecraft/world/entity/player/Player;DDDLnet/minecraft/sounds/SoundEvent;Lnet/minecraft/sounds/SoundSource;FF)V", ordinal = 1),
-            cancellable = true)
+    @Inject(method = "use",
+        at = @At(
+            value = "INVOKE",
+            target = "Lnet/minecraft/world/level/Level;playSound(Lnet/minecraft/world/entity/Entity;DDDLnet/minecraft/sounds/SoundEvent;Lnet/minecraft/sounds/SoundSource;FF)V"
+        ),
+        slice = @Slice(
+            from = @At(value = "FIELD", target = "Lnet/minecraft/world/level/gameevent/GameEvent;ITEM_INTERACT_FINISH:Lnet/minecraft/core/Holder$Reference;"),
+            to = @At(value = "CONSTANT", args = "classValue=net/minecraft/server/level/ServerLevel")
+        ),
+        cancellable = true)
     private void onThrowEvent(Level level, Player player, InteractionHand hand, CallbackInfoReturnable<InteractionResult> cir) {
         if (level.isClientSide) {
             // Only fire event on server-side to avoid crash on client
@@ -69,7 +78,7 @@ public abstract class FishingRodItemMixin {
         ItemStack itemstack = player.getItemInHand(hand);
 
         if (level instanceof ServerLevel serverLevel) {
-            int $$6 = (int)(EnchantmentHelper.getFishingTimeReduction(serverLevel, itemstack, player) * 20.0F);
+            int $$6 = (int) (EnchantmentHelper.getFishingTimeReduction(serverLevel, itemstack, player) * 20.0F);
             int $$7 = EnchantmentHelper.getFishingLuckBonus(serverLevel, itemstack, player);
             FishingHook fishHook = new FishingHook(player, level, $$7, $$6);
 

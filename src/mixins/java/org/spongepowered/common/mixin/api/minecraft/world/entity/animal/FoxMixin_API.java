@@ -24,6 +24,8 @@
  */
 package org.spongepowered.common.mixin.api.minecraft.world.entity.animal;
 
+import net.minecraft.world.entity.EntityReference;
+import net.minecraft.world.entity.LivingEntity;
 import org.spongepowered.api.data.Keys;
 import org.spongepowered.api.data.value.Value;
 import org.spongepowered.api.entity.living.animal.Fox;
@@ -36,18 +38,20 @@ import org.spongepowered.asm.mixin.Shadow;
 
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 @Mixin(net.minecraft.world.entity.animal.Fox.class)
 @Implements(@Interface(iface = Fox.class, prefix = "fox$", remap = Remap.NONE))
 public abstract class FoxMixin_API extends AnimalMixin_API implements Fox {
 
     // @formatter:off
-    @Shadow protected abstract boolean shadow$trusts(UUID p_213468_1_);
+    @Shadow abstract Stream<EntityReference<LivingEntity>> shadow$getTrustedEntities();
     // @formatter:on
+
 
     @Intrinsic
     public boolean fox$trusts(UUID uniqueId) {
-        return this.shadow$trusts(uniqueId);
+        return this.shadow$getTrustedEntities().map(EntityReference::getUUID).anyMatch(uniqueId::equals);
     }
 
     @Override

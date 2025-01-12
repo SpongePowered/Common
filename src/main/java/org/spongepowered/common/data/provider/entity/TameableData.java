@@ -24,6 +24,7 @@
  */
 package org.spongepowered.common.data.provider.entity;
 
+import net.minecraft.world.entity.EntityReference;
 import net.minecraft.world.entity.TamableAnimal;
 import org.spongepowered.api.data.Keys;
 import org.spongepowered.common.data.provider.DataProviderRegistrator;
@@ -44,9 +45,14 @@ public final class TameableData {
                         .get(TamableAnimal::isTame)
                         .set((h, v) -> h.setTame(v, true))
                     .create(Keys.OWNER)
-                        .get(TamableAnimal::getOwnerUUID)
+                        .get(t -> {
+                            if (t.getOwnerReference() == null) {
+                                return null;
+                            }
+                            return t.getOwnerReference().getUUID();
+                        })
                         .set((h, v) -> {
-                            h.setOwnerUUID(v);
+                            h.setOwnerReference(new EntityReference<>(v));
                             h.setTame(v != null, true);
                         });
     }

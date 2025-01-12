@@ -25,6 +25,8 @@
 package org.spongepowered.common.accessor.world.entity.animal;
 
 import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.world.entity.EntityReference;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.animal.Fox;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
@@ -32,16 +34,15 @@ import org.spongepowered.asm.mixin.gen.Invoker;
 import org.spongepowered.common.UntransformedAccessorError;
 
 import java.util.Optional;
-import java.util.UUID;
 
 @Mixin(Fox.class)
 public interface FoxAccessor {
 
-    @Accessor("DATA_TRUSTED_ID_0") static EntityDataAccessor<Optional<UUID>> accessor$DATA_TRUSTED_ID_0() {
+    @Accessor("DATA_TRUSTED_ID_0") static EntityDataAccessor<Optional<EntityReference<LivingEntity>>> accessor$DATA_TRUSTED_ID_0() {
         throw new UntransformedAccessorError();
     }
 
-    @Accessor("DATA_TRUSTED_ID_1") static EntityDataAccessor<Optional<UUID>> accessor$DATA_TRUSTED_ID_1() {
+    @Accessor("DATA_TRUSTED_ID_1") static EntityDataAccessor<Optional<EntityReference<LivingEntity>>> accessor$DATA_TRUSTED_ID_1() {
         throw new UntransformedAccessorError();
     }
 

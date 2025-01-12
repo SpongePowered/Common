@@ -982,8 +982,10 @@ public final class Constants {
          * check if lighting is queued for the block change.
          */
         public static final int LIGHTING_UPDATES = 1 << 7; // 128 if set, blocks lighting updates
-        public static final int PHYSICS_MASK =    1 << 8; // Sponge Added mask, because vanilla doesn't support it yet
-        public static final int PATHFINDING_UPDATES = 1 << 9; // Sponge Added mask, because vanilla doesn't allow bypassing notifications to ai pathfinders
+        public static final int STRUCTURE_PLACEMENT = 1 << 8; // 256 if set, blocks structure placement
+
+        public static final int PHYSICS_MASK =    1 << 16; // Sponge Added mask, because vanilla doesn't support it yet
+        public static final int PATHFINDING_UPDATES = 1 << 17; // Sponge Added mask, because vanilla doesn't allow bypassing notifications to ai pathfinders
         // All of these flags are what we "expose" to the API
         // The flags that are naturally inverted are already inverted here by being masked in
         // with the opposite OR.
@@ -993,6 +995,7 @@ public final class Constants {
             | Constants.BlockChangeFlags.FORCE_RE_RENDER
             | Constants.BlockChangeFlags.NEIGHBOR_DROPS
             | Constants.BlockChangeFlags.DENY_NEIGHBOR_SHAPE_UPDATE
+            | Constants.BlockChangeFlags.STRUCTURE_PLACEMENT
             ;
         public static final int DEFAULT = Constants.BlockChangeFlags.BLOCK_UPDATED
             | Constants.BlockChangeFlags.NOTIFY_CLIENTS;

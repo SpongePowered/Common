@@ -230,7 +230,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements SubjectBr
         final var thisPlayer = ((net.minecraft.server.level.ServerPlayer) (Object) this);
 
         final ChunkPos chunkPos = new ChunkPos(VecHelper.toBlockPos(pos));
-        level.getChunkSource().addRegionTicket(TicketType.FORCED, chunkPos, 1, chunkPos);
+        level.getChunkSource().addTicketWithRadius(TicketType.FORCED, chunkPos, 1);
 
         thisPlayer.stopRiding();
         if (thisPlayer.isSleeping()) {
@@ -427,7 +427,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements SubjectBr
             }
 
             return this.bridge$changeDimension(new TeleportTransition(world, new Vec3(x, y, z), Vec3.ZERO, yaw, pitch, relative,
-                    e -> world.getChunkSource().addRegionTicket(TicketType.FORCED, e.chunkPosition(), 1, e.chunkPosition()))) != null;
+                    e -> world.getChunkSource().addTicketWithRadius(TicketType.FORCED, e.chunkPosition(), 1))) != null;
         }
     }
 
@@ -653,7 +653,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements SubjectBr
                 final String s = component.getString(256);
                 final net.minecraft.network.chat.Component itextcomponent1 = net.minecraft.network.chat.Component.translatable("death.attack.message_too_long", net.minecraft.network.chat.Component.literal(s).withStyle(ChatFormatting.YELLOW));
                 final net.minecraft.network.chat.Component itextcomponent2 = net.minecraft.network.chat.Component.translatable("death.attack.even_more_magic", this.shadow$getDisplayName())
-                        .withStyle((p_212357_1_) -> p_212357_1_.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, itextcomponent1)));
+                        .withStyle((p_212357_1_) -> p_212357_1_.withHoverEvent(new HoverEvent.ShowText(itextcomponent1)));
                 return new ClientboundPlayerCombatKillPacket(this.shadow$getId(), itextcomponent2);
             }));
             final Team team = this.shadow$getTeam();

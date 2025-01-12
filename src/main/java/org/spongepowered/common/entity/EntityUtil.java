@@ -28,8 +28,7 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
-import net.minecraft.util.random.SimpleWeightedRandomList;
-import net.minecraft.util.random.WeightedEntry;
+import net.minecraft.util.random.WeightedList;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.item.ItemEntity;
@@ -207,11 +206,11 @@ public final class EntityUtil {
         return new SpawnData(tag, Optional.empty(), Optional.empty());
     }
 
-    public static WeightedTable<EntityArchetype> toWeightedArchetypes(final SimpleWeightedRandomList<SpawnData> spawnData) {
+    public static WeightedTable<EntityArchetype> toWeightedArchetypes(final WeightedList<SpawnData> spawnData) {
         final WeightedTable<EntityArchetype> possibleEntities = new WeightedTable<>();
 
-        for (final WeightedEntry.Wrapper<SpawnData> weightedEntity : spawnData.unwrap()) {
-            final CompoundTag nbt = weightedEntity.data().entityToSpawn();
+        for (final var weightedEntity : spawnData.unwrap()) {
+            final CompoundTag nbt = weightedEntity.value().entityToSpawn();
             final String resourceLocation = nbt.getString(Constants.Entity.ENTITY_TYPE_ID);
             final var mcType = SpongeCommon.vanillaRegistry(Registries.ENTITY_TYPE).getOptional(ResourceLocation.parse(resourceLocation));
             final var type = mcType.map(org.spongepowered.api.entity.EntityType.class::cast).orElse(EntityTypes.PIG.get());
@@ -221,13 +220,13 @@ public final class EntityUtil {
                     .entityData(NBTTranslator.INSTANCE.translateFrom(nbt))
                     .build();
 
-            possibleEntities.add(new WeightedSerializableObject<>(archetype, weightedEntity.getWeight().asInt()));
+            possibleEntities.add(new WeightedSerializableObject<>(archetype, weightedEntity.weight()));
         }
         return possibleEntities;
     }
 
-    public static SimpleWeightedRandomList<SpawnData> toSpawnPotentials(final WeightedTable<EntityArchetype> table) {
-        final SimpleWeightedRandomList.Builder<SpawnData> builder = SimpleWeightedRandomList.builder();
+    public static WeightedList<SpawnData> toSpawnPotentials(final WeightedTable<EntityArchetype> table) {
+        final WeightedList.Builder<SpawnData> builder = WeightedList.builder();
         for (final var entry : table) {
             if (entry instanceof final WeightedObject<EntityArchetype> weightedObj) {
                 final var tag = NBTTranslator.INSTANCE.translate(weightedObj.get().entityData());
