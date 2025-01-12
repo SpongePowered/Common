@@ -30,13 +30,13 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import java.util.Deque;
 
 public class EffectTransactor implements AutoCloseable {
-    final @Nullable ResultingTransactionBySideEffect previousEffect;
+    final @Nullable ResultingTransactionBySideEffect<?, ?, ?, ?> previousEffect;
     public final @Nullable GameTransaction<@NonNull ?> parent;
     private final TransactionalCaptureSupplier supplier;
-    private final ResultingTransactionBySideEffect effect;
+    private final ResultingTransactionBySideEffect<?, ?, ?, ?> effect;
 
-    EffectTransactor(final ResultingTransactionBySideEffect effect, final @Nullable GameTransaction<@NonNull ?> parent,
-        final @Nullable ResultingTransactionBySideEffect previousEffect, final TransactionalCaptureSupplier transactor) {
+    EffectTransactor(final ResultingTransactionBySideEffect<?, ?, ?, ?> effect, final @Nullable GameTransaction<@NonNull ?> parent,
+        final @Nullable ResultingTransactionBySideEffect<?, ?, ?, ?> previousEffect, final TransactionalCaptureSupplier transactor) {
         /*
         | ChangeBlock(1) <- head will be RemoveTileEntity(1), tail is still RemoveTileentity(1)
         |  |- RemoveTileEntity <- Head will be ChangeBlock(2) tail is still ChangeBlock(2)
@@ -55,7 +55,7 @@ public class EffectTransactor implements AutoCloseable {
             && this.parent.sideEffects != null
             && this.parent.getEffects().peekLast() == this.effect
         ) {
-            final Deque<ResultingTransactionBySideEffect> effects = this.parent.getEffects();
+            final Deque<ResultingTransactionBySideEffect<?, ?, ?, ?>> effects = this.parent.getEffects();
             effects.removeLast();
             if (effects.isEmpty()) {
                 this.parent.sideEffects = null;

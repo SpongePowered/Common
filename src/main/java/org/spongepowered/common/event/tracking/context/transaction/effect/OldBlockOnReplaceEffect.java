@@ -25,11 +25,11 @@
 package org.spongepowered.common.event.tracking.context.transaction.effect;
 
 import net.minecraft.world.level.block.state.BlockState;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.spongepowered.common.event.tracking.context.transaction.pipeline.BlockPipeline;
 import org.spongepowered.common.event.tracking.context.transaction.pipeline.PipelineCursor;
-import org.spongepowered.common.world.SpongeBlockChangeFlag;
 
-public final class OldBlockOnReplaceEffect implements ProcessingSideEffect {
+public final class OldBlockOnReplaceEffect implements ProcessingSideEffect<BlockPipeline, PipelineCursor, BlockChangeArgs, BlockState> {
     private static final class Holder {
         static final OldBlockOnReplaceEffect INSTANCE = new OldBlockOnReplaceEffect();
     }
@@ -42,9 +42,8 @@ public final class OldBlockOnReplaceEffect implements ProcessingSideEffect {
     }
 
     @Override
-    public EffectResult processSideEffect(
-        final BlockPipeline pipeline, final PipelineCursor oldState, final BlockState newState,
-        final SpongeBlockChangeFlag flag, final int limit
+    public EffectResult<@Nullable BlockState> processSideEffect(
+        final BlockPipeline pipeline, final PipelineCursor oldState, final BlockChangeArgs args
     ) {
         // Normally, vanilla does this:
         // boolean var14 = var11.hasBlockEntity();
@@ -56,7 +55,9 @@ public final class OldBlockOnReplaceEffect implements ProcessingSideEffect {
         // However, since we know we're not on the client (ChunkPipeline is not
         // used outside of server world context)
         // we can safely just do oldState.onRemove(this.level, var1, var2, var3).
+        final var flag = args.flag();
+        final var newState = args.newState();
         oldState.state().onRemove(pipeline.getServerWorld(), oldState.pos(), newState, flag.movingBlocks());
-        return EffectResult.NULL_PASS;
+        return EffectResult.nullPass();
     }
 }

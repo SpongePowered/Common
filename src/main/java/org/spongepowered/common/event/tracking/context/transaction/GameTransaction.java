@@ -46,6 +46,7 @@ import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.StringJoiner;
 import java.util.function.BiConsumer;
+import java.util.stream.Stream;
 
 @DefaultQualifier(NonNull.class)
 public abstract class GameTransaction<E extends Event & Cancellable> implements TransactionFlow, StatefulTransaction {
@@ -54,7 +55,7 @@ public abstract class GameTransaction<E extends Event & Cancellable> implements 
     protected boolean cancelled = false;
 
     // Children Definitions
-    @Nullable LinkedList<ResultingTransactionBySideEffect> sideEffects;
+    @Nullable LinkedList<ResultingTransactionBySideEffect<?, ?, ?, ?>> sideEffects;
 
     // LinkedList node definitions
     @Nullable GameTransaction<@NonNull ?> previous;
@@ -75,14 +76,14 @@ public abstract class GameTransaction<E extends Event & Cancellable> implements 
         return this.transactionType;
     }
 
-    final Deque<ResultingTransactionBySideEffect> getEffects() {
+    final Deque<ResultingTransactionBySideEffect<?, ?, ?, ?>> getEffects() {
         if (this.sideEffects == null) {
             this.sideEffects = new LinkedList<>();
         }
         return this.sideEffects;
     }
 
-    public final void addLast(final ResultingTransactionBySideEffect effect) {
+    public final void addLast(final ResultingTransactionBySideEffect<?, ?, ?, ?> effect) {
         if (this.sideEffects == null) {
             this.sideEffects = new LinkedList<>();
         }
@@ -97,7 +98,7 @@ public abstract class GameTransaction<E extends Event & Cancellable> implements 
         if (this.sideEffects == null) {
             return false;
         }
-        for (final ResultingTransactionBySideEffect sideEffect : this.sideEffects) {
+        for (final ResultingTransactionBySideEffect<?, ?, ?, ?> sideEffect : this.sideEffects) {
             @Nullable GameTransaction<@NonNull ?> transaction = sideEffect.head;
             while (transaction != null) {
                 if (transaction.transactionType.isPrimary() || transaction.hasChildTransactions()) {
@@ -131,9 +132,16 @@ public abstract class GameTransaction<E extends Event & Cancellable> implements 
     public final void markCancelled() {
         this.cancelled = true;
         this.childIterator().forEachRemaining(GameTransaction::markCancelled);
+        if (this.next != null && this.next.hasUnknownChainRequiringCancellation()) {
+            this.next.markCancelled();
+        }
     }
 
     public abstract boolean markCancelledTransactions(E event, ImmutableList<? extends GameTransaction<E>> transactions);
+
+    protected boolean hasUnknownChainRequiringCancellation() {
+        return false;
+    }
 
     public void postProcessEvent(final PhaseContext<@NonNull ?> context, final E event) {
 
@@ -182,17 +190,29 @@ public abstract class GameTransaction<E extends Event & Cancellable> implements 
 
     }
 
+    public void associateSideEffectEvents(E e, Stream<Event> elements) {
+
+    }
+
+    public void pushCause(CauseStackManager.StackFrame frame, E e) {
+        frame.pushCause(e);
+    }
+
+    public void finalizeSideEffects(E e) {
+
+    }
+
     private static class ChildIterator implements Iterator<GameTransaction<@NonNull ?>> {
-        private final Iterator<ResultingTransactionBySideEffect> effectIterator;
+        private final Iterator<ResultingTransactionBySideEffect<?, ?, ?, ?>> effectIterator;
         private @Nullable GameTransaction<@NonNull ?> cachedNext;
         private @MonotonicNonNull GameTransaction<@NonNull ?> pointer;
         private boolean hasNoRemainingElements = false;
 
-        ChildIterator(final Iterator<ResultingTransactionBySideEffect> iterator) {
+        ChildIterator(final Iterator<ResultingTransactionBySideEffect<?, ?, ?, ?>> iterator) {
             // We're going to search the iterator's effects until we find the first at least
             this.effectIterator = iterator;
             while (this.effectIterator.hasNext()) {
-                final ResultingTransactionBySideEffect next = this.effectIterator.next();
+                final ResultingTransactionBySideEffect<?, ?, ?, ?> next = this.effectIterator.next();
                 if (next.head != null) {
                     this.cachedNext = next.head;
                     this.pointer = next.head;
@@ -219,7 +239,7 @@ public abstract class GameTransaction<E extends Event & Cancellable> implements 
             // start search for the next, sadly because effects don't make a clean chain,
             // there can be many effects with no transactions recorded
             while (this.effectIterator.hasNext()) {
-                final ResultingTransactionBySideEffect next = this.effectIterator.next();
+                final ResultingTransactionBySideEffect<?, ?, ?, ?> next = this.effectIterator.next();
                 if (next.head != null) {
                     this.cachedNext = next.head;
                     return true;
@@ -250,16 +270,16 @@ public abstract class GameTransaction<E extends Event & Cancellable> implements 
 
 
     private static class ReverseChildIterator implements Iterator<GameTransaction<@NonNull ?>> {
-        private final Iterator<ResultingTransactionBySideEffect> effectIterator;
+        private final Iterator<ResultingTransactionBySideEffect<?, ?, ?, ?>> effectIterator;
         private @Nullable GameTransaction<@NonNull ?> cachedPrevious;
         private @MonotonicNonNull GameTransaction<@NonNull ?> pointer;
         private boolean hasNoRemainingElements = false;
 
-        ReverseChildIterator(final Iterator<ResultingTransactionBySideEffect> iterator) {
+        ReverseChildIterator(final Iterator<ResultingTransactionBySideEffect<?, ?, ?, ?>> iterator) {
             // We're going to search the iterator's effects until we find the first at least
             this.effectIterator = iterator;
             while (this.effectIterator.hasNext()) {
-                final ResultingTransactionBySideEffect next = this.effectIterator.next();
+                final ResultingTransactionBySideEffect<?, ?, ?, ?> next = this.effectIterator.next();
                 if (next.tail != null) {
                     this.pointer = next.tail;
                     this.cachedPrevious = next.tail;
@@ -287,7 +307,7 @@ public abstract class GameTransaction<E extends Event & Cancellable> implements 
             // start search for the next, sadly because effects don't make a clean chain,
             // there can be many effects with no transactions recorded
             while (this.effectIterator.hasNext()) {
-                final ResultingTransactionBySideEffect next = this.effectIterator.next();
+                final ResultingTransactionBySideEffect<?, ?, ?, ?> next = this.effectIterator.next();
                 if (next.tail != null) {
                     this.cachedPrevious = next.tail;
                     return true;

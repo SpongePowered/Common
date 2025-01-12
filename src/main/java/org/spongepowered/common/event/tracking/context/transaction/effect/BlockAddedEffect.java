@@ -25,11 +25,11 @@
 package org.spongepowered.common.event.tracking.context.transaction.effect;
 
 import net.minecraft.world.level.block.state.BlockState;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.spongepowered.common.event.tracking.context.transaction.pipeline.BlockPipeline;
 import org.spongepowered.common.event.tracking.context.transaction.pipeline.PipelineCursor;
-import org.spongepowered.common.world.SpongeBlockChangeFlag;
 
-public final class BlockAddedEffect implements ProcessingSideEffect {
+public final class BlockAddedEffect implements ProcessingSideEffect<BlockPipeline, PipelineCursor, BlockChangeArgs, BlockState> {
 
     private static final class Holder {
         static final BlockAddedEffect INSTANCE = new BlockAddedEffect();
@@ -42,9 +42,11 @@ public final class BlockAddedEffect implements ProcessingSideEffect {
     }
 
     @Override
-    public EffectResult processSideEffect(final BlockPipeline pipeline, final PipelineCursor oldState, final BlockState newState,
-        final SpongeBlockChangeFlag flag, final int limit
+    public EffectResult<@Nullable BlockState> processSideEffect(
+        final BlockPipeline pipeline, final PipelineCursor oldState, final BlockChangeArgs args
     ) {
+        final var flag = args.flag();
+        final var newState = args.newState();
         // Vanilla will check if this is the server
         // if (!this.level.isClientSide) {
         //     var2.onPlace(this.level, var1, var11, var3);
@@ -55,6 +57,6 @@ public final class BlockAddedEffect implements ProcessingSideEffect {
         if (flag.performBlockPhysics()) {
             newState.onPlace(pipeline.getServerWorld(), oldState.pos(), oldState.state(), flag.movingBlocks());
         }
-        return EffectResult.NULL_PASS;
+        return EffectResult.nullPass();
     }
 }

@@ -25,11 +25,12 @@
 package org.spongepowered.common.event.tracking.context.transaction.effect;
 
 import net.minecraft.world.level.block.state.BlockState;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.spongepowered.common.event.tracking.context.transaction.pipeline.BlockPipeline;
 import org.spongepowered.common.event.tracking.context.transaction.pipeline.PipelineCursor;
 import org.spongepowered.common.world.SpongeBlockChangeFlag;
 
-public final class WorldBlockChangeCompleteEffect implements ProcessingSideEffect{
+public final class WorldBlockChangeCompleteEffect implements ProcessingSideEffect<BlockPipeline, PipelineCursor, BlockChangeArgs, BlockState> {
 
     private static final class Holder {
         static final WorldBlockChangeCompleteEffect INSTANCE = new WorldBlockChangeCompleteEffect();
@@ -42,12 +43,13 @@ public final class WorldBlockChangeCompleteEffect implements ProcessingSideEffec
     WorldBlockChangeCompleteEffect() {}
 
     @Override
-    public EffectResult processSideEffect(final BlockPipeline pipeline, final PipelineCursor oldState, final BlockState newState,
-        final SpongeBlockChangeFlag flag, final int limit
+    public EffectResult<@Nullable BlockState> processSideEffect(final BlockPipeline pipeline, final PipelineCursor oldState, final BlockChangeArgs args
     ) {
+        final BlockState newState = args.newState();
+        final SpongeBlockChangeFlag flag = args.flag();
         if (flag.notifyPathfinding()) {
             pipeline.getServerWorld().onBlockStateChange(oldState.pos(), oldState.state(), newState);
         }
-        return new EffectResult(oldState.state(), true);
+        return new EffectResult<>(oldState.state(), true);
     }
 }

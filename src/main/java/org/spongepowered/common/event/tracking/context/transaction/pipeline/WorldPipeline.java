@@ -36,6 +36,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.spongepowered.common.event.tracking.PhaseContext;
 import org.spongepowered.common.event.tracking.context.transaction.EffectTransactor;
 import org.spongepowered.common.event.tracking.context.transaction.ResultingTransactionBySideEffect;
+import org.spongepowered.common.event.tracking.context.transaction.effect.BlockChangeArgs;
 import org.spongepowered.common.event.tracking.context.transaction.effect.EffectResult;
 import org.spongepowered.common.event.tracking.context.transaction.effect.ProcessingSideEffect;
 import org.spongepowered.common.world.SpongeBlockChangeFlag;
@@ -52,7 +53,7 @@ public final class WorldPipeline implements BlockPipeline {
     private final Supplier<ServerLevel> serverWorld;
     private final Supplier<LevelChunkSection> sectionSupplier;
     private final boolean wasEmpty;
-    private final List<ResultingTransactionBySideEffect> worldEffects;
+    private final List<ResultingTransactionBySideEffect<BlockPipeline, PipelineCursor, BlockChangeArgs, BlockState>> worldEffects;
     private final ChunkPipeline chunkPipeline;
 
     WorldPipeline(final Builder builder) {
@@ -101,14 +102,13 @@ public final class WorldPipeline implements BlockPipeline {
         final int oldOpacity = oldState.getLightBlock();
         PipelineCursor formerState = new PipelineCursor(oldState, pos, existing, destroyer, limit);
 
-        for (final ResultingTransactionBySideEffect effect : this.worldEffects) {
+        for (final ResultingTransactionBySideEffect<BlockPipeline, PipelineCursor, BlockChangeArgs, BlockState> effect : this.worldEffects) {
             try (final EffectTransactor ignored = context.getTransactor().pushEffect(effect)) {
-                final EffectResult result = effect.effect.processSideEffect(
+                final var args = new BlockChangeArgs(newProposedState, flag, limit);
+                final EffectResult<@Nullable BlockState> result = effect.effect.processSideEffect(
                     this,
                     formerState,
-                    newProposedState,
-                    flag,
-                    limit
+                    args
                 );
                 if (result.hasResult) {
                     return result.resultingState != null;
@@ -134,8 +134,8 @@ public final class WorldPipeline implements BlockPipeline {
 
         final Supplier<ServerLevel> serverWorld;
         final Supplier<LevelChunk> chunkSupplier;
-        final Supplier<LevelChunkSection> sectionSupplier;
-        @MonotonicNonNull List<ResultingTransactionBySideEffect> effects;
+        final Supplier<@Nullable LevelChunkSection> sectionSupplier;
+        @MonotonicNonNull List<ResultingTransactionBySideEffect<BlockPipeline, PipelineCursor, BlockChangeArgs, BlockState>> effects;
         final ChunkPipeline chunkPipeline;
 
         Builder(final ChunkPipeline chunkPipeline) {
@@ -145,11 +145,11 @@ public final class WorldPipeline implements BlockPipeline {
             this.chunkPipeline = chunkPipeline;
         }
 
-        public Builder addEffect(final ProcessingSideEffect effect) {
+        public Builder addEffect(final ProcessingSideEffect<BlockPipeline, PipelineCursor, BlockChangeArgs, BlockState> effect) {
             if (this.effects == null) {
                 this.effects = new LinkedList<>();
             }
-            this.effects.add(new ResultingTransactionBySideEffect(Objects.requireNonNull(effect, "Effect is null")));
+            this.effects.add(new ResultingTransactionBySideEffect<>(Objects.requireNonNull(effect, "Effect is null")));
             return this;
         }
 

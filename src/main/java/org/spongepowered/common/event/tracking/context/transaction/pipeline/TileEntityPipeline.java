@@ -26,6 +26,7 @@ package org.spongepowered.common.event.tracking.context.transaction.pipeline;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.LevelChunkSection;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -33,6 +34,7 @@ import org.spongepowered.api.world.BlockChangeFlags;
 import org.spongepowered.common.event.tracking.PhaseContext;
 import org.spongepowered.common.event.tracking.context.transaction.EffectTransactor;
 import org.spongepowered.common.event.tracking.context.transaction.ResultingTransactionBySideEffect;
+import org.spongepowered.common.event.tracking.context.transaction.effect.BlockChangeArgs;
 import org.spongepowered.common.event.tracking.context.transaction.effect.EffectResult;
 import org.spongepowered.common.event.tracking.context.transaction.effect.ProcessingSideEffect;
 import org.spongepowered.common.world.SpongeBlockChangeFlag;
@@ -49,7 +51,7 @@ public final class TileEntityPipeline implements BlockPipeline {
     private final @Nullable Supplier<LevelChunk> chunkSupplier;
     private final @Nullable Supplier<ServerLevel> serverWorld;
     private final @Nullable Supplier<LevelChunkSection> sectionSupplier;
-    private final List<ResultingTransactionBySideEffect> effects;
+    private final List<ResultingTransactionBySideEffect<BlockPipeline, PipelineCursor, BlockChangeArgs, BlockState>> effects;
 
     private TileEntityPipeline(final Builder builder) {
         this.chunkSupplier = builder.chunkSupplier;
@@ -98,14 +100,17 @@ public final class TileEntityPipeline implements BlockPipeline {
 
     public boolean processEffects(final PhaseContext<?> context, final PipelineCursor initialCursor) {
         PipelineCursor currentCursor = initialCursor;
-        for (final ResultingTransactionBySideEffect effect : this.effects) {
+        for (final ResultingTransactionBySideEffect<BlockPipeline, PipelineCursor, BlockChangeArgs, BlockState> effect : this.effects) {
             try (final EffectTransactor ignored = context.getTransactor().pushEffect(effect)) {
-                final EffectResult result = effect.effect.processSideEffect(
-                    this,
-                    currentCursor,
+                final BlockChangeArgs args = new BlockChangeArgs(
                     currentCursor.state(),
                     (SpongeBlockChangeFlag) BlockChangeFlags.NONE,
                     currentCursor.limit()
+                );
+                final EffectResult<@Nullable BlockState> result = effect.effect.processSideEffect(
+                    this,
+                    currentCursor,
+                    args
                 );
                 if (result.resultingState != currentCursor.state()) {
                     currentCursor = new PipelineCursor(
@@ -129,13 +134,13 @@ public final class TileEntityPipeline implements BlockPipeline {
         @Nullable Supplier<ServerLevel> serverWorld;
         @Nullable Supplier<LevelChunk> chunkSupplier;
         @Nullable Supplier<LevelChunkSection> sectionSupplier;
-        List<ResultingTransactionBySideEffect> effects;
+        List<ResultingTransactionBySideEffect<BlockPipeline, PipelineCursor, BlockChangeArgs, BlockState>> effects;
 
-        public Builder addEffect(final ProcessingSideEffect effect) {
+        public Builder addEffect(final ProcessingSideEffect<BlockPipeline, PipelineCursor, BlockChangeArgs, BlockState> effect) {
             if (this.effects == null) {
                 this.effects = new LinkedList<>();
             }
-            this.effects.add(new ResultingTransactionBySideEffect(Objects.requireNonNull(effect, "Effect is null")));
+            this.effects.add(new ResultingTransactionBySideEffect<>(Objects.requireNonNull(effect, "Effect is null")));
             return this;
         }
 

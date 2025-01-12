@@ -407,7 +407,7 @@ public final class VolumeStreamTest implements LoadableModule {
         }
 
         @Listener
-        public void onInteract(final InteractBlockEvent.Secondary event, @Root final Player player) {
+        public void onInteract(final InteractBlockEvent.Secondary.Pre event, @Root final Player player) {
             event.context().get(EventContextKeys.USED_ITEM).ifPresent(snapshot -> {
                 final BlockSnapshot block = event.block();
                 if (snapshot.type().equals(ItemTypes.WOODEN_AXE.get()) && block != BlockSnapshot.empty()) {

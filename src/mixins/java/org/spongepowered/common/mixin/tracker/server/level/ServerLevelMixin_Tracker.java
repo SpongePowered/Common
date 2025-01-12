@@ -32,11 +32,15 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientboundExplodePacket;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.BlockEventData;
 import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.ExplosionDamageCalculator;
@@ -48,6 +52,7 @@ import net.minecraft.world.level.block.piston.PistonBaseBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.material.FluidState;
+import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -63,6 +68,7 @@ import org.spongepowered.api.world.BlockChangeFlag;
 import org.spongepowered.api.world.LocatableBlock;
 import org.spongepowered.api.world.server.ServerWorld;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
@@ -92,6 +98,9 @@ import org.spongepowered.common.event.tracking.context.transaction.block.ChangeB
 import org.spongepowered.common.event.tracking.context.transaction.block.RemoveBlockEntity;
 import org.spongepowered.common.event.tracking.context.transaction.effect.CheckBlockPostPlacementIsSameEffect;
 import org.spongepowered.common.event.tracking.context.transaction.effect.EffectResult;
+import org.spongepowered.common.event.tracking.context.transaction.effect.InteractionAtArgs;
+import org.spongepowered.common.event.tracking.context.transaction.effect.InteractionItemEffect;
+import org.spongepowered.common.event.tracking.context.transaction.effect.InteractionUseItemOnBlockEffect;
 import org.spongepowered.common.event.tracking.context.transaction.effect.NotifyClientEffect;
 import org.spongepowered.common.event.tracking.context.transaction.effect.NotifyNeighborSideEffect;
 import org.spongepowered.common.event.tracking.context.transaction.effect.PerformBlockDropsFromDestruction;
@@ -100,9 +109,14 @@ import org.spongepowered.common.event.tracking.context.transaction.effect.SetAnd
 import org.spongepowered.common.event.tracking.context.transaction.effect.UpdateConnectingBlocksEffect;
 import org.spongepowered.common.event.tracking.context.transaction.effect.UpdateLightSideEffect;
 import org.spongepowered.common.event.tracking.context.transaction.effect.UpdateWorldRendererEffect;
+import org.spongepowered.common.event.tracking.context.transaction.effect.UseItemArgs;
+import org.spongepowered.common.event.tracking.context.transaction.effect.UseItemAtArgs;
+import org.spongepowered.common.event.tracking.context.transaction.effect.UseItemAtEffect;
+import org.spongepowered.common.event.tracking.context.transaction.effect.UseItemEffect;
 import org.spongepowered.common.event.tracking.context.transaction.effect.WorldBlockChangeCompleteEffect;
 import org.spongepowered.common.event.tracking.context.transaction.effect.WorldDestroyBlockLevelEffect;
 import org.spongepowered.common.event.tracking.context.transaction.pipeline.ChunkPipeline;
+import org.spongepowered.common.event.tracking.context.transaction.pipeline.InteractionPipeline;
 import org.spongepowered.common.event.tracking.context.transaction.pipeline.PipelineCursor;
 import org.spongepowered.common.event.tracking.context.transaction.pipeline.TileEntityPipeline;
 import org.spongepowered.common.event.tracking.context.transaction.pipeline.WorldPipeline;
@@ -125,15 +139,15 @@ public abstract class ServerLevelMixin_Tracker extends LevelMixin_Tracker implem
 
 
     @Redirect(
-            // This normally would target this.entityTickList.forEach((var2x) ->
-            // but we don't have lambda syntax support yet.
-            method = "lambda$tick$2",
-            at = @At(
-                    value = "INVOKE",
-                    target = "Lnet/minecraft/server/level/ServerLevel;guardEntityTick(Ljava/util/function/Consumer;Lnet/minecraft/world/entity/Entity;)V")
+        // This normally would target this.entityTickList.forEach((var2x) ->
+        // but we don't have lambda syntax support yet.
+        method = "lambda$tick$2",
+        at = @At(
+            value = "INVOKE",
+            target = "Lnet/minecraft/server/level/ServerLevel;guardEntityTick(Ljava/util/function/Consumer;Lnet/minecraft/world/entity/Entity;)V")
     )
     private void tracker$wrapNormalEntityTick(final ServerLevel level, final Consumer<Entity> entityUpdateConsumer,
-        final Entity entity
+                                              final Entity entity
     ) {
         final PhaseContext<@NonNull ?> currentState = PhaseTracker.getWorldInstance((ServerLevel) (Object) this).getPhaseContext();
         TrackingUtil.tickEntity(entityUpdateConsumer, entity);
@@ -152,9 +166,9 @@ public abstract class ServerLevelMixin_Tracker extends LevelMixin_Tracker implem
      * or we wrap in this method here.
      *
      * @param blockState The block state being ticked
-     * @param worldIn The world (this world)
-     * @param posIn The position of the block
-     * @param randomIn The world random
+     * @param worldIn    The world (this world)
+     * @param posIn      The position of the block
+     * @param randomIn   The world random
      * @author gabizou - January 11th, 2020 - Minecraft 1.14.3
      */
     @Redirect(method = "tickBlock(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/Block;)V",
@@ -399,6 +413,7 @@ public abstract class ServerLevelMixin_Tracker extends LevelMixin_Tracker implem
         this.tracker$apiExplosion = null;
     }
 
+    @Unique
     private void tracker$cancelExplosionEffects(final Entity entity) {
         // TODO cancel effects
         if (entity instanceof ExplosiveBridge explosiveBridge) {
@@ -433,6 +448,7 @@ public abstract class ServerLevelMixin_Tracker extends LevelMixin_Tracker implem
         return Optional.of(this.bridge$makePipeline(pos, currentState, newState, chunk, spongeFlag, Constants.World.DEFAULT_BLOCK_CHANGE_LIMIT));
     }
 
+    @Unique
     private WorldPipeline.Builder bridge$makePipeline(
         final BlockPos pos,
         final BlockState currentState,
@@ -446,12 +462,12 @@ public abstract class ServerLevelMixin_Tracker extends LevelMixin_Tracker implem
         // Then build and use the BlockPipeline
         final ChunkPipeline chunkPipeline = mixinChunk.bridge$createChunkPipeline(pos, newState, currentState, spongeFlag, limit);
         final WorldPipeline.Builder worldPipelineBuilder = WorldPipeline.builder(chunkPipeline);
-        worldPipelineBuilder.addEffect((pipeline, oldState, newState1, flag1, cursorLimit) -> {
-            if (oldState == null) {
-                return EffectResult.NULL_RETURN;
-            }
-            return EffectResult.NULL_PASS;
-        })
+        worldPipelineBuilder.addEffect((pipeline, oldState, args) -> {
+                if (oldState == null) {
+                    return EffectResult.nullReturn();
+                }
+                return EffectResult.nullPass();
+            })
             .addEffect(UpdateLightSideEffect.getInstance())
             .addEffect(CheckBlockPostPlacementIsSameEffect.getInstance())
             .addEffect(UpdateWorldRendererEffect.getInstance())
@@ -509,12 +525,9 @@ public abstract class ServerLevelMixin_Tracker extends LevelMixin_Tracker implem
             return false;
         } else {
             // Sponge Start - Sanity check against the PhaseTracker for instances
-            if (this.bridge$isFake()) {
+            final var instance = this.tracker$validateServerThread();
+            if (instance == null) {
                 return super.destroyBlock(pos, doDrops, p_241212_3_, limit);
-            }
-            final PhaseTracker instance = PhaseTracker.getWorldInstance((ServerLevel) (Object) this);
-            if (!instance.onSidedThread()) {
-                throw new UnsupportedOperationException("Cannot perform a tracked Block Change on a ServerWorld while not on the main thread!");
             }
             final FluidState fluidstate = this.shadow$getFluidState(pos);
             final BlockState emptyBlock = fluidstate.createLegacyBlock();
@@ -541,7 +554,7 @@ public abstract class ServerLevelMixin_Tracker extends LevelMixin_Tracker implem
 
     @Override
     public SpongeBlockSnapshot bridge$createSnapshot(final net.minecraft.world.level.block.state.BlockState state, final BlockPos pos,
-        final BlockChangeFlag updateFlag
+                                                     final BlockChangeFlag updateFlag
     ) {
         final SpongeBlockSnapshot.BuilderImpl builder = SpongeBlockSnapshot.BuilderImpl.pooled();
         builder.reset();
@@ -576,6 +589,86 @@ public abstract class ServerLevelMixin_Tracker extends LevelMixin_Tracker implem
         return builder.build();
     }
 
+    @Override
+    public InteractionPipeline<InteractionAtArgs> bridge$startInteractionUseOnChange(
+        net.minecraft.world.level.Level worldIn, ServerPlayer playerIn, InteractionHand handIn,
+        BlockHitResult blockRaytraceResultIn, BlockState blockstate, ItemStack copiedStack
+    ) {
+        final var instance = this.tracker$validateServerThread();
+        if (instance == null) {
+            return null;
+        }
+        final var args = new InteractionAtArgs(worldIn, playerIn, handIn, blockRaytraceResultIn, blockstate, copiedStack);
+        return new InteractionPipeline<>(
+            args,
+            InteractionResult.TRY_WITH_EMPTY_HAND,
+            InteractionUseItemOnBlockEffect.getInstance(),
+            instance.getPhaseContext().getTransactor()
+            );
+    }
+
+
+    @Override
+    public InteractionPipeline<InteractionAtArgs> bridge$startInteractionChange(
+        net.minecraft.world.level.Level worldIn, ServerPlayer playerIn, InteractionHand handIn,
+        BlockHitResult blockRaytraceResultIn, BlockState blockstate, ItemStack copiedStack
+    ) {
+        final var instance = this.tracker$validateServerThread();
+        if (instance == null) {
+            return null;
+        }
+        final var args = new InteractionAtArgs(worldIn, playerIn, handIn, blockRaytraceResultIn, blockstate, copiedStack);
+        return new InteractionPipeline<InteractionAtArgs>(
+            args,
+            InteractionResult.PASS,
+            InteractionItemEffect.getInstance(),
+            instance.getPhaseContext().getTransactor()
+        );
+    }
+
+    @Unique
+    private PhaseTracker tracker$validateServerThread() {
+        if (this.shadow$isDebug()) { // isClientSide is always false since this is WorldServer
+            return null;
+        }
+        if (this.bridge$isFake()) {
+            return null;
+        }
+        final var instance = PhaseTracker.getWorldInstance(this);
+        if (instance.getSidedThread() != PhaseTracker.getServerInstanceExplicitly().getSidedThread() && instance != PhaseTracker.getServerInstanceExplicitly()) {
+            throw new UnsupportedOperationException("Cannot perform a tracked Block Change on a ServerWorld while not on the main thread!");
+        }
+        return instance;
+    }
+
+    @Override
+    public InteractionPipeline<UseItemAtArgs> bridge$startItemInteractionChange(
+        net.minecraft.world.level.Level worldIn, ServerPlayer playerIn, InteractionHand handIn,
+        ItemStack copiedStack, BlockHitResult blockRaytraceResult, boolean creative
+    ) {
+        final var instance = this.tracker$validateServerThread();
+        if (instance == null) {
+            return null;
+        }
+        final var args = new UseItemAtArgs(worldIn, playerIn,handIn, blockRaytraceResult, copiedStack, creative);
+        return new InteractionPipeline<>(
+            args,
+            InteractionResult.PASS,
+            UseItemAtEffect.getInstance(),
+            instance.getPhaseContext().getTransactor()
+        );
+    }
+
+    @Override
+    public InteractionPipeline<UseItemArgs> bridge$startItemInteractionUseChange(net.minecraft.world.level.Level worldIn, ServerPlayer playerIn, InteractionHand handIn, ItemStack copiedStack) {
+        final var instance = this.tracker$validateServerThread();
+        if (instance == null) {
+            return null;
+        }
+        final var args = new UseItemArgs(worldIn, playerIn, handIn, copiedStack, playerIn.gameMode);
+        return new InteractionPipeline<>(args, InteractionResult.PASS, UseItemEffect.getInstance(), instance.getPhaseContext().getTransactor());
+    }
+
     /**
      * Technically an overwrite, but because this is simply an override, we can
      * effectively do as we need to, which is determine if we are performing
@@ -585,7 +678,7 @@ public abstract class ServerLevelMixin_Tracker extends LevelMixin_Tracker implem
      * <ul>
      *     <li>This world instance is managed and verified by Sponge</li>
      *     <li>This world must {@link LevelBridge#bridge$isFake()} return {@code false}</li>
-     *     <li>The {@link PhaseTracker#SERVER}'s {@link PhaseTracker#getSidedThread()} must be {@code ==} {@link Thread#currentThread()}</li
+     *     <li>The {@link PhaseTracker#getServerInstanceExplicitly}'s {@link PhaseTracker#getSidedThread()} must be {@code ==} {@link Thread#currentThread()}</li
      *     <li>The current {@link IPhaseState} must be allowing to record transactions with an applicable {@link org.spongepowered.common.event.tracking.context.transaction.TransactionalCaptureSupplier}</li>
      * </ul>
      * After which, we may be able to appropriately associate the {@link net.minecraft.world.level.block.entity.BlockEntity}
@@ -620,7 +713,7 @@ public abstract class ServerLevelMixin_Tracker extends LevelMixin_Tracker implem
             final TileEntityPipeline pipeline = TileEntityPipeline.kickOff((ServerLevel) (Object) this, immutable)
                 .addEffect(RemoveTileEntityFromChunkEffect.getInstance())
                 .build();
-            pipeline.processEffects(current, new PipelineCursor(tileentity.getBlockState(), immutable, tileentity, (Entity) null, Constants.World.DEFAULT_BLOCK_CHANGE_LIMIT));
+            pipeline.processEffects(current, new PipelineCursor(tileentity.getBlockState(),  immutable, tileentity, (Entity) null, Constants.World.DEFAULT_BLOCK_CHANGE_LIMIT));
             return;
         }
         super.shadow$removeBlockEntity(immutable);
@@ -652,7 +745,7 @@ public abstract class ServerLevelMixin_Tracker extends LevelMixin_Tracker implem
                 final TileEntityPipeline pipeline = TileEntityPipeline.kickOff((ServerLevel) (Object) this, immutable)
                     .addEffect(SetAndRegisterBlockEntityToLevelChunk.getInstance())
                     .build();
-                pipeline.processEffects(current, new PipelineCursor(proposed.getBlockState(), immutable, proposed, (Entity) null, Constants.World.DEFAULT_BLOCK_CHANGE_LIMIT));
+                pipeline.processEffects(current, new PipelineCursor(proposed.getBlockState(),  immutable, proposed, (Entity) null, Constants.World.DEFAULT_BLOCK_CHANGE_LIMIT));
                 return;
             }
         }

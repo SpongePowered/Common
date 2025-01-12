@@ -22,36 +22,35 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.spongepowered.common.event.tracking.context.transaction.effect;
+package org.spongepowered.common.event.tracking.context.transaction.pipeline;
 
-import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.InteractionResult;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.spongepowered.common.event.tracking.context.transaction.EffectTransactor;
+import org.spongepowered.common.event.tracking.PhaseContext;
 import org.spongepowered.common.event.tracking.context.transaction.ResultingTransactionBySideEffect;
 import org.spongepowered.common.event.tracking.context.transaction.TransactionalCaptureSupplier;
-import org.spongepowered.common.event.tracking.context.transaction.pipeline.BlockPipeline;
-import org.spongepowered.common.event.tracking.context.transaction.pipeline.PipelineCursor;
+import org.spongepowered.common.event.tracking.context.transaction.effect.ProcessingSideEffect;
 
-public final class BroadcastInventoryChangesEffect implements ProcessingSideEffect<BlockPipeline, PipelineCursor, BlockChangeArgs, BlockState> {
+import java.util.Objects;
 
-    private static final class Holder {
-        static final BroadcastInventoryChangesEffect INSTANCE = new BroadcastInventoryChangesEffect();
+public record InteractionPipeline<@NonNull A extends ProcessingSideEffect.Args>(
+    A args,
+    InteractionResult defaultResult,
+    ProcessingSideEffect<InteractionPipeline<A>, InteractionResult, A, InteractionResult> effect,
+    TransactionalCaptureSupplier transactor
+) {
+
+    public InteractionResult processInteraction(final PhaseContext<?> context) {
+        var result = this.defaultResult;
+        final ResultingTransactionBySideEffect<InteractionPipeline<A>, InteractionResult, A, InteractionResult> resultingEffect = new ResultingTransactionBySideEffect<>(this.effect);
+        try (final var ignored = context.getTransactor().pushEffect(resultingEffect)) {
+            final var effectResult = this.effect.processSideEffect(this, result, this.args);
+            if (effectResult.hasResult) {
+                final @Nullable InteractionResult resultingState = effectResult.resultingState;
+                result = Objects.requireNonNullElse(resultingState, result);
+            }
+        }
+        return result;
     }
-    public static BroadcastInventoryChangesEffect getInstance() {
-        return Holder.INSTANCE;
-    }
-    public static EffectTransactor transact(final TransactionalCaptureSupplier transactor) {
-        return transactor.pushEffect(new ResultingTransactionBySideEffect<>(BroadcastInventoryChangesEffect.getInstance()));
-    }
-
-    BroadcastInventoryChangesEffect() {}
-
-    @Override
-    public EffectResult<@Nullable BlockState> processSideEffect(
-        final BlockPipeline pipeline, final PipelineCursor oldState, final BlockChangeArgs args
-    ) {
-        return EffectResult.nullReturn();
-    }
-
-
 }

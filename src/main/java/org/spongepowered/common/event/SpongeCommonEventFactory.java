@@ -297,10 +297,10 @@ public final class SpongeCommonEventFactory {
         }
     }
 
-    public static InteractItemEvent.Secondary callInteractItemEventSecondary(final net.minecraft.world.entity.player.Player player, final ItemStack stack, final InteractionHand hand) {
+    public static InteractItemEvent.Secondary.Pre callInteractItemEventSecondary(final net.minecraft.world.entity.player.Player player, final ItemStack stack, final InteractionHand hand) {
         try (final CauseStackManager.StackFrame frame = PhaseTracker.getCauseStackManager().pushCauseFrame()) {
             SpongeCommonEventFactory.applyCommonInteractContext(player, stack, hand, null, null, frame);
-            final InteractItemEvent.Secondary event = SpongeEventFactory.createInteractItemEventSecondary(frame.currentCause(), ItemStackUtil.snapshotOf(stack));
+            final var event = SpongeEventFactory.createInteractItemEventSecondaryPre(frame.currentCause(), ItemStackUtil.snapshotOf(stack));
             SpongeCommon.post(event);
             return event;
         }
@@ -339,10 +339,10 @@ public final class SpongeCommonEventFactory {
         }
     }
 
-    public static InteractBlockEvent.Secondary callInteractBlockEventSecondary(final net.minecraft.world.entity.player.Player player, final ItemStack heldItem, final Vector3d hitVec, final BlockSnapshot targetBlock, final Direction targetSide, final InteractionHand hand) {
+    public static InteractBlockEvent.Secondary.Pre callInteractBlockEventSecondary(final net.minecraft.world.entity.player.Player player, final ItemStack heldItem, final Vector3d hitVec, final BlockSnapshot targetBlock, final Direction targetSide, final InteractionHand hand) {
         try (final CauseStackManager.StackFrame frame = PhaseTracker.getCauseStackManager().pushCauseFrame()) {
             SpongeCommonEventFactory.applyCommonInteractContext(player, heldItem, hand, targetBlock, null, frame);
-            final InteractBlockEvent.Secondary event = SpongeEventFactory.createInteractBlockEventSecondary(frame.currentCause(),
+            final InteractBlockEvent.Secondary.Pre event = SpongeEventFactory.createInteractBlockEventSecondaryPre(frame.currentCause(),
                     Tristate.UNDEFINED, Tristate.UNDEFINED, Tristate.UNDEFINED, Tristate.UNDEFINED, targetBlock, hitVec,
                     targetSide);
             SpongeCommon.post(event);

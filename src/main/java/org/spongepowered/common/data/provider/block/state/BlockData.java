@@ -54,7 +54,7 @@ public final class BlockData {
     }
 
     // @formatter:off
-    public static void register(final DataProviderRegistrator registrator) {
+    @SuppressWarnings("deprecation") public static void register(final DataProviderRegistrator registrator) {
         registrator
                 .asImmutable(Block.class)
                     .create(Keys.BLAST_RESISTANCE)

@@ -26,15 +26,16 @@ package org.spongepowered.common.event.tracking.context.transaction.effect;
 
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.spongepowered.common.event.tracking.context.transaction.pipeline.BlockPipeline;
 import org.spongepowered.common.event.tracking.context.transaction.pipeline.PipelineCursor;
-import org.spongepowered.common.world.SpongeBlockChangeFlag;
 
-public final class ChunkChangeCompleteEffect implements ProcessingSideEffect {
+public final class ChunkChangeCompleteEffect implements ProcessingSideEffect<BlockPipeline, PipelineCursor, BlockChangeArgs, BlockState> {
 
     private static final class Holder {
         static final ChunkChangeCompleteEffect INSTANCE = new ChunkChangeCompleteEffect();
     }
+
     ChunkChangeCompleteEffect() {
     }
 
@@ -43,13 +44,12 @@ public final class ChunkChangeCompleteEffect implements ProcessingSideEffect {
     }
 
     @Override
-    public EffectResult processSideEffect(final BlockPipeline pipeline, final PipelineCursor oldState, final BlockState newState,
-        final SpongeBlockChangeFlag flag, final int limit
+    public EffectResult<@Nullable BlockState> processSideEffect(
+        final BlockPipeline pipeline, final PipelineCursor oldState, final BlockChangeArgs args
     ) {
-
         final LevelChunk chunk = pipeline.getAffectedChunk();
         // this.unsaved = true; // Vanilla, we'll just call the accessor available
         chunk.markUnsaved();
-        return new EffectResult(oldState.state(), true);
+        return new EffectResult<>(oldState.state(), true);
     }
 }
