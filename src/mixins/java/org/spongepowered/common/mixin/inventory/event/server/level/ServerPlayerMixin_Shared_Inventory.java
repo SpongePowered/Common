@@ -24,10 +24,10 @@
  */
 package org.spongepowered.common.mixin.inventory.event.server.level;
 
-import net.minecraft.server.level.ServerLevel;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Cancellable;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.EntityType;

@@ -24,7 +24,6 @@
  */
 package org.spongepowered.common.mixin.inventory.event.server.level;
 
-import net.minecraft.server.level.ServerLevel;
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
@@ -32,6 +31,7 @@ import com.llamalad7.mixinextras.sugar.Cancellable;
 import net.minecraft.network.protocol.game.ClientboundContainerClosePacket;
 import net.minecraft.network.protocol.game.ClientboundHorseScreenOpenPacket;
 import net.minecraft.network.protocol.game.ClientboundOpenScreenPacket;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import net.minecraft.world.Container;

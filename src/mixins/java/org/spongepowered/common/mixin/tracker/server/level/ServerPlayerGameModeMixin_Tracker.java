@@ -39,7 +39,6 @@ import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.spongepowered.api.block.BlockSnapshot;
 import org.spongepowered.api.event.CauseStackManager;
 import org.spongepowered.api.event.EventContextKeys;
@@ -57,9 +56,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.common.accessor.server.level.ServerPlayerAccessor;
 import org.spongepowered.common.bridge.server.level.ServerPlayerGameModeBridge;
-import org.spongepowered.common.bridge.world.inventory.container.ContainerBridge;
 import org.spongepowered.common.event.SpongeCommonEventFactory;
-import org.spongepowered.common.event.inventory.InventoryEventFactory;
 import org.spongepowered.common.event.tracking.PhaseContext;
 import org.spongepowered.common.event.tracking.PhaseTracker;
 import org.spongepowered.common.event.tracking.context.transaction.EffectTransactor;
@@ -71,7 +68,6 @@ import org.spongepowered.common.event.tracking.phase.player.PlayerPhase;
 import org.spongepowered.common.registry.provider.DirectionFacingProvider;
 import org.spongepowered.common.util.VecHelper;
 import org.spongepowered.math.vector.Vector3d;
-import org.spongepowered.math.vector.Vector3i;
 
 @Mixin(ServerPlayerGameMode.class)
 public abstract class ServerPlayerGameModeMixin_Tracker {
