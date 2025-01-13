@@ -534,7 +534,7 @@ public abstract class ServerLevelMixin_Tracker extends LevelMixin_Tracker implem
 
             final WorldPipeline pipeline = pipelineBuilder
                 .addEffect((pipeline1, oldState, newState, flag, limit1) -> {
-                    pipeline1.getServerWorld().gameEvent(GameEvent.BLOCK_DESTROY, oldState.pos, GameEvent.Context.of(p_241212_3_, oldState.state));
+                    pipeline1.getServerWorld().gameEvent(GameEvent.BLOCK_DESTROY, oldState.pos(), GameEvent.Context.of(p_241212_3_, oldState.state()));
                     return EffectResult.NULL_PASS;
                 })
                 .addEffect(WorldBlockChangeCompleteEffect.getInstance())
