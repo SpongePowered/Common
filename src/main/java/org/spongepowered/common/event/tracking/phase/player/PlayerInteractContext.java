@@ -24,19 +24,35 @@
  */
 package org.spongepowered.common.event.tracking.phase.player;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.spongepowered.api.world.server.ServerLocation;
 import org.spongepowered.common.event.tracking.IPhaseState;
-import org.spongepowered.common.event.tracking.context.GeneralizedContext;
+import org.spongepowered.common.event.tracking.PhaseContext;
+import org.spongepowered.common.event.tracking.PhaseTracker;
 
-public final class PlayerPhase {
+import java.util.Optional;
 
-    public static final class State {
+public final class PlayerInteractContext extends PhaseContext<PlayerInteractContext> {
 
-        public static final PlayerInteractPhase PLAYER_INTERACT = new PlayerInteractPhase();
+    private @Nullable ServerLocation containerLocation;
 
-        public static final IPhaseState<GeneralizedContext> PLAYER_LOGOUT = new PlayerLogoutPhaseState();
+    PlayerInteractContext(final IPhaseState<PlayerInteractContext> state, final PhaseTracker tracker) {
+        super(state, tracker);
     }
 
-    PlayerPhase() {
+    public PlayerInteractContext containerLocation(final ServerLocation location) {
+        this.containerLocation = location;
+        return this;
     }
 
+    @Override
+    public Optional<ServerLocation> containerLocation() {
+        return Optional.ofNullable(this.containerLocation);
+    }
+
+    @Override
+    protected void reset() {
+        super.reset();
+        this.containerLocation = null;
+    }
 }

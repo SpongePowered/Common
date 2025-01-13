@@ -24,43 +24,37 @@
  */
 package org.spongepowered.common.event.tracking.context.transaction.effect;
 
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.chunk.LevelChunk;
 import org.spongepowered.common.event.tracking.context.transaction.pipeline.BlockPipeline;
 import org.spongepowered.common.event.tracking.context.transaction.pipeline.PipelineCursor;
 import org.spongepowered.common.world.SpongeBlockChangeFlag;
 
-public final class OldBlockOnReplaceEffect implements ProcessingSideEffect {
+public final class UpdatePOIAfterBlockChange implements ProcessingSideEffect {
+
     private static final class Holder {
-        static final OldBlockOnReplaceEffect INSTANCE = new OldBlockOnReplaceEffect();
+        static final UpdatePOIAfterBlockChange INSTANCE = new UpdatePOIAfterBlockChange();
     }
 
-    OldBlockOnReplaceEffect() {
+    public static UpdatePOIAfterBlockChange getInstance() {
+        return UpdatePOIAfterBlockChange.Holder.INSTANCE;
     }
 
-    public static OldBlockOnReplaceEffect getInstance() {
-        return Holder.INSTANCE;
-    }
+    UpdatePOIAfterBlockChange() {}
 
     @Override
-    public EffectResult processSideEffect(
-        final BlockPipeline pipeline, final PipelineCursor oldState, final BlockState newState,
-        final SpongeBlockChangeFlag flag, final int limit
+    public EffectResult processSideEffect(final BlockPipeline pipeline, final PipelineCursor oldState,
+        final BlockState newState, final SpongeBlockChangeFlag flag, final int limit
     ) {
-        // Normally, vanilla does this:
-        // boolean var14 = var11.hasBlockEntity();
-        // if (!this.level.isClientSide) {
-        //     var11.onRemove(this.level, var1, var2, var3);
-        // } else if (!var11.is(var12) && var14) {
-        //     this.removeBlockEntity(var1);
-        // }
-        // However, since we know we're not on the client (ChunkPipeline is not
-        // used outside of server world context)
-        // we can safely just do oldState.onRemove(this.level, var1, var2, var3).
-        if (flag.performBlockDestruction()) {
-            oldState.state().onRemove(pipeline.getServerWorld(), oldState.pos(), newState, flag.movingBlocks());
-        } else if (oldState.state().hasBlockEntity() && !oldState.state().is(newState.getBlock())) {
-            pipeline.getServerWorld().removeBlockEntity(oldState.pos());
+        final LevelChunk chunk = pipeline.getAffectedChunk();
+        final ServerLevel world = pipeline.getServerWorld();
+
+        final var nowState = chunk.getBlockState(oldState.pos());
+        if (nowState == newState) {
+            world.onBlockStateChange(oldState.pos(), oldState.state(), nowState);
         }
         return EffectResult.NULL_PASS;
     }
+
 }

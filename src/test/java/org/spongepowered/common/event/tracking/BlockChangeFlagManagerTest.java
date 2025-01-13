@@ -56,8 +56,9 @@ class BlockChangeFlagManagerTest {
         assertTrue(flag.neighborDropsAllowed()); // 32
         assertFalse(flag.movingBlocks()); // 64
         assertTrue(flag.updateLighting()); // 128
-        assertTrue(flag.performBlockPhysics()); // 256 - Sponge added
-        assertTrue(flag.notifyPathfinding()); // 512 - Sponge added
+        assertTrue(flag.performBlockPhysics()); // Sponge added
+        assertTrue(flag.notifyPathfinding()); // Sponge added
+        assertTrue(flag.performBlockDestruction()); // Sponge added
     }
 
     @Test
@@ -72,8 +73,9 @@ class BlockChangeFlagManagerTest {
         assertTrue(updated.neighborDropsAllowed()); // 32
         assertFalse(updated.movingBlocks()); // 64
         assertTrue(updated.updateLighting()); // 128
-        assertTrue(updated.performBlockPhysics()); // 256 - Sponge added
-        assertTrue(updated.notifyPathfinding()); // 512 - Sponge added
+        assertTrue(updated.performBlockPhysics()); // Sponge added
+        assertTrue(updated.notifyPathfinding()); // Sponge added
+        assertTrue(updated.performBlockDestruction()); // Sponge added
     }
 
     @Test
@@ -89,6 +91,7 @@ class BlockChangeFlagManagerTest {
         assertFalse(none.updateLighting());
         assertFalse(none.performBlockPhysics());
         assertFalse(none.notifyPathfinding());
+        assertFalse(none.performBlockDestruction());
     }
 
     @Test
@@ -104,6 +107,7 @@ class BlockChangeFlagManagerTest {
         assertTrue(restore.updateLighting());
         assertFalse(restore.performBlockPhysics());
         assertTrue(restore.notifyPathfinding());
+        assertFalse(restore.performBlockDestruction());
     }
 
     @Test
@@ -119,6 +123,7 @@ class BlockChangeFlagManagerTest {
         assertTrue(empty.updateLighting());
         assertTrue(empty.performBlockPhysics());
         assertTrue(empty.notifyPathfinding());
+        assertTrue(empty.performBlockDestruction());
     }
 
     @Test
@@ -135,6 +140,7 @@ class BlockChangeFlagManagerTest {
         assertTrue(neighbors.updateLighting());
         assertTrue(neighbors.performBlockPhysics());
         assertTrue(neighbors.notifyPathfinding());
+        assertTrue(neighbors.performBlockDestruction());
     }
 
     @Test
@@ -151,6 +157,7 @@ class BlockChangeFlagManagerTest {
         assertTrue(clients.updateLighting());
         assertTrue(clients.performBlockPhysics());
         assertTrue(clients.notifyPathfinding());
+        assertTrue(clients.performBlockDestruction());
     }
 
     @Test
@@ -167,6 +174,7 @@ class BlockChangeFlagManagerTest {
         assertTrue(observers.updateLighting());
         assertTrue(observers.performBlockPhysics());
         assertTrue(observers.notifyPathfinding());
+        assertTrue(observers.performBlockDestruction());
     }
 
     @Test
@@ -183,6 +191,7 @@ class BlockChangeFlagManagerTest {
         assertTrue(noPhysics.updateLighting());
         assertFalse(noPhysics.performBlockPhysics());
         assertTrue(noPhysics.notifyPathfinding());
+        assertTrue(noPhysics.performBlockDestruction());
     }
 
     @Test
@@ -199,6 +208,7 @@ class BlockChangeFlagManagerTest {
         assertFalse(noLighting.updateLighting());
         assertTrue(noLighting.performBlockPhysics());
         assertTrue(noLighting.notifyPathfinding());
+        assertTrue(noLighting.performBlockDestruction());
     }
 
     @Test
@@ -215,6 +225,24 @@ class BlockChangeFlagManagerTest {
         assertTrue(noPathfinding.updateLighting());
         assertTrue(noPathfinding.performBlockPhysics());
         assertFalse(noPathfinding.notifyPathfinding());
+        assertTrue(noPathfinding.performBlockDestruction());
+    }
+
+    @Test
+    void verifyWithPerformBlockDestruction() {
+        final SpongeBlockChangeFlag empty = BlockChangeFlagManager.fromNativeInt(0);
+        final SpongeBlockChangeFlag noPathfinding = empty.withPerformBlockDestruction(false);
+        assertFalse(noPathfinding.updateNeighbors());
+        assertFalse(noPathfinding.notifyClients());
+        assertFalse(noPathfinding.ignoreRender());
+        assertFalse(noPathfinding.forceClientRerender());
+        assertTrue(noPathfinding.updateNeighboringShapes());
+        assertTrue(noPathfinding.neighborDropsAllowed());
+        assertFalse(noPathfinding.movingBlocks());
+        assertTrue(noPathfinding.updateLighting());
+        assertTrue(noPathfinding.performBlockPhysics());
+        assertTrue(noPathfinding.notifyPathfinding());
+        assertFalse(noPathfinding.performBlockDestruction());
     }
 
     @Test
@@ -231,6 +259,7 @@ class BlockChangeFlagManagerTest {
         assertFalse(inverse.updateLighting());
         assertFalse(inverse.performBlockPhysics());
         assertFalse(inverse.notifyPathfinding());
+        assertFalse(inverse.performBlockDestruction());
     }
 
     /**
@@ -250,7 +279,7 @@ class BlockChangeFlagManagerTest {
     void verifyNestedNeighborPhysics() {
         final SpongeBlockChangeFlag flag = BlockChangeFlagManagerTest.createDefaultFlag();
         assertTrue(flag.updateNeighboringShapes()); // 16
-        assertTrue(flag.getRawFlag() > 0);
+        assertTrue(flag.getRawFlag() != 0);
         assertEquals((flag.getRawFlag() & 32), 0);
         assertTrue(flag.neighborDropsAllowed());
         final SpongeBlockChangeFlag nestedNeighbor = flag.asNestedNeighborUpdates();
@@ -264,6 +293,7 @@ class BlockChangeFlagManagerTest {
         assertTrue(nestedNeighbor.updateLighting());
         assertTrue(nestedNeighbor.performBlockPhysics());
         assertTrue(nestedNeighbor.notifyPathfinding());
+        assertTrue(nestedNeighbor.performBlockDestruction());
         assertEquals(3 & -34, nestedNeighbor.getRawFlag());
 
         final int overloadedFlag =
@@ -278,7 +308,7 @@ class BlockChangeFlagManagerTest {
             | Constants.BlockChangeFlags.PATHFINDING_UPDATES;
         final SpongeBlockChangeFlag otherFlag = BlockChangeFlagManager.fromNativeInt(overloadedFlag);
         assertTrue(otherFlag.updateNeighboringShapes()); // 16
-        assertTrue(otherFlag.getRawFlag() > 0);
+        assertTrue(otherFlag.getRawFlag() != 0);
         assertFalse(otherFlag.neighborDropsAllowed());
         final SpongeBlockChangeFlag nestedOther = otherFlag.asNestedNeighborUpdates();
         assertFalse(nestedOther.updateNeighbors()); // 1
@@ -291,6 +321,7 @@ class BlockChangeFlagManagerTest {
         assertFalse(nestedOther.updateLighting());
         assertFalse(nestedOther.performBlockPhysics());
         assertFalse(nestedOther.notifyPathfinding());
+        assertTrue(nestedOther.performBlockDestruction());
 
         // Finally, verify that with mojang's flag logic, we're still abiding by it.
         assertEquals(overloadedFlag & -34, nestedOther.getRawFlag());

@@ -25,7 +25,6 @@
 package org.spongepowered.common.mixin.inventory.api.server.level;
 
 import net.kyori.adventure.text.Component;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.spongepowered.api.entity.living.player.server.ServerPlayer;
 import org.spongepowered.api.item.inventory.Container;
 import org.spongepowered.api.item.inventory.Inventory;
@@ -33,10 +32,6 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.common.bridge.world.inventory.container.ContainerBridge;
 import org.spongepowered.common.event.inventory.InventoryEventFactory;
-import org.spongepowered.common.event.tracking.PhaseContext;
-import org.spongepowered.common.event.tracking.PhaseTracker;
-import org.spongepowered.common.event.tracking.TrackingUtil;
-import org.spongepowered.common.event.tracking.phase.packet.PacketPhase;
 import org.spongepowered.common.mixin.inventory.api.world.entity.player.PlayerMixin_Inventory_API;
 
 import java.util.Optional;
@@ -74,19 +69,9 @@ public abstract class ServerPlayerMixin_Inventory_API extends PlayerMixin_Invent
         }
         // Create Close_Window to capture item drops
         final net.minecraft.server.level.ServerPlayer player = (net.minecraft.server.level.ServerPlayer) (Object) this;
-        try (final PhaseContext<@NonNull ?> ctx = PacketPhase.General.CLOSE_WINDOW.createPhaseContext(PhaseTracker.getWorldInstance(player.serverLevel()))
-                .source(this)
-                .packetPlayer(player)
-                .isClientSide(false)
-        ) {
-            ctx.buildAndSwitch();
-            this.shadow$doCloseContainer();
-
-            if (!TrackingUtil.processBlockCaptures(ctx)) {
-                return false;
-            }
-        }
-        return true;
+        final net.minecraft.world.inventory.AbstractContainerMenu openMenu = player.containerMenu;
+        this.shadow$doCloseContainer();
+        return openMenu != player.containerMenu;
     }
 
 }

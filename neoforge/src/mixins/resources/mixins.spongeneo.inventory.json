@@ -5,6 +5,7 @@
   "target": "@env(DEFAULT)",
   "priority": 1300,
   "mixins": [
+    "event.entity.PlayerMixin_Inventory_Neo",
     "event.server.level.ServerPlayerMixin_Inventory_Neo",
     "event.world.level.block.entity.HopperBlockEntityMixin_Inventory_Neo"
   ]

@@ -24,19 +24,19 @@
  */
 package org.spongepowered.common.event.tracking.phase.player;
 
-import org.spongepowered.common.event.tracking.IPhaseState;
-import org.spongepowered.common.event.tracking.context.GeneralizedContext;
+import org.spongepowered.common.event.tracking.PhaseTracker;
+import org.spongepowered.common.event.tracking.PooledPhaseState;
+import org.spongepowered.common.event.tracking.TrackingUtil;
 
-public final class PlayerPhase {
+public final class PlayerInteractPhase extends PooledPhaseState<PlayerInteractContext> {
 
-    public static final class State {
-
-        public static final PlayerInteractPhase PLAYER_INTERACT = new PlayerInteractPhase();
-
-        public static final IPhaseState<GeneralizedContext> PLAYER_LOGOUT = new PlayerLogoutPhaseState();
+    @Override
+    protected PlayerInteractContext createNewContext(final PhaseTracker tracker) {
+        return new PlayerInteractContext(this, tracker);
     }
 
-    PlayerPhase() {
+    @Override
+    public void unwind(final PlayerInteractContext context) {
+        TrackingUtil.processBlockCaptures(context);
     }
-
 }

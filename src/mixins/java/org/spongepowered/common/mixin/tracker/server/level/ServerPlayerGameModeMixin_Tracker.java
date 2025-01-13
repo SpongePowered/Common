@@ -55,6 +55,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import org.spongepowered.common.accessor.server.level.ServerPlayerAccessor;
 import org.spongepowered.common.bridge.server.level.ServerPlayerGameModeBridge;
 import org.spongepowered.common.bridge.world.inventory.container.ContainerBridge;
 import org.spongepowered.common.event.SpongeCommonEventFactory;
@@ -66,6 +67,7 @@ import org.spongepowered.common.event.tracking.context.transaction.ResultingTran
 import org.spongepowered.common.event.tracking.context.transaction.TransactionalCaptureSupplier;
 import org.spongepowered.common.event.tracking.context.transaction.effect.InventoryEffect;
 import org.spongepowered.common.event.tracking.context.transaction.inventory.PlayerInventoryTransaction;
+import org.spongepowered.common.event.tracking.phase.player.PlayerPhase;
 import org.spongepowered.common.registry.provider.DirectionFacingProvider;
 import org.spongepowered.common.util.VecHelper;
 import org.spongepowered.math.vector.Vector3d;
@@ -114,102 +116,91 @@ public abstract class ServerPlayerGameModeMixin_Tracker {
             return InteractionResult.FAIL;
         }
         final PhaseTracker phaseTracker = PhaseTracker.getWorldInstance((ServerLevel) worldIn);
-        // Sponge end
-        if (this.gameModeForPlayer == GameType.SPECTATOR) {
-            final MenuProvider inamedcontainerprovider = blockstate.getMenuProvider(worldIn, blockpos);
-            if (inamedcontainerprovider != null) {
-                playerIn.openMenu(inamedcontainerprovider);
-                final Vector3i pos = VecHelper.toVector3i(blockRaytraceResultIn.getBlockPos());
-                final ServerLocation location = ServerLocation.of((ServerWorld) worldIn, pos);
-                try (final CauseStackManager.StackFrame frame = phaseTracker.pushCauseFrame()) {
-                    frame.pushCause(playerIn);
-                    frame.addContext(EventContextKeys.BLOCK_HIT, ((ServerWorld)(worldIn)).createSnapshot(pos));
-                    ((ContainerBridge) playerIn.containerMenu).bridge$setOpenLocation(location);
-                    if (!InventoryEventFactory.callInteractContainerOpenEvent(playerIn)) {
-                        return InteractionResult.SUCCESS;
-                    }
-                }
-                return InteractionResult.SUCCESS;
-            } else {
-                return InteractionResult.PASS;
-            }
-        } else {
-            final boolean flag = !playerIn.getMainHandItem().isEmpty() || !playerIn.getOffhandItem().isEmpty();
-            final boolean flag1 = playerIn.isSecondaryUseActive() && flag;
-            final ItemStack copiedStack = stackIn.copy();
-            if (useBlock != Tristate.FALSE && !flag1) { // Sponge check useBlock
-                final InteractionResult result = blockstate.useItemOn(playerIn.getItemInHand(handIn), worldIn, playerIn, handIn, blockRaytraceResultIn);
-
-                if (result.consumesAction()) {
-                    CriteriaTriggers.ITEM_USED_ON_BLOCK.trigger(playerIn, blockpos, copiedStack);
-                    return result;
-                }
-
-                if (result instanceof InteractionResult.TryEmptyHandInteraction && handIn == InteractionHand.MAIN_HAND) {
-                    final AbstractContainerMenu lastOpenContainer = playerIn.containerMenu; // Sponge
-                    final InteractionResult result2 = blockstate.useWithoutItem(worldIn, playerIn, blockRaytraceResultIn);
-                    if (result2.consumesAction()) {
-                        // Sponge Start
-                        if (lastOpenContainer != playerIn.containerMenu) {
-                            final Vector3i pos = VecHelper.toVector3i(blockRaytraceResultIn.getBlockPos());
-                            final ServerLocation location = ServerLocation.of((ServerWorld) worldIn, pos);
-                            try (final CauseStackManager.StackFrame frame = phaseTracker.pushCauseFrame()) {
-                                frame.pushCause(playerIn);
-                                frame.addContext(EventContextKeys.BLOCK_HIT, ((ServerWorld) (worldIn)).createSnapshot(pos));
-                                ((ContainerBridge) playerIn.containerMenu).bridge$setOpenLocation(location);
-                                if (!InventoryEventFactory.callInteractContainerOpenEvent(playerIn)) {
-                                    return InteractionResult.FAIL;
-                                }
-                            }
-                        }
-                        // Sponge End
-
-                        CriteriaTriggers.DEFAULT_BLOCK_USE.trigger(playerIn, blockpos);
-                        return result2;
-                    }
-                }
-            }
-
-            if (!stackIn.isEmpty() && !playerIn.getCooldowns().isOnCooldown(stackIn)) {
-                // Sponge start
-                if (useItem == Tristate.FALSE) {
-                    ((ServerPlayerGameModeBridge) this).bridge$setInteractBlockRightClickCancelled(true);
+        try (final CauseStackManager.StackFrame frame = phaseTracker.pushCauseFrame();
+             final PhaseContext<?> context = PlayerPhase.State.PLAYER_INTERACT.createPhaseContext(phaseTracker)
+                 .containerLocation(ServerLocation.of((ServerWorld) worldIn, VecHelper.toVector3i(blockpos)))) {
+            context.buildAndSwitch();
+            frame.pushCause(event);
+            frame.addContext(EventContextKeys.BLOCK_HIT, snapshot);
+            // Sponge end
+            if (this.gameModeForPlayer == GameType.SPECTATOR) {
+                final MenuProvider inamedcontainerprovider = blockstate.getMenuProvider(worldIn, blockpos);
+                if (inamedcontainerprovider != null) {
+                    playerIn.openMenu(inamedcontainerprovider);
+                    return InteractionResult.SUCCESS;
+                } else {
                     return InteractionResult.PASS;
                 }
-                // Sponge end
-                final UseOnContext itemusecontext = new UseOnContext(playerIn, handIn, blockRaytraceResultIn);
-                final InteractionResult result;
-                if (this.isCreative()) {
-                    final int i = stackIn.getCount();
-                    result = stackIn.useOn(itemusecontext);
-                    stackIn.setCount(i);
-                } else {
-                    result = stackIn.useOn(itemusecontext);
-                    // Sponge start - log change in hand
-                    final PhaseContext<@NonNull ?> context = phaseTracker.getPhaseContext();
-                    final TransactionalCaptureSupplier transactor = context.getTransactor();
-                    if (!transactor.isEmpty()) { //TODO: Add effect to attach the transaction to be the child of the parents
-                        try (final EffectTransactor ignored = context.getTransactor().pushEffect(new ResultingTransactionBySideEffect(InventoryEffect.getInstance()))) {
-                            transactor.logPlayerInventoryChange(this.player, PlayerInventoryTransaction.EventCreator.STANDARD);
-                            this.player.inventoryMenu.broadcastChanges();
+            } else {
+                final boolean flag = !playerIn.getMainHandItem().isEmpty() || !playerIn.getOffhandItem().isEmpty();
+                final boolean flag1 = playerIn.isSecondaryUseActive() && flag;
+                final ItemStack copiedStack = stackIn.copy();
+                if (useBlock != Tristate.FALSE && !flag1) { // Sponge check useBlock
+                    final InteractionResult result = blockstate.useItemOn(playerIn.getItemInHand(handIn), worldIn, playerIn, handIn, blockRaytraceResultIn);
+
+                    if (result.consumesAction()) {
+                        CriteriaTriggers.ITEM_USED_ON_BLOCK.trigger(playerIn, blockpos, copiedStack);
+                        return result;
+                    }
+
+                    if (result instanceof InteractionResult.TryEmptyHandInteraction && handIn == InteractionHand.MAIN_HAND) {
+                        final AbstractContainerMenu lastOpenContainer = playerIn.containerMenu; // Sponge
+                        final int containerCounter = ((ServerPlayerAccessor) playerIn).accessor$containerCounter(); // Sponge
+                        final InteractionResult result2 = blockstate.useWithoutItem(worldIn, playerIn, blockRaytraceResultIn);
+                        if (result2.consumesAction()) {
+                            // Sponge Start
+                            if (lastOpenContainer == playerIn.containerMenu
+                                && containerCounter != ((ServerPlayerAccessor) playerIn).accessor$containerCounter()) {
+                                return InteractionResult.FAIL;
+                            }
+                            // Sponge End
+
+                            CriteriaTriggers.DEFAULT_BLOCK_USE.trigger(playerIn, blockpos);
+                            return result2;
                         }
                     }
+                }
+
+                if (!stackIn.isEmpty() && !playerIn.getCooldowns().isOnCooldown(stackIn)) {
+                    // Sponge start
+                    if (useItem == Tristate.FALSE) {
+                        ((ServerPlayerGameModeBridge) this).bridge$setInteractBlockRightClickCancelled(true);
+                        return InteractionResult.PASS;
+                    }
                     // Sponge end
-                }
+                    final UseOnContext itemusecontext = new UseOnContext(playerIn, handIn, blockRaytraceResultIn);
+                    final InteractionResult result;
+                    if (this.isCreative()) {
+                        final int i = stackIn.getCount();
+                        result = stackIn.useOn(itemusecontext);
+                        stackIn.setCount(i);
+                    } else {
+                        result = stackIn.useOn(itemusecontext);
+                        // Sponge start - log change in hand
+                        final TransactionalCaptureSupplier transactor = context.getTransactor();
+                        if (!transactor.isEmpty()) { //TODO: Add effect to attach the transaction to be the child of the parents
+                            try (final EffectTransactor ignored = context.getTransactor().pushEffect(new ResultingTransactionBySideEffect(InventoryEffect.getInstance()))) {
+                                transactor.logPlayerInventoryChange(this.player, PlayerInventoryTransaction.EventCreator.STANDARD);
+                                this.player.inventoryMenu.broadcastChanges();
+                            }
+                        }
+                        // Sponge end
+                    }
 
-                if (result.consumesAction()) {
-                    CriteriaTriggers.ITEM_USED_ON_BLOCK.trigger(playerIn, blockpos, copiedStack);
-                }
+                    if (result.consumesAction()) {
+                        CriteriaTriggers.ITEM_USED_ON_BLOCK.trigger(playerIn, blockpos, copiedStack);
+                    }
 
-                return result;
-            } else {
-                // Sponge start
-                if(useBlock == Tristate.FALSE && !flag1) {
-                    ((ServerPlayerGameModeBridge) this).bridge$setInteractBlockRightClickCancelled(true);
-                }
-                // Sponge end
+                    return result;
+                } else {
+                    // Sponge start
+                    if(useBlock == Tristate.FALSE && !flag1) {
+                        ((ServerPlayerGameModeBridge) this).bridge$setInteractBlockRightClickCancelled(true);
+                    }
+                    // Sponge end
 
-                return InteractionResult.PASS;
+                    return InteractionResult.PASS;
+                }
             }
         }
     }

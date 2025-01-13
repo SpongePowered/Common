@@ -98,7 +98,7 @@ import org.spongepowered.common.event.tracking.context.transaction.effect.Perfor
 import org.spongepowered.common.event.tracking.context.transaction.effect.RemoveTileEntityFromChunkEffect;
 import org.spongepowered.common.event.tracking.context.transaction.effect.SetAndRegisterBlockEntityToLevelChunk;
 import org.spongepowered.common.event.tracking.context.transaction.effect.UpdateConnectingBlocksEffect;
-import org.spongepowered.common.event.tracking.context.transaction.effect.UpdateLightSideEffect;
+import org.spongepowered.common.event.tracking.context.transaction.effect.UpdatePOIAfterBlockChange;
 import org.spongepowered.common.event.tracking.context.transaction.effect.UpdateWorldRendererEffect;
 import org.spongepowered.common.event.tracking.context.transaction.effect.WorldBlockChangeCompleteEffect;
 import org.spongepowered.common.event.tracking.context.transaction.effect.WorldDestroyBlockLevelEffect;
@@ -452,12 +452,13 @@ public abstract class ServerLevelMixin_Tracker extends LevelMixin_Tracker implem
             }
             return EffectResult.NULL_PASS;
         })
-            .addEffect(UpdateLightSideEffect.getInstance())
             .addEffect(CheckBlockPostPlacementIsSameEffect.getInstance())
             .addEffect(UpdateWorldRendererEffect.getInstance())
             .addEffect(NotifyClientEffect.getInstance())
             .addEffect(NotifyNeighborSideEffect.getInstance())
-            .addEffect(UpdateConnectingBlocksEffect.getInstance());
+            .addEffect(UpdateConnectingBlocksEffect.getInstance())
+            .addEffect(UpdatePOIAfterBlockChange.getInstance())
+        ;
         return worldPipelineBuilder;
     }
 

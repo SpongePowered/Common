@@ -22,21 +22,20 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.spongepowered.common.event.tracking.phase.player;
+package org.spongepowered.neoforge.mixin.inventory.event.entity;
 
-import org.spongepowered.common.event.tracking.IPhaseState;
-import org.spongepowered.common.event.tracking.context.GeneralizedContext;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.InventoryMenu;
+import org.spongepowered.asm.mixin.Final;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 
-public final class PlayerPhase {
+@Mixin(Player.class)
+public abstract class PlayerMixin_Inventory_Neo {
 
-    public static final class State {
-
-        public static final PlayerInteractPhase PLAYER_INTERACT = new PlayerInteractPhase();
-
-        public static final IPhaseState<GeneralizedContext> PLAYER_LOGOUT = new PlayerLogoutPhaseState();
-    }
-
-    PlayerPhase() {
-    }
-
+    // @formatter:off
+    @Shadow public AbstractContainerMenu containerMenu;
+    @Shadow @Final public InventoryMenu inventoryMenu;
+    // @formatter:on
 }

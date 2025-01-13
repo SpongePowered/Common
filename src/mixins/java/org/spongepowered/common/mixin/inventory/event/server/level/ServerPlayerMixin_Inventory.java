@@ -25,8 +25,17 @@
 package org.spongepowered.common.mixin.inventory.event.server.level;
 
 import net.minecraft.server.level.ServerLevel;
+import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.llamalad7.mixinextras.sugar.Cancellable;
+import net.minecraft.network.protocol.game.ClientboundContainerClosePacket;
+import net.minecraft.network.protocol.game.ClientboundHorseScreenOpenPacket;
+import net.minecraft.network.protocol.game.ClientboundOpenScreenPacket;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import net.minecraft.world.Container;
+import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -36,44 +45,57 @@ import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.HorseInventoryMenu;
+import net.minecraft.world.inventory.InventoryMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.spongepowered.api.data.Transaction;
+import org.spongepowered.api.event.CauseStackManager;
+import org.spongepowered.api.event.SpongeEventFactory;
+import org.spongepowered.api.event.item.inventory.container.InteractContainerEvent;
 import org.spongepowered.api.item.inventory.Inventory;
+import org.spongepowered.api.item.inventory.ItemStackSnapshot;
 import org.spongepowered.api.item.inventory.Slot;
 import org.spongepowered.api.item.inventory.equipment.EquipmentType;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import org.spongepowered.common.SpongeCommon;
 import org.spongepowered.common.bridge.world.entity.EntityBridge;
 import org.spongepowered.common.bridge.world.entity.player.PlayerInventoryBridge;
 import org.spongepowered.common.bridge.world.inventory.ViewableInventoryBridge;
+import org.spongepowered.common.event.inventory.InventoryEventFactory;
 import org.spongepowered.common.event.tracking.PhaseContext;
 import org.spongepowered.common.event.tracking.PhaseTracker;
+import org.spongepowered.common.event.tracking.TrackingUtil;
 import org.spongepowered.common.event.tracking.context.transaction.EffectTransactor;
 import org.spongepowered.common.event.tracking.context.transaction.TransactionalCaptureSupplier;
 import org.spongepowered.common.event.tracking.context.transaction.inventory.PlayerInventoryTransaction;
+import org.spongepowered.common.event.tracking.phase.packet.PacketPhaseUtil;
 import org.spongepowered.common.event.tracking.phase.packet.inventory.SwapHandItemsState;
 import org.spongepowered.common.inventory.adapter.InventoryAdapter;
 import org.spongepowered.common.inventory.fabric.Fabric;
 import org.spongepowered.common.inventory.lens.Lens;
 import org.spongepowered.common.inventory.lens.impl.minecraft.PlayerInventoryLens;
 import org.spongepowered.common.inventory.lens.slots.SlotLens;
+import org.spongepowered.common.item.util.ItemStackUtil;
 import org.spongepowered.common.mixin.inventory.event.entity.player.PlayerMixin_Inventory;
 
+import java.util.Collections;
 import java.util.Map;
 
 @Mixin(ServerPlayer.class)
 public abstract class ServerPlayerMixin_Inventory extends PlayerMixin_Inventory {
 
     // @formatter:off
+    @Shadow public ServerGamePacketListenerImpl connection;
     @Nullable private EffectTransactor inventory$effectTransactor = null;
     @Nullable private Object inventory$menuProvider;
+    // @formatter:on
 
     @Shadow public abstract ServerLevel shadow$serverLevel();
     // @formatter:on
@@ -193,7 +215,7 @@ public abstract class ServerPlayerMixin_Inventory extends PlayerMixin_Inventory 
         this.inventory$menuProvider = null;
     }
 
-    @Redirect(
+    @WrapOperation(
         method = "openHorseInventory",
         at = @At(
             value = "NEW",
@@ -201,14 +223,16 @@ public abstract class ServerPlayerMixin_Inventory extends PlayerMixin_Inventory 
         )
     )
     private HorseInventoryMenu impl$transactHorseInventoryMenuCreationWithEffect(
-            final int $$0, final net.minecraft.world.entity.player.Inventory $$1, final Container $$2, final AbstractHorse $$3, final int $$4
+        final int $$0, final net.minecraft.world.entity.player.Inventory $$1, final Container $$2, final AbstractHorse $$3, final int $$4,
+        final Operation<HorseInventoryMenu> original, final @Cancellable CallbackInfo ci
     ) {
-        try (final EffectTransactor ignored = PhaseTracker.getWorldInstance(this.shadow$serverLevel()).getPhaseContext()
-            .getTransactor()
-            .logOpenInventory((ServerPlayer) (Object) this)
-        ) {
-            return new HorseInventoryMenu($$0, $$1, $$2, $$3, $$4);
+        final HorseInventoryMenu menu = original.call($$0, $$1, $$2, $$3, $$4);
+        if (!InventoryEventFactory.callInteractContainerOpenEvent((ServerPlayer) (Object) this, menu)) {
+            ci.cancel();
+            return menu;
         }
+        this.connection.send(new ClientboundHorseScreenOpenPacket(menu.containerId, $$4, $$3.getId()));
+        return menu;
     }
 
     // -- small bridge-like methods
@@ -230,14 +254,50 @@ public abstract class ServerPlayerMixin_Inventory extends PlayerMixin_Inventory 
         throw new IllegalStateException("Unknown Lens for Player Inventory: " + lens.getClass().getName());
     }
 
-    @Redirect(method = "doCloseContainer",
+    @WrapMethod(method = "doCloseContainer")
+    private void impl$onPreDoCloseContainer(final Operation<Void> original) {
+        final PhaseTracker tracker = PhaseTracker.getWorldInstance(this.shadow$serverLevel());
+        final ItemStackSnapshot resultingCursor = ItemStackUtil.snapshotOf(this.containerMenu.getCarried());
+        final Transaction<ItemStackSnapshot> cursorTransaction = new Transaction<>(resultingCursor, resultingCursor);
+        final InteractContainerEvent.Close event = SpongeEventFactory.createInteractContainerEventClose(
+            tracker.currentCause(), (org.spongepowered.api.item.inventory.Container) this.containerMenu,
+            cursorTransaction, (Inventory) this.containerMenu, Collections.emptyList());
+        SpongeCommon.post(event);
+        PacketPhaseUtil.handleCursorRestore((ServerPlayer) (Object) this, event.cursorTransaction(), event.isCancelled());
+        if (event.isCancelled() && !(this.containerMenu instanceof InventoryMenu)) {
+            final PhaseContext<@NonNull ?> context = tracker.getPhaseContext();
+            if (context.isClientSide()) {
+                final net.minecraft.world.inventory.Slot slot = this.containerMenu.getSlot(0);
+                final net.minecraft.world.Container slotInventory = slot.container;
+                final net.minecraft.network.chat.@Nullable Component title;
+                // TODO get name from last open
+                if (slotInventory instanceof MenuProvider) {
+                    title = ((MenuProvider) slotInventory).getDisplayName();
+                } else {
+                    // expected fallback for unknown types
+                    title = null;
+                }
+                this.connection.send(new ClientboundOpenScreenPacket(this.containerMenu.containerId, this.containerMenu.getType(), title));
+            }
+            return;
+        }
+        this.connection.send(new ClientboundContainerClosePacket(this.containerMenu.containerId));
+        try (final CauseStackManager.StackFrame frame = tracker.pushCauseFrame()) {
+            frame.pushCause(event);
+            original.call();
+        }
+    }
+
+    @WrapOperation(method = "doCloseContainer",
         at = @At(value = "INVOKE", target = "Lnet/minecraft/world/inventory/AbstractContainerMenu;removed(Lnet/minecraft/world/entity/player/Player;)V"))
-    private void impl$onHandleContainerClose(final AbstractContainerMenu instance, final Player player) {
-        final PhaseContext<@NonNull ?> context = PhaseTracker.getWorldInstance((ServerLevel)player.level()).getPhaseContext();
+    private void impl$onDoCloseContainerCaptureRemoval(final AbstractContainerMenu instance, final Player player, final Operation<Void> original) {
+        final PhaseTracker tracker = PhaseTracker.getWorldInstance(this.shadow$serverLevel());
+        final PhaseContext<@NonNull ?> context = tracker.getPhaseContext();
         final TransactionalCaptureSupplier transactor = context.getTransactor();
-        try (final EffectTransactor ignored = transactor.logCloseInventory(context, player)) {
-            instance.removed(player);
+        try (final EffectTransactor ignored = transactor.logPlayerInventoryChangeWithEffect(player, PlayerInventoryTransaction.EventCreator.STANDARD)) {
+            original.call(instance, player);
             instance.broadcastChanges();
+            TrackingUtil.processBlockCaptures(context);
         }
     }
 }

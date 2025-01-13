@@ -42,6 +42,7 @@ import org.spongepowered.common.event.tracking.context.transaction.effect.OldBlo
 import org.spongepowered.common.event.tracking.context.transaction.effect.SetBlockToChunkSectionEffect;
 import org.spongepowered.common.event.tracking.context.transaction.effect.UpdateChunkLightManagerEffect;
 import org.spongepowered.common.event.tracking.context.transaction.effect.UpdateHeightMapEffect;
+import org.spongepowered.common.event.tracking.context.transaction.effect.UpdateLightSideEffect;
 import org.spongepowered.common.event.tracking.context.transaction.effect.UpdateOrCreateNewTileEntityPostPlacementEffect;
 import org.spongepowered.common.event.tracking.context.transaction.pipeline.ChunkPipeline;
 import org.spongepowered.common.util.Constants;
@@ -87,6 +88,7 @@ public final class ChangeBlock extends BlockEventBasedTransaction {
         builder.addEffect(SetBlockToChunkSectionEffect.getInstance());
         builder.addEffect(UpdateHeightMapEffect.getInstance());
         builder.addEffect(UpdateChunkLightManagerEffect.getInstance());
+        builder.addEffect(UpdateLightSideEffect.getInstance());
         builder.addEffect(OldBlockOnReplaceEffect.getInstance());
         builder.addEffect(CheckBlockPostPlacementIsSameEffect.getInstance());
         builder.addEffect(BlockAddedEffect.getInstance());
