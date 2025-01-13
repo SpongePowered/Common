@@ -638,6 +638,9 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements SubjectBr
     @Overwrite
     public void die(final DamageSource cause) {
         // Sponge start - Call Destruct Death Event
+        if (PlatformHooks.INSTANCE.getEventHooks().callPlayerDestruction((net.minecraft.server.level.ServerPlayer) (Object) this, cause)) {
+            return;
+        }
         final DestructEntityEvent.Death event = SpongeCommonEventFactory.callDestructEntityEventDeath((net.minecraft.server.level.ServerPlayer) (Object) this, cause,
                 Audiences.server());
         if (event.isCancelled()) {

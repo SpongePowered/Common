@@ -47,6 +47,7 @@ import net.minecraft.world.level.block.entity.TickingBlockEntity;
 import net.minecraft.world.level.block.piston.PistonBaseBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
+import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.Vec3;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -98,7 +99,6 @@ import org.spongepowered.common.event.tracking.context.transaction.effect.Perfor
 import org.spongepowered.common.event.tracking.context.transaction.effect.RemoveTileEntityFromChunkEffect;
 import org.spongepowered.common.event.tracking.context.transaction.effect.SetAndRegisterBlockEntityToLevelChunk;
 import org.spongepowered.common.event.tracking.context.transaction.effect.UpdateConnectingBlocksEffect;
-import org.spongepowered.common.event.tracking.context.transaction.effect.UpdatePOIAfterBlockChange;
 import org.spongepowered.common.event.tracking.context.transaction.effect.UpdateWorldRendererEffect;
 import org.spongepowered.common.event.tracking.context.transaction.effect.WorldBlockChangeCompleteEffect;
 import org.spongepowered.common.event.tracking.context.transaction.effect.WorldDestroyBlockLevelEffect;
@@ -457,7 +457,6 @@ public abstract class ServerLevelMixin_Tracker extends LevelMixin_Tracker implem
             .addEffect(NotifyClientEffect.getInstance())
             .addEffect(NotifyNeighborSideEffect.getInstance())
             .addEffect(UpdateConnectingBlocksEffect.getInstance())
-            .addEffect(UpdatePOIAfterBlockChange.getInstance())
         ;
         return worldPipelineBuilder;
     }
@@ -526,13 +525,18 @@ public abstract class ServerLevelMixin_Tracker extends LevelMixin_Tracker implem
                 return false;
             }
             final WorldPipeline.Builder pipelineBuilder = this.bridge$makePipeline(pos, currentState, emptyBlock, chunk, spongeFlag, limit)
-                .addEffect(WorldDestroyBlockLevelEffect.getInstance());
+                .addEffect(WorldDestroyBlockLevelEffect.getInstance())
+                ;
 
             if (doDrops) {
                 pipelineBuilder.addEffect(PerformBlockDropsFromDestruction.getInstance());
             }
 
             final WorldPipeline pipeline = pipelineBuilder
+                .addEffect((pipeline1, oldState, newState, flag, limit1) -> {
+                    pipeline1.getServerWorld().gameEvent(GameEvent.BLOCK_DESTROY, oldState.pos, GameEvent.Context.of(p_241212_3_, oldState.state));
+                    return EffectResult.NULL_PASS;
+                })
                 .addEffect(WorldBlockChangeCompleteEffect.getInstance())
                 .build();
 

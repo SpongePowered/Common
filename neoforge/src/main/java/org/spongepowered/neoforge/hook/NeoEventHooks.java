@@ -24,8 +24,16 @@
  */
 package org.spongepowered.neoforge.hook;
 
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.damagesource.DamageSource;
+import net.neoforged.neoforge.common.CommonHooks;
 import org.spongepowered.common.hooks.EventHooks;
 
 public final class NeoEventHooks implements EventHooks {
+
+    @Override
+    public boolean callPlayerDestruction(ServerPlayer serverPlayer, DamageSource cause) {
+        return CommonHooks.onLivingDeath(serverPlayer, cause);
+    }
 
 }

@@ -24,8 +24,14 @@
  */
 package org.spongepowered.forge.hook;
 
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraftforge.event.ForgeEventFactory;
 import org.spongepowered.common.hooks.EventHooks;
 
 public final class ForgeEventHooks implements EventHooks {
-
+    @Override
+    public boolean callPlayerDestruction(ServerPlayer serverPlayer, DamageSource cause) {
+        return ForgeEventFactory.onLivingDeath(serverPlayer, cause);
+    }
 }
