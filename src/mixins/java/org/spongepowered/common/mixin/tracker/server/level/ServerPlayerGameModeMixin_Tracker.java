@@ -52,17 +52,16 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import org.spongepowered.common.accessor.server.level.ServerPlayerAccessor;
 import org.spongepowered.common.bridge.server.level.ServerPlayerGameModeBridge;
 import org.spongepowered.common.bridge.world.TrackedWorldBridge;
-import org.spongepowered.common.bridge.world.inventory.container.ContainerBridge;
 import org.spongepowered.common.event.SpongeCommonEventFactory;
-import org.spongepowered.common.event.inventory.InventoryEventFactory;
 import org.spongepowered.common.event.tracking.PhaseContext;
 import org.spongepowered.common.event.tracking.PhaseTracker;
+import org.spongepowered.common.event.tracking.phase.player.PlayerPhase;
 import org.spongepowered.common.registry.provider.DirectionFacingProvider;
 import org.spongepowered.common.util.VecHelper;
 import org.spongepowered.math.vector.Vector3d;
-import org.spongepowered.math.vector.Vector3i;
 
 @Mixin(ServerPlayerGameMode.class)
 public abstract class ServerPlayerGameModeMixin_Tracker {
@@ -112,25 +111,18 @@ public abstract class ServerPlayerGameModeMixin_Tracker {
             player.inventoryMenu.sendAllDataToRemote();
             return InteractionResult.FAIL;
         }
-        try (final var frame = PhaseTracker.getCauseStackManager().pushCauseFrame()) {
+        final PhaseTracker phaseTracker = PhaseTracker.getWorldInstance((ServerLevel) worldIn);
+        try (final CauseStackManager.StackFrame frame = phaseTracker.pushCauseFrame();
+             final PhaseContext<?> context = PlayerPhase.State.PLAYER_INTERACT.createPhaseContext(phaseTracker)
+                 .containerLocation(ServerLocation.of((ServerWorld) worldIn, VecHelper.toVector3i(blockpos)))) {
+            context.buildAndSwitch();
             frame.pushCause(event);
+            frame.addContext(EventContextKeys.BLOCK_HIT, snapshot);
             // Sponge end
             if (this.gameModeForPlayer == GameType.SPECTATOR) {
                 final MenuProvider inamedcontainerprovider = blockstate.getMenuProvider(worldIn, blockpos);
                 if (inamedcontainerprovider != null) {
                     playerIn.openMenu(inamedcontainerprovider);
-                    // Sponge start - throw open container event
-                    final Vector3i pos = VecHelper.toVector3i(blockRaytraceResultIn.getBlockPos());
-                    final ServerLocation location = ServerLocation.of((ServerWorld) worldIn, pos);
-                    try (final CauseStackManager.StackFrame blockHit = PhaseTracker.getCauseStackManager().pushCauseFrame()) {
-                        blockHit.pushCause(playerIn);
-                        blockHit.addContext(EventContextKeys.BLOCK_HIT, ((ServerWorld) (worldIn)).createSnapshot(pos));
-                        ((ContainerBridge) playerIn.containerMenu).bridge$setOpenLocation(location);
-                        if (!InventoryEventFactory.callInteractContainerOpenEvent(playerIn)) {
-                            return InteractionResult.SUCCESS;
-                        }
-                    }
-                    // Sponge end
                     return InteractionResult.CONSUME;
                 } else {
                     return InteractionResult.PASS;
@@ -155,18 +147,11 @@ public abstract class ServerPlayerGameModeMixin_Tracker {
                     final var result = interaction.processInteraction(phaseContext);
                     // Sponge end
                     if (result.consumesAction()) {
-                        // Sponge Start - verify opened container is not changed, otherwise throw an event
-                        if (lastOpenContainer != playerIn.containerMenu) {
-                            final Vector3i pos = VecHelper.toVector3i(blockRaytraceResultIn.getBlockPos());
-                            final ServerLocation location = ServerLocation.of((ServerWorld) worldIn, pos);
-                            try (final CauseStackManager.StackFrame blockUse = PhaseTracker.getCauseStackManager().pushCauseFrame()) {
-                                blockUse.pushCause(playerIn);
-                                blockUse.addContext(EventContextKeys.BLOCK_HIT, ((ServerWorld) (worldIn)).createSnapshot(pos));
-                                ((ContainerBridge) playerIn.containerMenu).bridge$setOpenLocation(location);
-                                if (!InventoryEventFactory.callInteractContainerOpenEvent(playerIn)) {
-                                    return InteractionResult.FAIL;
-                                }
-                            }
+                        // Sponge Start - propagate container cancellation
+                        final int containerCounter = ((ServerPlayerAccessor) playerIn).accessor$containerCounter();
+                        if (lastOpenContainer == playerIn.containerMenu
+                            && containerCounter != ((ServerPlayerAccessor) playerIn).accessor$containerCounter()) {
+                            return InteractionResult.FAIL;
                         }
                         // Sponge End
 

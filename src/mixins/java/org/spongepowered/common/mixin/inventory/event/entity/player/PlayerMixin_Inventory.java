@@ -46,9 +46,11 @@ import java.util.Map;
 @Mixin(value = Player.class)
 public abstract class PlayerMixin_Inventory extends LivingEntityMixin_Inventory {
 
+    // @formatter:off
     @Final @Shadow public net.minecraft.world.entity.player.Inventory inventory;
     @Shadow public AbstractContainerMenu containerMenu;
     @Shadow @Final public InventoryMenu inventoryMenu;
+    // @formatter:on
 
     protected PlayerMixin_Inventory(final EntityType<?> param0, final Level param1) {
         super(param0, param1);

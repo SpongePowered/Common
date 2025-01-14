@@ -26,20 +26,29 @@ package org.spongepowered.common.mixin.api.minecraft.client.multiplayer;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientHandshakePacketListenerImpl;
+import net.minecraft.network.Connection;
 import org.spongepowered.api.network.ClientConnectionState;
+import org.spongepowered.api.network.ClientSideConnection;
 import org.spongepowered.api.profile.GameProfile;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.common.bridge.network.ConnectionBridge;
 import org.spongepowered.common.profile.SpongeGameProfile;
 
 @Mixin(ClientHandshakePacketListenerImpl.class)
 public abstract class ClientHandshakePacketListenerImplMixin_API implements ClientConnectionState.Login {
 
     // @formatter:off
+    @Shadow @Final private Connection connection;
     @Shadow @Final private Minecraft minecraft;
     @Shadow @Final private boolean wasTransferredTo;
     // @formatter:on
+
+    @Override
+    public ClientSideConnection connection() {
+        return (ClientSideConnection) ((ConnectionBridge) this.connection).bridge$getEngineConnection();
+    }
 
     @Override
     public boolean transferred() {

@@ -128,17 +128,6 @@ public class ServerGamePacketListenerImplMixin_Inventory {
         }
     }
 
-    @Redirect(method = "handleContainerClose",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerPlayer;doCloseContainer()V"))
-    private void impl$onHandleContainerClose(final ServerPlayer player) {
-        final PhaseContext<@NonNull ?> context = PhaseTracker.getWorldInstance(this.player.serverLevel()).getPhaseContext();
-        final TransactionalCaptureSupplier transactor = context.getTransactor();
-        try (final EffectTransactor ignored = transactor.logCloseInventory(player, true)) {
-            this.player.containerMenu.removed(player);
-            this.player.containerMenu.broadcastChanges();
-        }
-    }
-
     @Redirect(method = "handleRenameItem(Lnet/minecraft/network/protocol/game/ServerboundRenameItemPacket;)V",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/world/inventory/AnvilMenu;setItemName(Ljava/lang/String;)Z"))
     private boolean impl$onHandleRenameItem(final AnvilMenu menu, final String name) {

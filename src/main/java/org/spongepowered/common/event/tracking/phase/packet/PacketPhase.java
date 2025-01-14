@@ -127,7 +127,7 @@ public final class PacketPhase {
         static final IPhaseState<BasicPacketContext> STOP_SPRINTING = new BasicPacketState();
         static final IPhaseState<BasicPacketContext> STOP_SLEEPING = new StopSleepingPacketState();
         static final IPhaseState<BasicPacketContext> TAB_COMPLETE = new BasicPacketState();
-        public static final IPhaseState<BasicPacketContext> CLOSE_WINDOW = new CloseWindowState();
+        static final CloseWindowState CLOSE_WINDOW = new CloseWindowState();
         public static final IPhaseState<BasicPacketContext> UPDATE_SIGN = new BasicPacketState();
         static final IPhaseState<BasicPacketContext> STOP_RIDING_JUMP = new BasicPacketState();
         static final IPhaseState<BasicPacketContext> HANDLED_EXTERNALLY = new UnknownPacketState();

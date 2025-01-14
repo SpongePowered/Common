@@ -61,7 +61,7 @@ public final class Installer {
             TinyLogger.INSTANCE,
             this.config.checkLibraryHashes,
             Paths.get(this.config.librariesDirectory.replace("${BASE_DIRECTORY}", directory.toAbsolutePath().toString())),
-            this.getClass().getResource("/libraries.json")
+            this.getClass().getResource("/sponge-libraries.json")
         );
     }
 

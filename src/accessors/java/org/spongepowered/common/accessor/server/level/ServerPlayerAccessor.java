@@ -47,4 +47,5 @@ public interface ServerPlayerAccessor {
 
     @Invoker("triggerDimensionChangeTriggers") void invoker$triggerDimensionChangeTriggers(final ServerLevel world);
 
+    @Accessor("containerCounter") int accessor$containerCounter();
 }

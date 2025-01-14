@@ -25,24 +25,21 @@
 package org.spongepowered.common.mixin.inventory.api.server.level;
 
 import net.kyori.adventure.text.Component;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.spongepowered.api.entity.living.player.server.ServerPlayer;
 import org.spongepowered.api.item.inventory.Container;
 import org.spongepowered.api.item.inventory.Inventory;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.common.bridge.world.inventory.container.ContainerBridge;
 import org.spongepowered.common.event.inventory.InventoryEventFactory;
-import org.spongepowered.common.event.tracking.PhaseContext;
-import org.spongepowered.common.event.tracking.PhaseTracker;
-import org.spongepowered.common.event.tracking.TrackingUtil;
-import org.spongepowered.common.event.tracking.context.transaction.EffectTransactor;
-import org.spongepowered.common.event.tracking.phase.packet.PacketPhase;
 import org.spongepowered.common.mixin.inventory.api.world.entity.player.PlayerMixin_Inventory_API;
 
 import java.util.Optional;
 
 @Mixin(net.minecraft.server.level.ServerPlayer.class)
 public abstract class ServerPlayerMixin_Inventory_API extends PlayerMixin_Inventory_API implements ServerPlayer {
+
+    @Shadow public abstract void shadow$doCloseContainer();
 
     @Override
     public Optional<Container> openInventory() {
@@ -72,21 +69,9 @@ public abstract class ServerPlayerMixin_Inventory_API extends PlayerMixin_Invent
         }
         // Create Close_Window to capture item drops
         final net.minecraft.server.level.ServerPlayer player = (net.minecraft.server.level.ServerPlayer) (Object) this;
-        try (final PhaseContext<@NonNull ?> ctx = PacketPhase.General.CLOSE_WINDOW.createPhaseContext(PhaseTracker.getWorldInstance(player.serverLevel()))
-                .source(this)
-                .packetPlayer(player)
-        ) {
-            ctx.buildAndSwitch();
-            try (final EffectTransactor ignored = ctx.getTransactor().logCloseInventory(player, false)) {
-                this.containerMenu.removed(player); // Drop & capture cursor item
-                this.containerMenu.broadcastChanges();
-            }
-
-            if (!TrackingUtil.processBlockCaptures(ctx)) {
-                return false;
-            }
-        }
-        return true;
+        final net.minecraft.world.inventory.AbstractContainerMenu openMenu = player.containerMenu;
+        this.shadow$doCloseContainer();
+        return openMenu != player.containerMenu;
     }
 
 }

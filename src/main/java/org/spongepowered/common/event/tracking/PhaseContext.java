@@ -34,6 +34,7 @@ import org.spongepowered.api.event.Cause;
 import org.spongepowered.api.event.CauseStackManager;
 import org.spongepowered.api.event.Event;
 import org.spongepowered.api.event.EventContextKeys;
+import org.spongepowered.api.world.server.ServerLocation;
 import org.spongepowered.common.applaunch.config.core.SpongeConfigs;
 import org.spongepowered.common.event.tracking.context.transaction.TransactionalCaptureSupplier;
 import org.spongepowered.common.util.MemoizedSupplier;
@@ -366,6 +367,14 @@ public class PhaseContext<P extends PhaseContext<P>> implements PhaseStateProxy<
             return ((ServerPlayer) this.source).uniqueId();
         }
         return null;
+    }
+
+    public boolean isClientSide() {
+        return false;
+    }
+
+    public Optional<ServerLocation> containerLocation() {
+        return Optional.empty();
     }
 
     protected boolean isRunaway(final PhaseContext<?> phaseContext) {

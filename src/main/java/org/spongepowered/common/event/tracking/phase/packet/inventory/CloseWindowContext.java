@@ -22,38 +22,38 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.spongepowered.common.mixin.api.minecraft.client.multiplayer;
+package org.spongepowered.common.event.tracking.phase.packet.inventory;
 
-import net.minecraft.client.multiplayer.ClientPacketListener;
-import org.spongepowered.api.entity.living.player.client.LocalPlayer;
-import org.spongepowered.api.network.ClientConnectionState;
-import org.spongepowered.api.network.ClientSideConnection;
-import org.spongepowered.api.profile.GameProfile;
-import org.spongepowered.asm.mixin.Final;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.common.bridge.network.ConnectionBridge;
-import org.spongepowered.common.profile.SpongeGameProfile;
+import org.spongepowered.common.event.tracking.PhaseTracker;
+import org.spongepowered.common.event.tracking.phase.packet.PacketContext;
+import org.spongepowered.common.event.tracking.phase.packet.PacketState;
 
-@Mixin(ClientPacketListener.class)
-public abstract class ClientPacketListenerMixin_API extends ClientCommonPacketListenerImplMixin_API implements ClientConnectionState.Game {
+public final class CloseWindowContext extends PacketContext<CloseWindowContext> {
 
-    // @formatter:off
-    @Shadow @Final private com.mojang.authlib.GameProfile localGameProfile;
-    // @formatter:on
+    private boolean clientSide = true;
 
-    @Override
-    public ClientSideConnection connection() {
-        return (ClientSideConnection) ((ConnectionBridge) this.connection).bridge$getEngineConnection();
+    public CloseWindowContext(final PacketState<CloseWindowContext> state, final PhaseTracker tracker) {
+        super(state, tracker);
+    }
+
+    public CloseWindowContext isClientSide(final boolean clientSide) {
+        this.clientSide = clientSide;
+        return this;
     }
 
     @Override
-    public GameProfile profile() {
-        return SpongeGameProfile.of(this.localGameProfile);
+    public boolean hasCaptures() {
+        return true;
     }
 
     @Override
-    public LocalPlayer player() {
-        return (LocalPlayer) this.minecraft.player;
+    public boolean isClientSide() {
+        return this.clientSide;
+    }
+
+    @Override
+    protected void reset() {
+        super.reset();
+        this.clientSide = true;
     }
 }

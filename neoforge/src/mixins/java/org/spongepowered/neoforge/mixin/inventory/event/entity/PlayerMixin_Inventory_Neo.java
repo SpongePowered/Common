@@ -22,38 +22,20 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.spongepowered.common.mixin.api.minecraft.client.multiplayer;
+package org.spongepowered.neoforge.mixin.inventory.event.entity;
 
-import net.minecraft.client.multiplayer.ClientPacketListener;
-import org.spongepowered.api.entity.living.player.client.LocalPlayer;
-import org.spongepowered.api.network.ClientConnectionState;
-import org.spongepowered.api.network.ClientSideConnection;
-import org.spongepowered.api.profile.GameProfile;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.InventoryMenu;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.common.bridge.network.ConnectionBridge;
-import org.spongepowered.common.profile.SpongeGameProfile;
 
-@Mixin(ClientPacketListener.class)
-public abstract class ClientPacketListenerMixin_API extends ClientCommonPacketListenerImplMixin_API implements ClientConnectionState.Game {
+@Mixin(Player.class)
+public abstract class PlayerMixin_Inventory_Neo {
 
     // @formatter:off
-    @Shadow @Final private com.mojang.authlib.GameProfile localGameProfile;
+    @Shadow public AbstractContainerMenu containerMenu;
+    @Shadow @Final public InventoryMenu inventoryMenu;
     // @formatter:on
-
-    @Override
-    public ClientSideConnection connection() {
-        return (ClientSideConnection) ((ConnectionBridge) this.connection).bridge$getEngineConnection();
-    }
-
-    @Override
-    public GameProfile profile() {
-        return SpongeGameProfile.of(this.localGameProfile);
-    }
-
-    @Override
-    public LocalPlayer player() {
-        return (LocalPlayer) this.minecraft.player;
-    }
 }

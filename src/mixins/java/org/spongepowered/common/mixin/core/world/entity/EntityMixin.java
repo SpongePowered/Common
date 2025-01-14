@@ -377,7 +377,7 @@ public abstract class EntityMixin implements EntityBridge, PlatformEntityBridge,
         }
 
         if (this.bridge$vanishState().invisible()) {
-            for (final ServerPlayerConnection playerConnection : trackerAccessor.accessor$seenBy()) {
+            for (final ServerPlayerConnection playerConnection : trackerAccessor.accessor$seenBy().toArray(new ServerPlayerConnection[0])) {
                 trackerAccessor.accessor$removePlayer(playerConnection.getPlayer());
             }
 

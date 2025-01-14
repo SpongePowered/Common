@@ -372,8 +372,8 @@ interface TransactionSink {
         return this.pushEffect(new ResultingTransactionBySideEffect<>(InventoryEffect.getInstance()));
     }
 
-    default EffectTransactor logCloseInventory(final Player player, final boolean clientSource) {
-        final CloseMenuTransaction transaction = new CloseMenuTransaction(player, clientSource);
+    default EffectTransactor logCloseInventory(final PhaseContext<@NonNull ?> current, final Player player) {
+        final CloseMenuTransaction transaction = new CloseMenuTransaction(player, current.isClientSide());
         this.logTransaction(transaction);
         return this.pushEffect(new ResultingTransactionBySideEffect<>(InventoryEffect.getInstance()));
     }

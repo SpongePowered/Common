@@ -982,8 +982,21 @@ public final class Constants {
          * check if lighting is queued for the block change.
          */
         public static final int LIGHTING_UPDATES = 1 << 7; // 128 if set, blocks lighting updates
-        public static final int PHYSICS_MASK =    1 << 8; // Sponge Added mask, because vanilla doesn't support it yet
-        public static final int PATHFINDING_UPDATES = 1 << 9; // Sponge Added mask, because vanilla doesn't allow bypassing notifications to ai pathfinders
+        public static final int PHYSICS_MASK =    1 << 31; // Sponge Added mask, because vanilla doesn't support it yet
+        public static final int PATHFINDING_UPDATES = 1 << 30; // Sponge Added mask, because vanilla doesn't allow bypassing notifications to ai pathfinders
+        public static final int PERFORM_BLOCK_DESTRUCTION =    1 << 29; // Sponge Added mask, because vanilla doesn't support it yet
+        public static final int MASK = Constants.BlockChangeFlags.BLOCK_UPDATED
+            | Constants.BlockChangeFlags.NOTIFY_CLIENTS
+            | Constants.BlockChangeFlags.IGNORE_RENDER
+            | Constants.BlockChangeFlags.FORCE_RE_RENDER
+            | Constants.BlockChangeFlags.DENY_NEIGHBOR_SHAPE_UPDATE
+            | Constants.BlockChangeFlags.NEIGHBOR_DROPS
+            | Constants.BlockChangeFlags.BLOCK_MOVING
+            | Constants.BlockChangeFlags.LIGHTING_UPDATES
+            | Constants.BlockChangeFlags.PHYSICS_MASK
+            | Constants.BlockChangeFlags.PATHFINDING_UPDATES
+            | Constants.BlockChangeFlags.PERFORM_BLOCK_DESTRUCTION
+            ;
         // All of these flags are what we "expose" to the API
         // The flags that are naturally inverted are already inverted here by being masked in
         // with the opposite OR.
@@ -993,6 +1006,7 @@ public final class Constants {
             | Constants.BlockChangeFlags.FORCE_RE_RENDER
             | Constants.BlockChangeFlags.NEIGHBOR_DROPS
             | Constants.BlockChangeFlags.DENY_NEIGHBOR_SHAPE_UPDATE
+            | Constants.BlockChangeFlags.PERFORM_BLOCK_DESTRUCTION
             ;
         public static final int DEFAULT = Constants.BlockChangeFlags.BLOCK_UPDATED
             | Constants.BlockChangeFlags.NOTIFY_CLIENTS;
@@ -1001,6 +1015,7 @@ public final class Constants {
             | Constants.BlockChangeFlags.NEIGHBOR_DROPS
             | Constants.BlockChangeFlags.PATHFINDING_UPDATES
             | Constants.BlockChangeFlags.LIGHTING_UPDATES
+            | Constants.BlockChangeFlags.PERFORM_BLOCK_DESTRUCTION
             ;
 
 

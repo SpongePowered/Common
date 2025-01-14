@@ -25,6 +25,7 @@
 package org.spongepowered.common.mixin.api.minecraft.server.network;
 
 import com.mojang.authlib.GameProfile;
+import net.minecraft.network.Connection;
 import net.minecraft.server.network.ServerCommonPacketListenerImpl;
 import org.spongepowered.api.network.EngineConnectionState;
 import org.spongepowered.asm.mixin.Final;
@@ -36,6 +37,7 @@ public abstract class ServerCommonPacketListenerImplMixin_API implements EngineC
 
     // @formatter:off
     @Shadow @Final private boolean transferred;
+    @Shadow @Final protected Connection connection;
 
     @Shadow protected abstract GameProfile shadow$playerProfile();
     @Shadow public abstract int shadow$latency();

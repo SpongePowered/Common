@@ -57,7 +57,11 @@ public final class OldBlockOnReplaceEffect implements ProcessingSideEffect<Block
         // we can safely just do oldState.onRemove(this.level, var1, var2, var3).
         final var flag = args.flag();
         final var newState = args.newState();
-        oldState.state().onRemove(pipeline.getServerWorld(), oldState.pos(), newState, flag.movingBlocks());
+        if (flag.performBlockDestruction()) {
+            oldState.state().onRemove(pipeline.getServerWorld(), oldState.pos(), newState, flag.movingBlocks());
+        } else if (oldState.state().hasBlockEntity() && !oldState.state().is(newState.getBlock())) {
+            pipeline.getServerWorld().removeBlockEntity(oldState.pos());
+        }
         return EffectResult.nullPass();
     }
 }

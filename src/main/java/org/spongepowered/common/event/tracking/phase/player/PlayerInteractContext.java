@@ -22,38 +22,37 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.spongepowered.common.mixin.api.minecraft.client.multiplayer;
+package org.spongepowered.common.event.tracking.phase.player;
 
-import net.minecraft.client.multiplayer.ClientPacketListener;
-import org.spongepowered.api.entity.living.player.client.LocalPlayer;
-import org.spongepowered.api.network.ClientConnectionState;
-import org.spongepowered.api.network.ClientSideConnection;
-import org.spongepowered.api.profile.GameProfile;
-import org.spongepowered.asm.mixin.Final;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.common.bridge.network.ConnectionBridge;
-import org.spongepowered.common.profile.SpongeGameProfile;
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.spongepowered.api.world.server.ServerLocation;
+import org.spongepowered.common.event.tracking.IPhaseState;
+import org.spongepowered.common.event.tracking.PhaseContext;
+import org.spongepowered.common.event.tracking.PhaseTracker;
 
-@Mixin(ClientPacketListener.class)
-public abstract class ClientPacketListenerMixin_API extends ClientCommonPacketListenerImplMixin_API implements ClientConnectionState.Game {
+import java.util.Optional;
 
-    // @formatter:off
-    @Shadow @Final private com.mojang.authlib.GameProfile localGameProfile;
-    // @formatter:on
+public final class PlayerInteractContext extends PhaseContext<PlayerInteractContext> {
 
-    @Override
-    public ClientSideConnection connection() {
-        return (ClientSideConnection) ((ConnectionBridge) this.connection).bridge$getEngineConnection();
+    private @Nullable ServerLocation containerLocation;
+
+    PlayerInteractContext(final IPhaseState<PlayerInteractContext> state, final PhaseTracker tracker) {
+        super(state, tracker);
+    }
+
+    public PlayerInteractContext containerLocation(final ServerLocation location) {
+        this.containerLocation = location;
+        return this;
     }
 
     @Override
-    public GameProfile profile() {
-        return SpongeGameProfile.of(this.localGameProfile);
+    public Optional<ServerLocation> containerLocation() {
+        return Optional.ofNullable(this.containerLocation);
     }
 
     @Override
-    public LocalPlayer player() {
-        return (LocalPlayer) this.minecraft.player;
+    protected void reset() {
+        super.reset();
+        this.containerLocation = null;
     }
 }
