@@ -32,7 +32,7 @@ import org.spongepowered.api.event.Cancellable;
 import org.spongepowered.api.event.Event;
 
 @DefaultQualifier(NonNull.class)
-record EventByTransaction<T extends Event & Cancellable>(
+public record EventByTransaction<T extends Event & Cancellable>(
     T event,
     ImmutableList<GameTransaction<T>> transactions,
     @Nullable GameTransaction<@NonNull ?> parent,

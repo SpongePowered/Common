@@ -25,11 +25,11 @@
 package org.spongepowered.common.event.tracking.context.transaction.effect;
 
 import net.minecraft.world.level.block.state.BlockState;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.spongepowered.common.event.tracking.context.transaction.pipeline.BlockPipeline;
 import org.spongepowered.common.event.tracking.context.transaction.pipeline.PipelineCursor;
-import org.spongepowered.common.world.SpongeBlockChangeFlag;
 
-public final class OldBlockOnReplaceEffect implements ProcessingSideEffect {
+public final class OldBlockOnReplaceEffect implements ProcessingSideEffect<BlockPipeline, PipelineCursor, BlockChangeArgs, BlockState> {
     private static final class Holder {
         static final OldBlockOnReplaceEffect INSTANCE = new OldBlockOnReplaceEffect();
     }
@@ -42,9 +42,8 @@ public final class OldBlockOnReplaceEffect implements ProcessingSideEffect {
     }
 
     @Override
-    public EffectResult processSideEffect(
-        final BlockPipeline pipeline, final PipelineCursor oldState, final BlockState newState,
-        final SpongeBlockChangeFlag flag, final int limit
+    public EffectResult<@Nullable BlockState> processSideEffect(
+        final BlockPipeline pipeline, final PipelineCursor oldState, final BlockChangeArgs args
     ) {
         // This replaces LevelChunk#setBlockState block:
         /*
@@ -78,14 +77,15 @@ public final class OldBlockOnReplaceEffect implements ProcessingSideEffect {
         the checks for physics flags
          */
         boolean hasBlockEntity = oldState.state().hasBlockEntity();
-
+        final var newState = args.newState();
+        final var flag = args.flag();
         final var pos = oldState.pos();
 
         if (!oldState.state().is(newState.getBlock())) {
-            return EffectResult.NULL_PASS;
+            return EffectResult.nullPass();
         }
         // Spogne adds the block physics flag
-        if (hasBlockEntity && !flag.structurePlacement() && flag.performBlockPhysics()) {
+        if (hasBlockEntity && !flag.performBlockDestruction() && flag.performBlockPhysics()) {
             final var blockEntity = oldState.tileEntity();
             if (blockEntity != null) {
                 blockEntity.preRemoveSideEffects(pos, newState);
@@ -100,6 +100,6 @@ public final class OldBlockOnReplaceEffect implements ProcessingSideEffect {
             oldState.state().affectNeighborsAfterRemoval(pipeline.getServerWorld(), pos, flag.movingBlocks());
         }
 
-        return EffectResult.NULL_PASS;
+        return EffectResult.nullPass();
     }
 }

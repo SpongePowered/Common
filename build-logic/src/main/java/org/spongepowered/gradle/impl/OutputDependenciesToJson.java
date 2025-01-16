@@ -50,6 +50,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -111,10 +112,10 @@ public abstract class OutputDependenciesToJson extends DefaultTask {
 
     @Input
     @Optional
-    protected abstract SetProperty<ModuleComponentIdentifier> getExcludedDependenciesBuildInput();
+    protected abstract SetProperty<ModuleComponentIdentifier> getExcludedDependencyIdentifiers();
 
-    public final void excludedDependencies(final NamedDomainObjectProvider<Configuration> config) {
-        this.getExcludedDependencies().set(config.flatMap(conf -> conf.getIncoming().getArtifacts().getResolvedArtifacts()));
+    public final void excludeDependencies(final NamedDomainObjectProvider<Configuration> config) {
+        this.getExcludedDependencies().addAll(config.flatMap(conf -> conf.getIncoming().getArtifacts().getResolvedArtifacts()));
     }
 
     /**
@@ -128,25 +129,21 @@ public abstract class OutputDependenciesToJson extends DefaultTask {
 
     public OutputDependenciesToJson() {
         this.getAllowedClassifiers().add("");
-        this.getExcludedDependenciesBuildInput().set(this.getExcludedDependencies().map(deps -> {
-            return deps.stream()
-              .map(res -> res.getId().getComponentIdentifier())
-              .filter(res -> res instanceof ModuleComponentIdentifier)
-              .map(res -> (ModuleComponentIdentifier) res)
-              .collect(Collectors.toSet());
+        this.getExcludedDependencyIdentifiers().set(this.getExcludedDependencies().map(artifacts -> {
+            final Set<ModuleComponentIdentifier> ids = new HashSet<>();
+            for (final ResolvedArtifactResult artifact : artifacts) {
+                final ComponentIdentifier id = artifact.getId().getComponentIdentifier();
+                if (id instanceof ModuleComponentIdentifier) {
+                    ids.add((ModuleComponentIdentifier) id);
+                }
+            }
+            return ids;
         }));
     }
 
     @TaskAction
     public void generateDependenciesJson() {
-        final Set<ModuleComponentIdentifier> excludedDeps = new HashSet<>();
-        if (this.getExcludedDependencies().isPresent()) {
-            for (final ResolvedArtifactResult result : this.getExcludedDependencies().get()) {
-                if (result.getId().getComponentIdentifier() instanceof ModuleComponentIdentifier) {
-                    excludedDeps.add((ModuleComponentIdentifier) result.getId().getComponentIdentifier());
-                }
-            }
-        }
+        final Set<ModuleComponentIdentifier> excludedDeps = this.getExcludedDependencyIdentifiers().getOrElse(Collections.emptySet());
 
         final Map<String, ConfigurationHolder> inputConfigs = this.getDependencies().get();
         final Map<String, List<DependencyDescriptor>> dependenciesMap = new TreeMap<>();
@@ -213,25 +210,29 @@ public abstract class OutputDependenciesToJson extends DefaultTask {
     }
 
     public static class ConfigurationHolder {
-        private final Provider<Set<ResolvedArtifactResult>> configuration;
+        private final Provider<Set<ResolvedArtifactResult>> artifacts;
 
         public ConfigurationHolder(final Configuration configuration) {
-            this.configuration = configuration.getIncoming().getArtifacts().getResolvedArtifacts();
+            this.artifacts = configuration.getIncoming().getArtifacts().getResolvedArtifacts();
         }
 
         @Input
         public Provider<Set<String>> getIds() {
-            return this.getArtifacts().map(set -> set.stream()
-              .map(art -> art.getId().getComponentIdentifier())
-              .filter(id -> id instanceof ModuleComponentIdentifier)
-              .map(ComponentIdentifier::getDisplayName)
-              .collect(Collectors.toSet()));
+            return this.artifacts.map(set -> {
+                final Set<String> ids = new HashSet<>();
+                for (final ResolvedArtifactResult artifact : set) {
+                    final ComponentIdentifier id = artifact.getId().getComponentIdentifier();
+                    if (id instanceof ModuleComponentIdentifier) {
+                        ids.add(id.getDisplayName());
+                    }
+                }
+                return ids;
+            });
         }
 
         @Internal
         public Provider<Set<ResolvedArtifactResult>> getArtifacts() {
-            return this.configuration;
+            return this.artifacts;
         }
     }
-
 }

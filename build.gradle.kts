@@ -122,6 +122,7 @@ dependencies {
         exclude(group = "org.apache.commons", module = "commons-lang3")
     }
     launchConfig(libs.mixin)
+    launchConfig(libs.mixinextras.common)
     launchConfig(apiLibs.checkerQual)
     launchConfig(libs.guava) {
         exclude(group = "com.google.code.findbugs", module = "jsr305") // We don't want to use jsr305, use checkerframework

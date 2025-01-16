@@ -31,6 +31,8 @@ public final class PlayerPhase {
 
     public static final class State {
 
+        public static final PlayerInteractPhase PLAYER_INTERACT = new PlayerInteractPhase();
+
         public static final IPhaseState<GeneralizedContext> PLAYER_LOGOUT = new PlayerLogoutPhaseState();
     }
 

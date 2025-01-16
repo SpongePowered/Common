@@ -55,6 +55,8 @@ val gameManagedLibrariesConfig: NamedDomainObjectProvider<Configuration> = confi
 val serviceShadedLibrariesConfig: NamedDomainObjectProvider<Configuration> = configurations.register("serviceShadedLibraries")
 val gameShadedLibrariesConfig: NamedDomainObjectProvider<Configuration> = configurations.register("gameShadedLibraries")
 
+val productionExcludedLibrariesConfig: NamedDomainObjectProvider<Configuration> = configurations.register("productionExcludedLibraries")
+
 // ModLauncher layers
 val bootLayerConfig: NamedDomainObjectProvider<Configuration> = configurations.register("bootLayer") {
     extendsFrom(bootLibrariesConfig.get())
@@ -189,6 +191,7 @@ dependencies {
     game(libs.javaxInject)
     game(platform(apiLibs.adventure.bom))
     game(libs.adventure.serializerConfigurate4)
+    game(libs.mixinextras.common)
 
     val serviceShadedLibraries = serviceShadedLibrariesConfig.name
     serviceShadedLibraries(project(transformersProject.path)) { isTransitive = false }
@@ -196,6 +199,12 @@ dependencies {
 
     val gameShadedLibraries = gameShadedLibrariesConfig.name
     gameShadedLibraries("org.spongepowered:spongeapi:$apiVersion") { isTransitive = false }
+
+    val gameManaged = gameManagedLibrariesConfig.name
+    gameManaged(libs.mixinextras.forge) // prod only
+
+    val productionExcluded = productionExcludedLibrariesConfig.name
+    productionExcluded(libs.mixinextras.common) // dev only
 
     afterEvaluate {
         spongeImpl.copyModulesExcludingProvided(serviceLibrariesConfig.get(), bootLayerConfig.get(), serviceShadedLibrariesConfig.get())
@@ -307,9 +316,10 @@ tasks {
     val emitDependencies by registering(org.spongepowered.gradle.impl.OutputDependenciesToJson::class) {
         group = "sponge"
         this.dependencies("main", gameManagedLibrariesConfig)
-        this.excludedDependencies(gameShadedLibrariesConfig)
+        this.excludeDependencies(gameShadedLibrariesConfig)
+        this.excludeDependencies(productionExcludedLibrariesConfig)
 
-        outputFile.set(installerResources.map { it.file("org/spongepowered/forge/applaunch/loading/moddiscovery/libraries.json") })
+        outputFile.set(installerResources.map { it.file("sponge-libraries.json") })
     }
     named(forgeAppLaunch.processResourcesTaskName).configure {
         dependsOn(emitDependencies)

@@ -27,11 +27,11 @@ package org.spongepowered.common.event.tracking.context.transaction.effect;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.state.BlockState;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.spongepowered.common.event.tracking.context.transaction.pipeline.BlockPipeline;
 import org.spongepowered.common.event.tracking.context.transaction.pipeline.PipelineCursor;
-import org.spongepowered.common.world.SpongeBlockChangeFlag;
 
-public final class UpdateConnectingBlocksEffect implements ProcessingSideEffect {
+public final class UpdateConnectingBlocksEffect implements ProcessingSideEffect<BlockPipeline, PipelineCursor, BlockChangeArgs, BlockState> {
 
     private static final class Holder {
         static final UpdateConnectingBlocksEffect INSTANCE = new UpdateConnectingBlocksEffect();
@@ -44,11 +44,14 @@ public final class UpdateConnectingBlocksEffect implements ProcessingSideEffect 
     UpdateConnectingBlocksEffect() {}
 
     @Override
-    public EffectResult processSideEffect(final BlockPipeline pipeline, final PipelineCursor oldState,
-        final BlockState newState, final SpongeBlockChangeFlag flag, final int limit
+    public EffectResult<@Nullable BlockState> processSideEffect(
+        final BlockPipeline pipeline, final PipelineCursor oldState, final BlockChangeArgs args
     ) {
         final ServerLevel world = pipeline.getServerWorld();
         final BlockPos pos = oldState.pos();
+        final var flag = args.flag();
+        final var newState = args.newState();
+        final var limit = args.limit();
         if (flag.updateNeighboringShapes() && limit > 0) {
             // int i = p_241211_3_ & -34; // Vanilla negates 34 to flip neighbor notification and and "state drops"
             final int withoutNeighborDropsAndNestedNeighborUpdates = flag.asNestedNeighborUpdates().getRawFlag();
@@ -60,7 +63,7 @@ public final class UpdateConnectingBlocksEffect implements ProcessingSideEffect 
             newState.updateIndirectNeighbourShapes(world, pos, withoutNeighborDropsAndNestedNeighborUpdates, limit - 1);
         }
 
-        return EffectResult.NULL_PASS;
+        return EffectResult.nullPass();
     }
 
 }

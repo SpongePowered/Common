@@ -74,6 +74,10 @@ public class OpenMenuTransaction extends GameTransaction<InteractContainerEvent>
         final PhaseContext<@NonNull ?> context, @Nullable final GameTransaction<@NonNull ?> parent,
         final ImmutableList<GameTransaction<InteractContainerEvent>> gameTransactions, final Cause currentCause
     ) {
+        // TODO: API-14 post events?
+        if (true) {
+            return Optional.empty();
+        }
         final ItemStackSnapshot resultingCursor = ItemStackUtil.snapshotOf(this.player.containerMenu.getCarried());
         final Transaction<ItemStackSnapshot> cursorTransaction = new Transaction<>(this.cursor, resultingCursor);
 

@@ -28,13 +28,16 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.chunk.LevelChunk;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.spongepowered.api.ResourceKey;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.CauseStackManager;
 import org.spongepowered.api.event.cause.entity.SpawnType;
 import org.spongepowered.api.event.cause.entity.SpawnTypes;
+import org.spongepowered.common.bridge.server.TickTaskBridge;
 import org.spongepowered.common.bridge.world.level.chunk.LevelChunkBridge;
 import org.spongepowered.common.entity.PlayerTracker;
 import org.spongepowered.common.event.tracking.IPhaseState;
@@ -104,6 +107,16 @@ public abstract class PacketState<P extends PacketContext<P>> extends PooledPhas
 
     protected boolean alwaysUnwinds() {
         return false;
+    }
+
+    @Override
+    public void foldContextForThread(final P context, final TickTaskBridge returnValue) {
+        final @Nullable ServerPlayer source = context.getPacketPlayer();
+        returnValue.bridge$contextShift((c, f) -> {
+            if (source != null) {
+                f.pushCause(source);
+            }
+        });
     }
 
     private final String desc = TrackingUtil.phaseStateToString("Packet", this);

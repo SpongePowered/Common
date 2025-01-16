@@ -35,6 +35,7 @@ import org.spongepowered.api.command.parameter.Parameter;
 import org.spongepowered.api.command.parameter.managed.Flag;
 import org.spongepowered.common.command.brigadier.argument.ArgumentParser;
 import org.spongepowered.common.command.brigadier.argument.CustomArgumentParser;
+import org.spongepowered.common.command.brigadier.tree.SpongeArgumentCommandNode;
 import org.spongepowered.common.command.brigadier.tree.SpongeArgumentCommandNodeBuilder;
 import org.spongepowered.common.command.brigadier.tree.SpongeCommandExecutorWrapper;
 import org.spongepowered.common.command.brigadier.tree.SpongeFlagLiteralCommandNode;
@@ -189,6 +190,7 @@ public final class SpongeParameterTranslator {
             final boolean shouldTerminate,
             final boolean allowSubcommands) {
 
+        final Set<CommandNode<CommandSourceStack>> tailNodes = new HashSet<>(parents);
         final Set<CommandNode<CommandSourceStack>> nodesToAttachTo = new HashSet<>(parents);
         final ListIterator<Parameter> parameterIterator = children.listIterator();
         while (parameterIterator.hasNext()) {
@@ -291,22 +293,35 @@ public final class SpongeParameterTranslator {
 
                     parametersToAttachTo.add(builtNode);
 
+                    // Filter out optional nodes that have a matching type, they are nearly impossible to "merge" correctly.
+                    if (isOptional) {
+                        final Set<CommandNode<CommandSourceStack>> conflictingNodes = nodesToAttachTo.stream()
+                            .filter(n -> n instanceof final SpongeArgumentCommandNode<?> argumentNodeToAttachTo
+                                && argumentNodeToAttachTo.isOptional() && argumentNodeToAttachTo.key().type().equals(valueParameter.key().type()))
+                            .collect(Collectors.toSet());
+                        if (!conflictingNodes.isEmpty()) {
+                            nodesToAttachTo.removeIf(n -> n.getChildren().stream().anyMatch(conflictingNodes::contains));
+                        }
+                    }
+
                     // Make sure the nodes we need to attach to have the nodes we need to
                     nodesToAttachTo.forEach(x -> x.addChild(builtNode));
                 }
 
                 // If this is not optional, then we clear the "toAttachTo" list because we do not want to skip the parameter.
                 if (!isOptional) {
+                    tailNodes.clear();
                     nodesToAttachTo.clear();
                 }
 
+                tailNodes.addAll(parametersToAttachTo);
                 nodesToAttachTo.addAll(parametersToAttachTo);
             }
         }
 
         // If we should make any terminal parameters actually terminal, we do that now.
         if (shouldTerminate) {
-            for (final CommandNode<CommandSourceStack> node : nodesToAttachTo) {
+            for (final CommandNode<CommandSourceStack> node : tailNodes) {
                 // These are therefore terminal.
                 if (node instanceof SpongeNode) { // they should be, but just in case
                     ((SpongeNode) node).forceExecutor(executorWrapper);
@@ -314,7 +329,7 @@ public final class SpongeParameterTranslator {
             }
         }
 
-        return nodesToAttachTo;
+        return tailNodes;
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
@@ -334,7 +349,8 @@ public final class SpongeParameterTranslator {
                 parameter.completer(),
                 parameter.modifier().orElse(null),
                 parameter.valueUsage().orElse(null),
-                suffix
+                suffix,
+                parameter.isOptional()
         );
         // CommandCause is mixed into CommandSource, so this is okay.
         argumentBuilder.requires((Predicate) parameter.requirement());

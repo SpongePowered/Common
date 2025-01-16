@@ -26,12 +26,15 @@ package org.spongepowered.common.bridge.world;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.entity.Entity;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.EntityBlock;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import net.minecraft.world.phys.BlockHitResult;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.spongepowered.api.block.BlockSnapshot;
 import org.spongepowered.api.world.BlockChangeFlag;
 import org.spongepowered.common.block.SpongeBlockSnapshot;
@@ -39,6 +42,10 @@ import org.spongepowered.common.bridge.server.level.ServerLevelBridge;
 import org.spongepowered.common.bridge.world.level.LevelBridge;
 import org.spongepowered.common.bridge.world.level.block.state.BlockStateBridge;
 import org.spongepowered.common.event.tracking.context.transaction.TransactionalCaptureSupplier;
+import org.spongepowered.common.event.tracking.context.transaction.effect.InteractionAtArgs;
+import org.spongepowered.common.event.tracking.context.transaction.effect.UseItemArgs;
+import org.spongepowered.common.event.tracking.context.transaction.effect.UseItemAtArgs;
+import org.spongepowered.common.event.tracking.context.transaction.pipeline.InteractionPipeline;
 import org.spongepowered.common.event.tracking.context.transaction.pipeline.WorldPipeline;
 
 import java.util.Optional;
@@ -50,16 +57,14 @@ import java.util.Optional;
  */
 public interface TrackedWorldBridge {
 
-    boolean bridge$forceSpawnEntity(Entity entity);
-
     Optional<WorldPipeline.Builder> bridge$startBlockChange(BlockPos pos, BlockState state, int rawFlags);
 
     /**
      * Delegates to the {@link ServerLevel} to perform the lookup for a {@link LevelChunk}
      * such that if the target {@link BlockPos} results in a {@code false} for
-     * {@link ServerLevel#isBlockLoaded(BlockPos)}, {@link BlockSnapshot#empty()}
+     * {@link ServerLevel#isLoaded(BlockPos)}, {@link BlockSnapshot#empty()}
      * will be returned. Likewise, optimizes the creation of the snapshot by performing
-     * the {@link LevelChunk#getBlockState(BlockPos)} and {@link LevelChunk#getTileEntity(BlockPos, Chunk.CreateEntityType)}
+     * the {@link LevelChunk#getBlockState(BlockPos)} and {@link LevelChunk#getBlockEntity(BlockPos, LevelChunk.EntityCreationType)}
      * lookup on the same chunk, avoiding an additional chunk lookup.
      *
      * <p>This should be used when the "known" {@link BlockState} for the target
@@ -74,16 +79,12 @@ public interface TrackedWorldBridge {
     }
 
     /**
-     * Creates a {@link BlockSnapshot} but performs an additional {@link LevelChunk#getTileEntity(BlockPos, Chunk.CreateEntityType)}
+     * Creates a {@link BlockSnapshot} but performs an additional {@link LevelChunk#getBlockEntity(BlockPos, LevelChunk.EntityCreationType)}
      * lookup if the providing {@link BlockState#getBlock()} {@code instanceof} is
      * {@code true} for being an {@link EntityBlock} or
      * {@link BlockStateBridge#bridge$hasTileEntity()}, and associates
      * the resulting snapshot of said Tile with the snapshot. This is useful for in-progress
      * snapshot creation during transaction building for {@link TransactionalCaptureSupplier}.
-     *
-     * <p>If the {@link BlockEntity} is already known, and no lookups are needed, use
-     * {@link #bridge$createSnapshotWithEntity(BlockState, BlockPos, BlockChangeFlag, BlockEntity)} as it avoids
-     * any further chunk lookups.</p>
      *
      * @param state The block state
      * @param pos The target position
@@ -92,17 +93,11 @@ public interface TrackedWorldBridge {
      */
     SpongeBlockSnapshot bridge$createSnapshot(BlockState state, BlockPos pos, BlockChangeFlag updateFlag);
 
-    /**
-     * Similar to {@link #bridge$createSnapshot(BlockState, BlockPos, BlockChangeFlag)},
-     * but with the added avoidance of a {@link BlockEntity} lookup during the creation of the resulting
-     * {@link SpongeBlockSnapshot}.
-     *
-     * @param state The state
-     * @param pos The position
-     * @param updateFlag The update flag
-     * @param tileEntity The tile entity to serialize, if available
-     * @return The snapshot, never NONE
-     */
-    SpongeBlockSnapshot bridge$createSnapshotWithEntity(BlockState state, BlockPos pos, BlockChangeFlag updateFlag, @Nullable BlockEntity tileEntity);
+    InteractionPipeline<@NonNull InteractionAtArgs> bridge$startInteractionUseOnChange(Level worldIn, ServerPlayer playerIn, InteractionHand handIn, BlockHitResult blockRaytraceResultIn, BlockState blockstate, ItemStack copiedStack);
 
+    InteractionPipeline<@NonNull InteractionAtArgs> bridge$startInteractionChange(Level worldIn, ServerPlayer playerIn, InteractionHand handIn, BlockHitResult blockRaytraceResultIn, BlockState blockstate, ItemStack copiedStack);
+
+    InteractionPipeline<@NonNull UseItemAtArgs> bridge$startItemInteractionChange(Level worldIn, ServerPlayer playerIn, InteractionHand handIn, ItemStack copiedStack, BlockHitResult blockRaytraceResult, boolean creative);
+
+    InteractionPipeline<@NonNull UseItemArgs> bridge$startItemInteractionUseChange(Level worldIn, ServerPlayer playerIn, InteractionHand handIn, ItemStack copiedStack);
 }

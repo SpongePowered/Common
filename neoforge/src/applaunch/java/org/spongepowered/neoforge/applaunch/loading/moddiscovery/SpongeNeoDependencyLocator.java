@@ -56,8 +56,8 @@ public class SpongeNeoDependencyLocator implements IDependencyLocator {
             new Log4JLogger(LogManager.getLogger(LibraryManager.class)),
             env.getProperty(SpongeNeoTransformationService.Keys.CHECK_LIBRARY_HASHES.get()).orElse(true),
             env.getProperty(SpongeNeoTransformationService.Keys.LIBRARIES_DIRECTORY.get())
-                .orElseThrow(() -> new IllegalStateException("no libraries available")),
-            SpongeNeoModLocator.class.getResource("libraries.json")
+                .orElseThrow(() -> new IllegalStateException("No libraries directory available")),
+            SpongeNeoModLocator.class.getResource("/sponge-libraries.json")
         );
 
         try {

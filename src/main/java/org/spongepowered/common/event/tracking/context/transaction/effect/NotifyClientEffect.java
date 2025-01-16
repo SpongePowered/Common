@@ -28,11 +28,12 @@ import net.minecraft.server.level.FullChunkStatus;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.spongepowered.common.event.tracking.context.transaction.pipeline.BlockPipeline;
 import org.spongepowered.common.event.tracking.context.transaction.pipeline.PipelineCursor;
 import org.spongepowered.common.world.SpongeBlockChangeFlag;
 
-public final class NotifyClientEffect implements ProcessingSideEffect {
+public final class NotifyClientEffect implements ProcessingSideEffect<BlockPipeline, PipelineCursor, BlockChangeArgs, BlockState> {
 
     private static final class Holder {
         static final NotifyClientEffect INSTANCE = new NotifyClientEffect();
@@ -45,9 +46,11 @@ public final class NotifyClientEffect implements ProcessingSideEffect {
     NotifyClientEffect() {}
 
     @Override
-    public EffectResult processSideEffect(final BlockPipeline pipeline, final PipelineCursor oldState,
-        final BlockState newState, final SpongeBlockChangeFlag flag, final int limit
+    public EffectResult<@Nullable BlockState> processSideEffect(
+        final BlockPipeline pipeline, final PipelineCursor oldState, final BlockChangeArgs args
     ) {
+        final BlockState newState = args.newState();
+        final SpongeBlockChangeFlag flag = args.flag();
         final LevelChunk chunk = pipeline.getAffectedChunk();
         final ServerLevel world = pipeline.getServerWorld();
 
@@ -58,7 +61,7 @@ public final class NotifyClientEffect implements ProcessingSideEffect {
             // this.notifyBlockUpdate(pos, blockstate, newWorldState, flags);
             world.sendBlockUpdated(oldState.pos(), oldState.state(), newState, flag.getRawFlag());
         }
-        return EffectResult.NULL_PASS;
+        return EffectResult.nullPass();
     }
 
 }

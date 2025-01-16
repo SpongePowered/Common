@@ -29,12 +29,14 @@ import org.spongepowered.api.Sponge;
 import org.spongepowered.api.event.Cancellable;
 import org.spongepowered.api.event.Event;
 import org.spongepowered.api.event.block.ChangeBlockEvent;
+import org.spongepowered.api.event.block.InteractBlockEvent;
 import org.spongepowered.api.event.block.NotifyNeighborBlockEvent;
 import org.spongepowered.api.event.block.ScheduleBlockUpdateEvent;
 import org.spongepowered.api.event.entity.HarvestEntityEvent;
 import org.spongepowered.api.event.entity.SpawnEntityEvent;
 import org.spongepowered.api.event.item.inventory.AffectSlotEvent;
 import org.spongepowered.api.event.item.inventory.ChangeInventoryEvent;
+import org.spongepowered.api.event.item.inventory.InteractItemEvent;
 import org.spongepowered.api.event.item.inventory.container.ClickContainerEvent;
 import org.spongepowered.api.event.item.inventory.container.InteractContainerEvent;
 import org.spongepowered.api.registry.DefaultedRegistryReference;
@@ -67,6 +69,8 @@ public final class TransactionTypes {
 
     public static final DefaultedRegistryReference<TransactionType<AffectSlotEvent>> SLOT_CHANGE = TransactionTypes.key(ResourceKey.sponge("slot_change"));
 
+    public static final DefaultedRegistryReference<TransactionType<InteractBlockEvent.Secondary.Post>> INTERACT_BLOCK_SECONDARY = TransactionTypes.key(ResourceKey.sponge("interact_block_secondary"));
+    public static final DefaultedRegistryReference<TransactionType<InteractItemEvent.Secondary.Post>> INTERACT_ITEM_SECONDARY = TransactionTypes.key(ResourceKey.sponge("interact_block_secondary"));
     public static final DefaultedRegistryReference<TransactionType<SpawnEntityEvent>> SPAWN_ENTITY = TransactionTypes.key(ResourceKey.sponge("spawn_entity"));
 
     // SORTFIELDS:OFF

@@ -24,6 +24,9 @@
  */
 package org.spongepowered.neoforge.mixin.inventory.event.server.level;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.llamalad7.mixinextras.sugar.Cancellable;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -36,16 +39,19 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import org.spongepowered.common.bridge.world.inventory.container.ContainerBridge;
+import org.spongepowered.common.event.inventory.InventoryEventFactory;
+import org.spongepowered.common.event.tracking.PhaseContext;
 import org.spongepowered.common.event.tracking.PhaseTracker;
 import org.spongepowered.common.event.tracking.context.transaction.EffectTransactor;
+import org.spongepowered.neoforge.mixin.inventory.event.entity.PlayerMixin_Inventory_Neo;
 
 import java.util.OptionalInt;
 import java.util.function.Consumer;
 
 @Mixin(ServerPlayer.class)
-public abstract class ServerPlayerMixin_Inventory_Neo {
+public abstract class ServerPlayerMixin_Inventory_Neo  extends PlayerMixin_Inventory_Neo {
 
     // @formatter:off
     @Shadow public abstract ServerLevel shadow$serverLevel();
@@ -71,7 +77,14 @@ public abstract class ServerPlayerMixin_Inventory_Neo {
         this.inventory$menuProvider = menuProvider;
     }
 
-    @Redirect(
+    @Inject(method = "openMenu(Lnet/minecraft/world/MenuProvider;Ljava/util/function/Consumer;)Ljava/util/OptionalInt;", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerPlayer;closeContainer()V", shift = At.Shift.AFTER), cancellable = true)
+    private void impl$openMenuCloseCancelled(final CallbackInfoReturnable<OptionalInt> cir) {
+        if (this.containerMenu != this.inventoryMenu) {
+            cir.setReturnValue(OptionalInt.empty());
+        }
+    }
+
+    @WrapOperation(
         method = "openMenu(Lnet/minecraft/world/MenuProvider;Ljava/util/function/Consumer;)Ljava/util/OptionalInt;",
         at = @At(
             value = "INVOKE",
@@ -80,13 +93,16 @@ public abstract class ServerPlayerMixin_Inventory_Neo {
     )
     private AbstractContainerMenu impl$transactMenuCreationWithEffect(
         final MenuProvider menuProvider, final int containerCounter, final net.minecraft.world.entity.player.Inventory inventory,
-        final Player player
+        final Player player, final Operation<AbstractContainerMenu> original, final @Cancellable CallbackInfoReturnable<OptionalInt> cir
     ) {
-        try (final EffectTransactor ignored = PhaseTracker.getWorldInstance(this.shadow$serverLevel()).getPhaseContext()
-            .getTransactor()
-            .logOpenInventory((ServerPlayer) (Object) this)
-        ) {
-            return menuProvider.createMenu(containerCounter, inventory, player);
+        final PhaseContext<?> context = PhaseTracker.getWorldInstance(this.shadow$serverLevel()).getPhaseContext();
+        try (final EffectTransactor ignored = context.getTransactor().logOpenInventory((ServerPlayer) (Object) this)) {
+            final AbstractContainerMenu menu = original.call(menuProvider, containerCounter, inventory, player);
+            context.containerLocation().ifPresent(((ContainerBridge) menu)::bridge$setOpenLocation);
+            if (!InventoryEventFactory.callInteractContainerOpenEvent((ServerPlayer) (Object) this, menu)) {
+                cir.setReturnValue(OptionalInt.empty());
+            }
+            return menu;
         }
     }
 }

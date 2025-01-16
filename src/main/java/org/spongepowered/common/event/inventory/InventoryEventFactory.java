@@ -226,15 +226,14 @@ public class InventoryEventFactory {
         return trans;
     }
 
-    public static boolean callInteractContainerOpenEvent(final ServerPlayer player) {
-        final ItemStackSnapshot newCursor = ItemStackUtil.snapshotOf(player.containerMenu.getCarried());
+    public static boolean callInteractContainerOpenEvent(final ServerPlayer player, final AbstractContainerMenu menu) {
+        final ItemStackSnapshot newCursor = ItemStackUtil.snapshotOf(menu.getCarried());
         final Transaction<ItemStackSnapshot> cursorTransaction = new Transaction<>(ItemStackSnapshot.empty(), newCursor);
         final InteractContainerEvent.Open event =
                 SpongeEventFactory.createInteractContainerEventOpen(PhaseTracker.getWorldInstance(player.serverLevel()).currentCause(),
                         (org.spongepowered.api.item.inventory.Container) player.containerMenu, cursorTransaction);
         SpongeCommon.post(event);
         if (event.isCancelled()) {
-            player.closeContainer();
             return false;
         }
         // Custom cursor
@@ -282,10 +281,6 @@ public class InventoryEventFactory {
         container = player.containerMenu;
 
         if (previousContainer == container) {
-            return null;
-        }
-
-        if (!InventoryEventFactory.callInteractContainerOpenEvent(player)) {
             return null;
         }
 

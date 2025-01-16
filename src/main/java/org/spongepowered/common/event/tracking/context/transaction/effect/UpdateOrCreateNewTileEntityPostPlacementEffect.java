@@ -33,9 +33,8 @@ import org.spongepowered.common.accessor.world.level.chunk.LevelChunkAccessor;
 import org.spongepowered.common.bridge.world.level.block.state.BlockStateBridge;
 import org.spongepowered.common.event.tracking.context.transaction.pipeline.BlockPipeline;
 import org.spongepowered.common.event.tracking.context.transaction.pipeline.PipelineCursor;
-import org.spongepowered.common.world.SpongeBlockChangeFlag;
 
-public final class UpdateOrCreateNewTileEntityPostPlacementEffect implements ProcessingSideEffect {
+public final class UpdateOrCreateNewTileEntityPostPlacementEffect implements ProcessingSideEffect<BlockPipeline, PipelineCursor, BlockChangeArgs, BlockState> {
 
     private static final class Holder {
         static final UpdateOrCreateNewTileEntityPostPlacementEffect INSTANCE = new UpdateOrCreateNewTileEntityPostPlacementEffect();
@@ -50,10 +49,10 @@ public final class UpdateOrCreateNewTileEntityPostPlacementEffect implements Pro
 
     @SuppressWarnings("deprecation")
     @Override
-    public EffectResult processSideEffect(
-        final BlockPipeline pipeline, final PipelineCursor oldState, final BlockState newState,
-        final SpongeBlockChangeFlag flag, final int limit
+    public EffectResult<@Nullable BlockState> processSideEffect(
+        final BlockPipeline pipeline, final PipelineCursor oldState, final BlockChangeArgs args
     ) {
+        final var newState = args.newState();
         final var pos = oldState.pos();
         final ServerLevel serverWorld = pipeline.getServerWorld();
         final LevelChunk chunk = pipeline.getAffectedChunk();
@@ -80,6 +79,6 @@ public final class UpdateOrCreateNewTileEntityPostPlacementEffect implements Pro
                 ((LevelChunkAccessor) chunk).accessor$updateBlockEntityTicker(maybeNewTileEntity);
             }
         }
-        return EffectResult.NULL_PASS;
+        return EffectResult.nullPass();
     }
 }

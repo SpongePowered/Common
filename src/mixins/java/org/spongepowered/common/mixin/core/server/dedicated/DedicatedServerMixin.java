@@ -24,6 +24,8 @@
  */
 package org.spongepowered.common.mixin.core.server.dedicated;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.mojang.datafixers.DataFixer;
 import net.kyori.adventure.resource.ResourcePackInfo;
 import net.kyori.adventure.resource.ResourcePackRequest;
@@ -38,7 +40,6 @@ import net.minecraft.world.level.storage.LevelStorageSource;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.common.SpongeCommon;
 import org.spongepowered.common.adventure.SpongeAdventure;
@@ -85,10 +86,10 @@ public abstract class DedicatedServerMixin extends MinecraftServerMixin {
         return this.shadow$isRunning();
     }
 
-    @Redirect(method = "initServer", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/players/GameProfileCache;save()V"))
-    private void onSave(final GameProfileCache cache) {
+    @WrapOperation(method = "initServer", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/players/GameProfileCache;save()V"))
+    private void onSave(final GameProfileCache cache, final Operation<Void> original) {
         ((GameProfileCacheBridge) cache).bridge$setCanSave(true);
-        cache.save();
+        original.call(cache);
         ((GameProfileCacheBridge) cache).bridge$setCanSave(false);
     }
 

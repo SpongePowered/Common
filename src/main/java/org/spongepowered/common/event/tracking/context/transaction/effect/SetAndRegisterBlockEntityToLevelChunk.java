@@ -31,9 +31,8 @@ import net.minecraft.world.level.block.state.BlockState;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.spongepowered.common.event.tracking.context.transaction.pipeline.BlockPipeline;
 import org.spongepowered.common.event.tracking.context.transaction.pipeline.PipelineCursor;
-import org.spongepowered.common.world.SpongeBlockChangeFlag;
 
-public final class SetAndRegisterBlockEntityToLevelChunk implements ProcessingSideEffect {
+public final class SetAndRegisterBlockEntityToLevelChunk implements ProcessingSideEffect<BlockPipeline, PipelineCursor, BlockChangeArgs, BlockState> {
 
     private static final class Holder {
         static final SetAndRegisterBlockEntityToLevelChunk INSTANCE = new SetAndRegisterBlockEntityToLevelChunk();
@@ -46,17 +45,16 @@ public final class SetAndRegisterBlockEntityToLevelChunk implements ProcessingSi
     SetAndRegisterBlockEntityToLevelChunk() {}
 
     @Override
-    public EffectResult processSideEffect(final BlockPipeline pipeline, final PipelineCursor oldState, final BlockState newState,
-        final SpongeBlockChangeFlag flag,
-        final int limit
+    public EffectResult<@Nullable BlockState> processSideEffect(
+        final BlockPipeline pipeline, final PipelineCursor oldState, final BlockChangeArgs args
     ) {
         final ServerLevel serverWorld = pipeline.getServerWorld();
         final @Nullable BlockEntity blockEntity = oldState.tileEntity();
         final BlockPos pos = oldState.pos();
         if (serverWorld.isOutsideBuildHeight(pos)) {
-            return EffectResult.NULL_RETURN;
+            return EffectResult.nullReturn();
         }
         pipeline.getAffectedChunk().addAndRegisterBlockEntity(blockEntity);
-        return EffectResult.NULL_PASS;
+        return EffectResult.nullPass();
     }
 }

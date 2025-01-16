@@ -38,6 +38,7 @@ import org.spongepowered.common.event.tracking.PhaseContext;
 import org.spongepowered.common.event.tracking.PhaseTracker;
 import org.spongepowered.common.event.tracking.context.ICaptureSupplier;
 import org.spongepowered.common.event.tracking.context.transaction.effect.PrepareBlockDrops;
+import org.spongepowered.common.event.tracking.context.transaction.effect.ProcessingSideEffect;
 import org.spongepowered.common.event.tracking.context.transaction.type.TransactionType;
 
 import java.util.Collections;
@@ -94,9 +95,9 @@ public final class TransactionalCaptureSupplier implements ICaptureSupplier, Tra
      */
 
     @Override
-    public EffectTransactor pushEffect(final ResultingTransactionBySideEffect effect) {
+    public <T, C, A extends ProcessingSideEffect.Args, @Nullable R> EffectTransactor pushEffect(final ResultingTransactionBySideEffect<T, C, A, R> effect) {
         final GameTransaction<@NonNull ?> parentTransaction = Optional.ofNullable(this.effect)
-            .map(child -> (GameTransaction) child.tail)
+            .map(child -> child.tail)
             .orElse(Objects.requireNonNull(this.tail, "Somehow pushing a new effect without an owning Transaction"));
         final EffectTransactor effectTransactor = new EffectTransactor(effect, parentTransaction, this.effect, this);
         this.effect = effect;
@@ -310,13 +311,16 @@ public final class TransactionalCaptureSupplier implements ICaptureSupplier, Tra
                 if (transaction.sideEffects == null || transaction.sideEffects.isEmpty()) {
                     continue;
                 }
-                generatedEvent.ifPresent(frame::pushCause);
+                generatedEvent.ifPresent(e -> transaction.pushCause(frame, e));
                 for (final ResultingTransactionBySideEffect sideEffect : transaction.sideEffects) {
                     if (sideEffect.head == null) {
                         continue;
                     }
-                    builder.addAll(TransactionalCaptureSupplier.batchTransactions(sideEffect.head, pointer, context, transactionPostEventBuilder));
+                    final var elements = TransactionalCaptureSupplier.batchTransactions(sideEffect.head, pointer, context, transactionPostEventBuilder);
+                    generatedEvent.ifPresent(e -> transaction.associateSideEffectEvents(e, elements.stream().map(EventByTransaction::event)));
+                    builder.addAll(elements);
                 }
+                generatedEvent.ifPresent(transaction::finalizeSideEffects);
             }
         }
     }

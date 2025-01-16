@@ -26,10 +26,12 @@ package org.spongepowered.common.mixin.api.minecraft.client.multiplayer;
 
 import net.minecraft.client.multiplayer.ClientConfigurationPacketListenerImpl;
 import org.spongepowered.api.network.ClientConnectionState;
+import org.spongepowered.api.network.ClientSideConnection;
 import org.spongepowered.api.profile.GameProfile;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.common.bridge.network.ConnectionBridge;
 import org.spongepowered.common.profile.SpongeGameProfile;
 
 @Mixin(ClientConfigurationPacketListenerImpl.class)
@@ -38,6 +40,11 @@ public abstract class ClientConfigurationPacketListenerImplMixin_API extends Cli
     // @formatter:off
     @Shadow @Final private com.mojang.authlib.GameProfile localGameProfile;
     // @formatter:on
+
+    @Override
+    public ClientSideConnection connection() {
+        return (ClientSideConnection) ((ConnectionBridge) this.connection).bridge$getEngineConnection();
+    }
 
     @Override
     public GameProfile profile() {

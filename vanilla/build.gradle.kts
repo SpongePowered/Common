@@ -206,6 +206,7 @@ dependencies {
     }
 
     boot(libs.mixin)
+    boot(libs.mixinextras.common)
     boot(libs.asm.tree)
     boot(libs.guava) {
         exclude(group = "com.google.errorprone", module = "error_prone_annotations")
@@ -387,18 +388,14 @@ tasks {
     val installerResources = project.layout.buildDirectory.dir("generated/resources/installer")
     vanillaInstaller.resources.srcDir(installerResources)
 
-    val downloadNotNeeded = configurations.register("downloadNotNeeded") {
-        extendsFrom(configurations.minecraft.get())
-        extendsFrom(gameShadedLibrariesConfig.get())
-    }
-
     val emitDependencies by registering(org.spongepowered.gradle.impl.OutputDependenciesToJson::class) {
         group = "sponge"
         this.dependencies("bootstrap", bootLibrariesConfig)
         this.dependencies("main", gameManagedLibrariesConfig)
-        this.excludedDependencies(downloadNotNeeded)
+        this.excludeDependencies(configurations.minecraft)
+        this.excludeDependencies(gameShadedLibrariesConfig)
 
-        outputFile.set(installerResources.map { it.file("libraries.json") })
+        outputFile.set(installerResources.map { it.file("sponge-libraries.json") })
     }
     named(vanillaInstaller.processResourcesTaskName).configure {
         dependsOn(emitDependencies)

@@ -33,12 +33,12 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.Optional;
 
-public class ResultingTransactionBySideEffect {
-    public final ProcessingSideEffect effect;
+public class ResultingTransactionBySideEffect<T, C, A extends ProcessingSideEffect.Args, @Nullable R> {
+    public final ProcessingSideEffect<T, C, A, @Nullable R> effect;
     @Nullable GameTransaction<@NonNull ?> head;
     @Nullable GameTransaction<@NonNull ?> tail;
 
-    public ResultingTransactionBySideEffect(final ProcessingSideEffect effect) {
+    public ResultingTransactionBySideEffect(final ProcessingSideEffect<T, C, A, @Nullable R> effect) {
         this.effect = effect;
     }
 

@@ -26,11 +26,11 @@ package org.spongepowered.common.event.tracking.context.transaction.effect;
 
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunkSection;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.spongepowered.common.event.tracking.context.transaction.pipeline.BlockPipeline;
 import org.spongepowered.common.event.tracking.context.transaction.pipeline.PipelineCursor;
-import org.spongepowered.common.world.SpongeBlockChangeFlag;
 
-public final class SetBlockToChunkSectionEffect implements ProcessingSideEffect {
+public final class SetBlockToChunkSectionEffect implements ProcessingSideEffect<BlockPipeline, PipelineCursor, BlockChangeArgs, BlockState> {
 
     private static final class Holder {
         private static final SetBlockToChunkSectionEffect INSTANCE = new SetBlockToChunkSectionEffect();
@@ -42,17 +42,17 @@ public final class SetBlockToChunkSectionEffect implements ProcessingSideEffect 
     }
 
     @Override
-    public EffectResult processSideEffect(final BlockPipeline pipeline, final PipelineCursor oldState, final BlockState newState,
-        final SpongeBlockChangeFlag flag, final int limit
+    public EffectResult<@Nullable BlockState> processSideEffect(final BlockPipeline pipeline, final PipelineCursor oldState, final BlockChangeArgs args
     ) {
+        final BlockState newState = args.newState();
         final LevelChunkSection chunkSection = pipeline.getAffectedSection();
         final int x = oldState.pos().getX() & 15;
         final int y = oldState.pos().getY() & 15;
         final int z = oldState.pos().getZ() & 15;
         final BlockState oldStateReturned = chunkSection.setBlockState(x, y, z, newState);
         if (oldStateReturned == newState) {
-            return EffectResult.NULL_RETURN;
+            return EffectResult.nullReturn();
         }
-        return EffectResult.NULL_PASS;
+        return EffectResult.nullPass();
     }
 }

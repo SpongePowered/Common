@@ -98,6 +98,7 @@ public final class SpongeArgumentCommandNode<T> extends ArgumentCommandNode<Comm
     private final @Nullable ValueParameterModifier<T> modifier;
     private final ValueUsage usage;
     private final boolean isComplexSuggestions;
+    private final boolean isOptional;
 
     // used so we can have insertion order.
     private final UnsortedNodeHolder nodeHolder = new UnsortedNodeHolder();
@@ -117,7 +118,8 @@ public final class SpongeArgumentCommandNode<T> extends ArgumentCommandNode<Comm
             final RedirectModifier<CommandSourceStack> modifier,
             final boolean forks,
             final String keyName,
-            final @Nullable ValueParameterModifier<T> parameterModifier) {
+            final @Nullable ValueParameterModifier<T> parameterModifier,
+            final boolean isOptional) {
         super(keyName,
                 (ArgumentType<T>) Constants.Command.STANDARD_STRING_ARGUMENT_TYPE, // we can abuse generics, we're not actually going to use this.
                 command,
@@ -131,6 +133,11 @@ public final class SpongeArgumentCommandNode<T> extends ArgumentCommandNode<Comm
         this.isComplexSuggestions = this.parser instanceof ComplexSuggestionNodeProvider;
         this.key = key;
         this.usage = usage;
+        this.isOptional = isOptional;
+    }
+
+    public Parameter.Key<? super T> key() {
+        return this.key;
     }
 
     public final boolean isComplex() {
@@ -298,6 +305,10 @@ public final class SpongeArgumentCommandNode<T> extends ArgumentCommandNode<Comm
             return this.usage.usage(this.key.key());
         }
         return this.getName();
+    }
+
+    public boolean isOptional() {
+        return this.isOptional;
     }
 
     @Override
