@@ -170,7 +170,7 @@ public abstract class LevelMixin implements LevelBridge, LevelAccessor {
                     dataFixed.remove("Dimension");
                     e.load((CompoundTag) dataFixed.getValue());
                     // position needs a reset
-                    e.moveTo(proposedPosition.x(), proposedPosition.y(), proposedPosition.z());
+                    e.snapTo(proposedPosition.x(), proposedPosition.y(), proposedPosition.z());
                 });
         if (rotation != null) {
             createdEntity.setRotation(rotation);
@@ -198,7 +198,7 @@ public abstract class LevelMixin implements LevelBridge, LevelAccessor {
         // Not all entities have a single World parameter as their constructor
         if (type == net.minecraft.world.entity.EntityType.LIGHTNING_BOLT) {
             entity = net.minecraft.world.entity.EntityType.LIGHTNING_BOLT.create(thisWorld, EntitySpawnReason.EVENT);
-            entity.moveTo(x, y, z);
+            entity.snapTo(x, y, z);
             ((LightningBolt) entity).setVisualOnly(false);
         }
         // TODO - archetypes should solve the problem of calling the correct constructor
@@ -221,7 +221,7 @@ public abstract class LevelMixin implements LevelBridge, LevelAccessor {
             final ResourceKey key = (ResourceKey) (Object) SpongeCommon.vanillaRegistry(Registries.ENTITY_TYPE).getKey((net.minecraft.world.entity.EntityType<?>) type);
             try {
                 entity = ((net.minecraft.world.entity.EntityType) type).create(thisWorld, EntitySpawnReason.EVENT);
-                entity.moveTo(x, y, z);
+                entity.snapTo(x, y, z);
             } catch (final Exception e) {
                 throw new RuntimeException("There was an issue attempting to construct " + key, e);
             }

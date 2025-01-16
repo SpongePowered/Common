@@ -312,7 +312,7 @@ public abstract class PlayerListMixin implements PlayerListBridge {
 
         final ServerLocation toLocation = event.toLocation();
         final Vector3d toRotation = event.toRotation();
-        mcPlayer.absMoveTo(toLocation.x(), toLocation.y(), toLocation.z(),
+        mcPlayer.absSnapTo(toLocation.x(), toLocation.y(), toLocation.z(),
                 (float) toRotation.y(), (float) toRotation.x());
         return (net.minecraft.server.level.ServerLevel) toLocation.world();
     }
@@ -428,6 +428,7 @@ public abstract class PlayerListMixin implements PlayerListBridge {
     }
 
     @Inject(method = "placeNewPlayer", at = @At(value = "RETURN"))
+    @SuppressWarnings("deprecation")
     private void impl$onInitPlayer_join(final Connection networkManager, final net.minecraft.server.level.ServerPlayer mcPlayer, final CommonListenerCookie $$2, final CallbackInfo ci) {
         final ServerPlayer player = (ServerPlayer) mcPlayer;
         final ServerSideConnection connection = player.connection();

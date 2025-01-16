@@ -43,6 +43,7 @@ import org.spongepowered.common.service.server.permission.SpongeSystemSubject;
 
 import java.util.Locale;
 
+@SuppressWarnings("deprecation")
 public final class ServerConsoleSystemSubject extends SpongeSystemSubject implements CommandSourceProviderBridge, CommandSource, CommandSourceBridge {
 
     @Override

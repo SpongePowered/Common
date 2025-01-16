@@ -102,7 +102,7 @@ public abstract class NativeComponentRenderer<C> {
     private HoverEvent renderHoverEvent(final HoverEvent input, final @NonNull C context) {
         return switch (input) {
             case HoverEvent.ShowText st -> {
-                final Component original = st.text();
+                final Component original = st.value();
                 yield new HoverEvent.ShowText(this.render(original.copy(), context));
             }
             case HoverEvent.ShowEntity se -> {

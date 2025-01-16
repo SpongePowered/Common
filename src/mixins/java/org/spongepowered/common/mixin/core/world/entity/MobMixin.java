@@ -24,11 +24,12 @@
  */
 package org.spongepowered.common.mixin.core.world.entity;
 
-import net.minecraft.world.entity.Leashable;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.goal.GoalSelector;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.spongepowered.api.entity.Entity;
@@ -57,8 +58,9 @@ public abstract class MobMixin extends LivingEntityMixin {
     @Shadow @Final protected GoalSelector goalSelector;
     @Shadow @Final protected GoalSelector targetSelector;
     @Shadow @Nullable private LivingEntity target;
-    @Shadow public abstract Leashable.LeashData shadow$getLeashData();
     @Shadow protected abstract void shadow$registerGoals();
+    @Shadow public abstract boolean shadow$isSaddled();
+    @Shadow public abstract void shadow$setItemSlot(EquipmentSlot $$0, ItemStack $$1);
     // @formatter:on
 
     @Redirect(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Mob;registerGoals()V"))

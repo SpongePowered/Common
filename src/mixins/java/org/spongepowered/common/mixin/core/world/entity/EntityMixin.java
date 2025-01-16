@@ -46,7 +46,6 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityDimensions;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.entity.PortalProcessor;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
@@ -157,7 +156,6 @@ public abstract class EntityMixin implements EntityBridge, PlatformEntityBridge,
     @Shadow public abstract void shadow$discard();
     @Shadow public abstract boolean shadow$isRemoved();
     @Shadow public abstract int shadow$getId();
-    @Shadow public abstract boolean shadow$isVehicle();
     @Shadow public abstract void shadow$playSound(SoundEvent soundIn, float volume, float pitch);
     @Shadow public abstract boolean shadow$isInvisible();
     @Shadow public abstract void shadow$setInvisible(boolean invisible);
@@ -184,17 +182,11 @@ public abstract class EntityMixin implements EntityBridge, PlatformEntityBridge,
     @Shadow public abstract boolean shadow$onGround();
     @Shadow @Nullable protected abstract String shadow$getEncodeId();
     @Shadow @javax.annotation.Nullable public PortalProcessor portalProcess;
+    @Shadow public abstract boolean save(final CompoundTag $$0);
+    @Shadow public abstract Level level();
     // @formatter:on
 
-    @Shadow public abstract void move(final MoverType $$0, final Vec3 $$1);
 
-    @Shadow public abstract boolean save(final CompoundTag $$0);
-
-    @Shadow public abstract Vec3 calculateViewVector(final float $$0, final float $$1);
-
-    @Shadow public abstract Level level();
-
-    @Shadow public abstract boolean startRiding(final Entity $$0);
 
     private boolean impl$isConstructing = true;
     private VanishState impl$vanishState = VanishState.unvanished();
@@ -289,7 +281,7 @@ public abstract class EntityMixin implements EntityBridge, PlatformEntityBridge,
 
     /**
      * {@link Entity#teleportTo(double, double, double)}
-     * {@link Entity#teleportTo(ServerLevel, double, double, double, Set, float, float)}
+     * {@link Entity#teleportTo(ServerLevel, double, double, double, Set, float, float, boolean)}
      */
     protected boolean impl$setLocation(final boolean isChangeOfWorld, final ServerLevel level, final Vector3d pos) {
         // TODO post teleport ticket needed?
@@ -310,7 +302,7 @@ public abstract class EntityMixin implements EntityBridge, PlatformEntityBridge,
             return false;
         }
         entity.restoreFrom((Entity) (Object) this);
-        entity.moveTo(pos.x(), pos.y(), pos.z());
+        entity.snapTo(pos.x(), pos.y(), pos.z());
         this.shadow$setRemoved(Entity.RemovalReason.CHANGED_DIMENSION);
         level.addDuringTeleport(entity);
         // TODO old code had reset empty time? on original/new world
@@ -425,7 +417,7 @@ public abstract class EntityMixin implements EntityBridge, PlatformEntityBridge,
 
     /**
      * @author faithcaio
-     * @reason handle dimension change events see {@link #bridge$changeDimension(DimensionTransition)}
+     * @reason handle dimension change events see {@link #bridge$changeDimension(TeleportTransition)}
      *
      * TODO we may need to separate into Vanilla and Forge again
      */
@@ -528,7 +520,7 @@ public abstract class EntityMixin implements EntityBridge, PlatformEntityBridge,
                 this.shadow$removeAfterChangingDimensions();
             }
 
-            newEntity.moveTo(transition.position().x, transition.position().y, transition.position().z, transition.yRot(), newEntity.getXRot());
+            newEntity.snapTo(transition.position().x, transition.position().y, transition.position().z, transition.yRot(), newEntity.getXRot());
             newEntity.setDeltaMovement(transition.deltaMovement());
             if (thisEntity != newEntity) {
                 newLevel.addDuringTeleport(newEntity);
@@ -709,8 +701,8 @@ public abstract class EntityMixin implements EntityBridge, PlatformEntityBridge,
 
     @Redirect(method = "checkFallDamage",
             at = @At(value = "INVOKE",
-                    target = "Lnet/minecraft/world/level/block/Block;fallOn(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/entity/Entity;F)V"))
-    private void impl$onFallOnCollide(final Block block, final Level world, final BlockState state, final BlockPos pos, final Entity entity, final float fallDistance) {
+                    target = "Lnet/minecraft/world/level/block/Block;fallOn(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/entity/Entity;D)V"))
+    private void impl$onFallOnCollide(final Block block, final Level world, final BlockState state, final BlockPos pos, final Entity entity, final double fallDistance) {
         if (!ShouldFire.COLLIDE_BLOCK_EVENT_FALL || world.isClientSide) {
             block.fallOn(world, state, pos, entity, fallDistance);
             return;
@@ -743,7 +735,7 @@ public abstract class EntityMixin implements EntityBridge, PlatformEntityBridge,
 
     }
 
-    @Redirect(method = "checkInsideBlocks(Ljava/util/List;Ljava/util/List;)V",
+    @Redirect(method = "checkInsideBlocks(Ljava/util/List;Lnet/minecraft/world/entity/Entity$StateVisitor;)V",
             at = @At(value = "INVOKE",
                     target = "Lnet/minecraft/world/level/block/state/BlockState;entityInside(Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/entity/Entity;)V"
             )

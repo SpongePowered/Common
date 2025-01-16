@@ -45,7 +45,7 @@ public final class CatData {
                 .asMutable(Cat.class)
                     .create(Keys.CAT_TYPE)
                         .get(h -> (CatType) (Object) h.getVariant().value())
-                        .set((h, v) -> h.setVariant(Holder.direct((CatVariant) (Object) v)))
+                        .set((h, v) -> ((CatAccessor) h).invoker$setVariant(Holder.direct((CatVariant) (Object) v)))
                     .create(Keys.DYE_COLOR)
                         .get(h -> (DyeColor) (Object) h.getCollarColor())
                         .set((h, v) -> ((CatAccessor)h).invoker$setCollarColor((net.minecraft.world.item.DyeColor) (Object) v))

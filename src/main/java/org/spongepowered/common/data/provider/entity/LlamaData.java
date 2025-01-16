@@ -45,7 +45,7 @@ public final class LlamaData {
                 .asMutable(Llama.class)
                     .create(Keys.LLAMA_TYPE)
                         .get(h -> (LlamaType) (Object) h.getVariant())
-                        .set((h, v) -> h.setVariant((Llama.Variant) (Object) v));
+                        .set((h, v) -> ((LlamaAccessor) h).invoker$setVariant((Llama.Variant) (Object) v));
     }
     // @formatter:on
 }

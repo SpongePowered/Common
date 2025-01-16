@@ -24,11 +24,13 @@
  */
 package org.spongepowered.common.data.provider.entity;
 
+import net.minecraft.core.registries.Registries;
 import net.minecraft.world.entity.monster.ZombieVillager;
 import net.minecraft.world.entity.npc.VillagerProfession;
 import org.spongepowered.api.data.Keys;
 import org.spongepowered.api.data.type.ProfessionType;
 import org.spongepowered.api.data.type.VillagerType;
+import org.spongepowered.common.SpongeCommon;
 import org.spongepowered.common.data.provider.DataProviderRegistrator;
 
 public final class ZombieVillagerData {
@@ -41,14 +43,20 @@ public final class ZombieVillagerData {
         registrator
                 .asMutable(ZombieVillager.class)
                     .create(Keys.PROFESSION_LEVEL)
-                        .get(h -> h.getVillagerData().getLevel())
-                        .set((h, v) -> h.setVillagerData(h.getVillagerData().setLevel(v)))
+                        .get(h -> h.getVillagerData().level())
+                        .set((h, v) -> h.setVillagerData(h.getVillagerData().withLevel(v)))
                     .create(Keys.PROFESSION_TYPE)
-                        .get(h -> (ProfessionType) (Object) h.getVillagerData().getProfession())
-                        .set((h, v) -> h.setVillagerData(h.getVillagerData().setProfession((VillagerProfession) (Object) v)))
+                        .get(h -> (ProfessionType) (Object) h.getVillagerData().profession())
+                        .set((h, v) -> {
+                            final var villagerProfession = SpongeCommon.vanillaRegistry(Registries.VILLAGER_PROFESSION).wrapAsHolder((VillagerProfession) (Object) v);
+                            h.setVillagerData(h.getVillagerData().withProfession(villagerProfession));
+                        })
                     .create(Keys.VILLAGER_TYPE)
-                        .get(h -> (VillagerType) (Object) h.getVillagerData().getType())
-                        .set((h, v) -> h.setVillagerData(h.getVillagerData().setType((net.minecraft.world.entity.npc.VillagerType) (Object) v)));
+                        .get(h -> (VillagerType) (Object) h.getVillagerData().type())
+                        .set((h, v) -> {
+                            final var villagerType = SpongeCommon.vanillaRegistry(Registries.VILLAGER_TYPE).wrapAsHolder((net.minecraft.world.entity.npc.VillagerType) (Object) v);
+                            h.setVillagerData(h.getVillagerData().withType(villagerType));
+                        });
     }
     // @formatter:on
 }

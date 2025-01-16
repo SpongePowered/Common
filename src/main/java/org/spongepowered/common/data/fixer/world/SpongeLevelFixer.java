@@ -49,6 +49,7 @@ public final class SpongeLevelFixer extends DataFix {
         );
     }
 
+    @SuppressWarnings("deprecation")
     private Typed<?> fixPlayerIdTable(Typed<?> typed, Type<?> levelType) {
         Type<?> fieldType = levelType.findFieldType(Constants.Sponge.LEGACY_SPONGE_PLAYER_UUID_TABLE);
         OpticFinder<List.ListType<?>> listFinder = DSL.fieldFinder(Constants.Sponge.LEGACY_SPONGE_PLAYER_UUID_TABLE, (List.ListType)fieldType);

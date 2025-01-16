@@ -59,6 +59,8 @@ import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.Rarity;
 import net.minecraft.world.item.ToolMaterial;
 import net.minecraft.world.item.component.FireworkExplosion;
+import net.minecraft.world.item.equipment.ArmorMaterial;
+import net.minecraft.world.item.equipment.ArmorMaterials;
 import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.LightLayer;
@@ -73,6 +75,7 @@ import net.minecraft.world.level.block.state.properties.BambooLeaves;
 import net.minecraft.world.level.block.state.properties.BellAttachType;
 import net.minecraft.world.level.block.state.properties.ChestType;
 import net.minecraft.world.level.block.state.properties.ComparatorMode;
+import net.minecraft.world.level.block.state.properties.CreakingHeartState;
 import net.minecraft.world.level.block.state.properties.DoorHingeSide;
 import net.minecraft.world.level.block.state.properties.DripstoneThickness;
 import net.minecraft.world.level.block.state.properties.Half;
@@ -84,6 +87,7 @@ import net.minecraft.world.level.block.state.properties.SculkSensorPhase;
 import net.minecraft.world.level.block.state.properties.SlabType;
 import net.minecraft.world.level.block.state.properties.StairsShape;
 import net.minecraft.world.level.block.state.properties.StructureMode;
+import net.minecraft.world.level.block.state.properties.TestBlockMode;
 import net.minecraft.world.level.block.state.properties.Tilt;
 import net.minecraft.world.level.block.state.properties.WallSide;
 import net.minecraft.world.level.levelgen.GenerationStep;
@@ -144,17 +148,16 @@ public final class VanillaRegistryLoader {
             map.put(EnderDragonPhase.HOVERING, "hover");
         }, phase -> CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, ((EnderDragonPhaseAccessor) phase).accessor$name()));
         this.holder.createRegistry(RegistryTypes.FIREWORK_SHAPE, VanillaRegistryLoader.fireworkShape());
-//        final var materials = new HashMap<ArmorMaterial, String>();
-//        materials.put(ArmorMaterials.LEATHER, ArmorMaterials.LEATHER.modelId().toString());
-//        materials.put(ArmorMaterials.CHAIN, ArmorMaterials.CHAIN.modelId().toString());
-//        materials.put(ArmorMaterials.IRON, ArmorMaterials.IRON.modelId().toString());
-//        materials.put(ArmorMaterials.GOLD, ArmorMaterials.GOLD.modelId().toString());
-//        materials.put(ArmorMaterials.DIAMOND, ArmorMaterials.DIAMOND.modelId().toString());
-//        materials.put(ArmorMaterials.TURTLE_SCUTE, ResourceKey.minecraft("turtle").toString());
-//        materials.put(ArmorMaterials.NETHERITE, ArmorMaterials.NETHERITE.modelId().toString());
-//        materials.put(ArmorMaterials.ARMADILLO_SCUTE, ArmorMaterials.ARMADILLO_SCUTE.modelId().toString());
-//
-//        this.naming(RegistryTypes.ARMOR_MATERIAL, materials.keySet().toArray(new ArmorMaterial[]{}), materials);
+        final var materials = new HashMap<ArmorMaterial, String>();
+        final var knownMaterials = new ArmorMaterial[]{
+            ArmorMaterials.LEATHER,ArmorMaterials.CHAINMAIL, ArmorMaterials.IRON, ArmorMaterials.GOLD, ArmorMaterials.DIAMOND,
+            ArmorMaterials.TURTLE_SCUTE,ArmorMaterials.NETHERITE, ArmorMaterials.ARMADILLO_SCUTE,
+        };
+        for (final ArmorMaterial armorMaterial : knownMaterials) {
+            materials.put(armorMaterial, armorMaterial.assetId().location().toString());
+        }
+
+        this.naming(RegistryTypes.ARMOR_MATERIAL, materials.keySet().toArray(new ArmorMaterial[]{}), materials);
         this.knownName(RegistryTypes.GAME_RULE, GameRulesAccessor.accessor$GAME_RULE_TYPES().keySet(), rule -> CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, rule.getId()));
         this.holder.createRegistry(RegistryTypes.ITEM_TIER, VanillaRegistryLoader.itemTier());
     }
@@ -225,12 +228,14 @@ public final class VanillaRegistryLoader {
         this.automaticName(RegistryTypes.ITEM_DISPLAY_TYPE, ItemDisplayContext.values());
         this.automaticName(RegistryTypes.BILLBOARD_TYPE, Display.BillboardConstraints.values());
         this.automaticName(RegistryTypes.TEXT_ALIGNMENT, Display.TextDisplay.Align.values());
+        this.automaticName(RegistryTypes.TEST_BLOCK_MODE, TestBlockMode.values());
         this.automaticName(RegistryTypes.LIGHT_TYPE, LightLayer.values());
         this.automaticName(RegistryTypes.DISPLAY_SLOT, DisplaySlot.values());
         this.automaticName(RegistryTypes.PUSH_REACTION, PushReaction.values());
         this.automaticName(RegistryTypes.TRIAL_SPAWNER_STATE, TrialSpawnerState.values());
         this.automaticName(RegistryTypes.VAULT_STATE, VaultState.values());
         this.automaticName(RegistryTypes.EXPLOSION_BLOCK_INTERACTION, Explosion.BlockInteraction.values());
+        this.automaticName(RegistryTypes.CREAKING_HEART_STATES, CreakingHeartState.values());
     }
 
     private static RegistryLoader<Criterion> criterion() {

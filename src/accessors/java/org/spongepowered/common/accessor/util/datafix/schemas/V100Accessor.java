@@ -34,7 +34,7 @@ import org.spongepowered.common.UntransformedInvokerError;
 @Mixin(V100.class)
 public interface V100Accessor {
 
-    @Invoker("equipment")
+    @Invoker("lambda$registerTypes$0")
     static TypeTemplate invoker$equipment(final Schema schema) {
         throw new UntransformedInvokerError();
     }

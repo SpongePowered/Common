@@ -37,6 +37,7 @@ import org.spongepowered.api.item.inventory.Inventory;
 import org.spongepowered.api.item.inventory.ItemStackSnapshot;
 import org.spongepowered.api.item.inventory.Slot;
 import org.spongepowered.api.item.inventory.equipment.EquipmentType;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -59,13 +60,12 @@ import java.util.Optional;
 public abstract class LivingEntityMixin_Inventory extends Entity {
 
     // @formatter:off
-    @Shadow public abstract void shadow$setItemSlot(EquipmentSlot slotIn, ItemStack stack);
-    @Shadow protected abstract ItemStack shadow$getLastHandItem(EquipmentSlot p_241347_1_);
-    @Shadow protected abstract ItemStack shadow$getLastArmorItem(EquipmentSlot p_241346_1_);
-    @Shadow protected abstract void shadow$completeUsingItem();
+    @Shadow @Final private Map<EquipmentSlot, ItemStack> lastEquipmentItems;
 
-    @Shadow private ItemStack lastBodyItemStack;
+    @Shadow public abstract void shadow$setItemSlot(EquipmentSlot slotIn, ItemStack stack);
+    @Shadow protected abstract void shadow$completeUsingItem();
     // @formatter:on
+
 
     protected LivingEntityMixin_Inventory(final EntityType<?> param0, final Level param1) {
         super(param0, param1);
@@ -75,24 +75,22 @@ public abstract class LivingEntityMixin_Inventory extends Entity {
             at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerChunkCache;broadcast(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/network/protocol/Packet;)V"))
     protected void inventory$onHandleHandSwap(final Map<EquipmentSlot, ItemStack> map, final CallbackInfo ci) {
         final Slot mainHand = this.impl$getSpongeSlot(EquipmentSlot.MAINHAND);
-        final boolean customMainHand = this.impl$throwEquipmentEvent(EquipmentSlot.MAINHAND, mainHand, map.get(EquipmentSlot.MAINHAND), this.shadow$getLastHandItem(EquipmentSlot.MAINHAND));
+        final var lastMainHand = this.lastEquipmentItems.get(EquipmentSlot.MAINHAND);
+        final boolean customMainHand = this.impl$throwEquipmentEvent(EquipmentSlot.MAINHAND, mainHand, map.get(EquipmentSlot.MAINHAND), lastMainHand);
+        final var lastOffHand = this.lastEquipmentItems.get(EquipmentSlot.OFFHAND);
         final Slot offHand = this.impl$getSpongeSlot(EquipmentSlot.OFFHAND);
-        final boolean customOffHand = this.impl$throwEquipmentEvent(EquipmentSlot.OFFHAND, offHand, map.get(EquipmentSlot.OFFHAND), this.shadow$getLastHandItem(EquipmentSlot.OFFHAND));
+        final boolean customOffHand = this.impl$throwEquipmentEvent(EquipmentSlot.OFFHAND, offHand, map.get(EquipmentSlot.OFFHAND), lastOffHand);
         if (customMainHand || customOffHand) {
             ci.cancel(); // If canceled or customized let handleEquipmentChanges send packets instead
         }
     }
 
     @Inject(method = "handleEquipmentChanges",
-            at = @At(value = "INVOKE", remap = false, target = "Ljava/util/Map;forEach(Ljava/util/function/BiConsumer;)V"))
+            at = @At(value = "INVOKE", target = "Ljava/util/Map;forEach(Ljava/util/function/BiConsumer;)V"))
     protected void inventory$onHandleEquipmentChanges(final Map<EquipmentSlot, ItemStack> map, final CallbackInfo ci) {
         map.entrySet().forEach(entry -> {
             final Slot slotAdapter = this.impl$getSpongeSlot(entry.getKey());
-            final ItemStack oldStack = switch (entry.getKey().getType()) {
-                case HAND -> this.shadow$getLastHandItem(entry.getKey());
-                case HUMANOID_ARMOR -> this.shadow$getLastArmorItem(entry.getKey());
-                case ANIMAL_ARMOR -> this.lastBodyItemStack;
-            };
+            final ItemStack oldStack = this.lastEquipmentItems.get(entry.getKey());
             entry.setValue(this.impl$callEquipmentEvent(entry.getKey(), slotAdapter, entry.getValue(), oldStack));
         });
     }

@@ -39,7 +39,6 @@ import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.animal.Pig;
 import net.minecraft.world.entity.animal.Sheep;
 import net.minecraft.world.entity.animal.Wolf;
 import net.minecraft.world.entity.animal.horse.AbstractChestedHorse;
@@ -65,7 +64,6 @@ import org.spongepowered.api.item.inventory.transaction.SlotTransaction;
 import org.spongepowered.common.accessor.entity.passive.AbstractChestedHorseEntityAccessor;
 import org.spongepowered.common.accessor.network.protocol.game.ServerboundMovePlayerPacketAccessor;
 import org.spongepowered.common.accessor.world.entity.EntityAccessor;
-import org.spongepowered.common.accessor.world.entity.animal.PigAccessor;
 import org.spongepowered.common.accessor.world.entity.animal.SheepAccessor;
 import org.spongepowered.common.accessor.world.entity.animal.WolfAccessor;
 import org.spongepowered.common.accessor.world.inventory.SlotAccessor;
@@ -309,10 +307,6 @@ public final class PacketPhaseUtil {
             return entity instanceof LivingEntity && !(entity instanceof Player) && stack.has(DataComponents.CUSTOM_NAME) ? EntityAccessor.accessor$DATA_CUSTOM_NAME() : null;
         }
 
-        if (item == Items.SADDLE) {
-            // ItemSaddle.itemInteractionForEntity
-            return entity instanceof Pig ? PigAccessor.accessor$DATA_SADDLE_ID() : null;
-        }
 
         if (item instanceof BlockItem && ((BlockItem) item).getBlock() == Blocks.CHEST) {
             // AbstractChestHorse.processInteract

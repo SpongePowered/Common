@@ -91,6 +91,7 @@ public final class SpongeBlockEntityArchetype extends AbstractArchetype<BlockEnt
         return NBTTranslator.INSTANCE.translateFrom(this.compound);
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public Optional<BlockEntity> apply(final ServerLocation location) {
         final BlockState currentState = location.block();

@@ -26,13 +26,13 @@ package org.spongepowered.common.accessor.world.entity;
 
 import net.minecraft.world.entity.ExperienceOrb;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.gen.Accessor;
+import org.spongepowered.asm.mixin.gen.Invoker;
 
 @Mixin(ExperienceOrb.class)
 public interface ExperienceOrbAccessor {
 
-    @Accessor("value") int accessor$value();
+    @Invoker("getValue") int accessor$value();
 
-    @Accessor("value") void accessor$value(final int value);
+    @Invoker("setValue") void accessor$value(final int value);
 
 }

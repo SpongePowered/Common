@@ -24,6 +24,7 @@
  */
 package org.spongepowered.common.data.provider.entity;
 
+import net.minecraft.core.registries.Registries;
 import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.entity.npc.VillagerProfession;
 import net.minecraft.world.entity.npc.WanderingTrader;
@@ -33,6 +34,7 @@ import org.spongepowered.api.data.Keys;
 import org.spongepowered.api.data.type.ProfessionType;
 import org.spongepowered.api.data.type.VillagerType;
 import org.spongepowered.api.item.merchant.TradeOffer;
+import org.spongepowered.common.SpongeCommon;
 import org.spongepowered.common.accessor.world.entity.npc.AbstractVillagerAccessor;
 import org.spongepowered.common.data.provider.DataProviderRegistrator;
 import org.spongepowered.common.util.SpongeTicks;
@@ -49,30 +51,38 @@ public final class VillagerData {
         registrator
                 .asMutable(Villager.class)
                     .create(Keys.PROFESSION_LEVEL)
-                        .get(h -> h.getVillagerData().getLevel())
-                        .set((h, v) -> h.setVillagerData(h.getVillagerData().setLevel(v)))
+                        .get(h -> h.getVillagerData().level())
+                        .set((h, v) -> h.setVillagerData(h.getVillagerData().withLevel(v)))
                     .create(Keys.PROFESSION_TYPE)
-                        .get(h -> (ProfessionType) (Object) h.getVillagerData().getProfession())
-                        .set((h, v) -> h.setVillagerData(h.getVillagerData().setProfession((VillagerProfession) (Object) v)))
+                        .get(h -> (ProfessionType) (Object) h.getVillagerData().profession())
+                        .set((h, v) -> {
+                            final var villagerType = SpongeCommon.vanillaRegistry(Registries.VILLAGER_PROFESSION)
+                                .wrapAsHolder((VillagerProfession) (Object) v);
+                            h.setVillagerData(h.getVillagerData().withProfession(villagerType));
+                        })
                     .create(Keys.EXPERIENCE)
                         .get(Villager::getVillagerXp)
                         .set(Villager::setVillagerXp)
                     .delete(h -> h.setVillagerXp(0))
                     .create(Keys.EXPERIENCE_LEVEL)
-                        .get(h -> h.getVillagerData().getLevel())
+                        .get(h -> h.getVillagerData().level())
                         .setAnd((h, v) -> {
                             if (v < 1) {
                                 return false;
                             }
-                            h.setVillagerData(h.getVillagerData().setLevel(v));
+                            h.setVillagerData(h.getVillagerData().withLevel(v));
                             return true;
                         })
                     .create(Keys.TRADE_OFFERS)
                         .get(h -> h.getOffers().stream().map(TradeOffer.class::cast).collect(Collectors.toList()))
                         .set((h, v) -> h.setOffers(v.stream().map(MerchantOffer.class::cast).collect(Collectors.toCollection(MerchantOffers::new))))
                     .create(Keys.VILLAGER_TYPE)
-                        .get(h -> (VillagerType) (Object) h.getVillagerData().getType())
-                        .set((h, v) -> h.setVillagerData(h.getVillagerData().setType((net.minecraft.world.entity.npc.VillagerType) (Object) v)))
+                        .get(h -> (VillagerType) (Object) h.getVillagerData().type())
+                        .set((h, v) -> {
+                            final var villagerType = SpongeCommon.vanillaRegistry(Registries.VILLAGER_TYPE)
+                                .wrapAsHolder((net.minecraft.world.entity.npc.VillagerType) (Object) v);
+                            h.setVillagerData(h.getVillagerData().withType(villagerType));
+                        })
                     .create(Keys.IS_UNHAPPY)
                         .get(h -> h.getUnhappyCounter() > 0)
                     .create(Keys.UNHAPPY_TIME)

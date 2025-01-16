@@ -27,6 +27,7 @@ package org.spongepowered.common.data.provider.entity;
 import net.minecraft.world.entity.animal.Parrot;
 import org.spongepowered.api.data.Keys;
 import org.spongepowered.api.data.type.ParrotType;
+import org.spongepowered.common.accessor.world.entity.animal.ParrotAccessor;
 import org.spongepowered.common.data.provider.DataProviderRegistrator;
 
 public final class ParrotData {
@@ -40,7 +41,7 @@ public final class ParrotData {
                 .asMutable(Parrot.class)
                     .create(Keys.PARROT_TYPE)
                         .get(h -> (ParrotType) (Object) h.getVariant())
-                        .set((h, v) -> h.setVariant((Parrot.Variant) (Object) v));
+                        .set((h, v) -> ((ParrotAccessor) h).invoker$setVariant((Parrot.Variant) (Object) v));
     }
     // @formatter:on
 }

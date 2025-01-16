@@ -41,5 +41,10 @@ public interface TropicalFishAccessor {
     @Invoker("setPackedVariant")
     void invoker$setPackedVariant(final int packedVariant);
 
+    @Invoker("setPattern") void invoker$setPattern(final TropicalFish.Pattern v);
 
+
+    @Invoker("setBaseColor") void invoker$setBaseColor(DyeColor v);
+
+    @Invoker("setPatternColor") void invoker$setPatternColor(DyeColor v);
 }

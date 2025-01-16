@@ -70,7 +70,7 @@ public abstract class ServerGamePacketListenerImplMixin_MovementCheck {
     @ModifyConstant(method = "handleMoveVehicle", constant = @Constant(doubleValue = 0.0625D, ordinal = 0), slice =
         @Slice(
             from = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;move(Lnet/minecraft/world/entity/MoverType;Lnet/minecraft/world/phys/Vec3;)V", ordinal = 0),
-            to = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;absMoveTo(DDDFF)V")
+            to = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;absSnapTo(DDDFF)V")
         )
     )
     private double movementCheck$onVehicleMovedWronglyCheck(final double value) {

@@ -129,7 +129,7 @@ public abstract class TeleportCommandMixin {
                     sp.connection.teleport(
                         new PositionMoveRotation(new Vec3( actualX, actualY, actualZ), Vec3.ZERO, (float) actualYaw, (float) actualPitch), relativeList);
                 } else {
-                    entityIn.moveTo(actualX, actualY, actualZ, (float) actualYaw, (float) actualPitch);
+                    entityIn.snapTo(actualX, actualY, actualZ, (float) actualYaw, (float) actualPitch);
                 }
 
                 entityIn.setYHeadRot((float) actualYaw);
@@ -187,7 +187,7 @@ public abstract class TeleportCommandMixin {
                     }
 
                     result.restoreFrom(entityIn);
-                    result.moveTo(posEvent.destinationPosition().x(), posEvent.destinationPosition().y(),
+                    result.snapTo(posEvent.destinationPosition().x(), posEvent.destinationPosition().y(),
                             posEvent.destinationPosition().z(), (float) actualYaw, (float) actualPitch);
                     result.setYHeadRot((float) actualYaw);
                     worldIn.addDuringTeleport(result);

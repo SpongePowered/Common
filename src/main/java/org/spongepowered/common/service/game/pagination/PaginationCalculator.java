@@ -27,6 +27,7 @@ package org.spongepowered.common.service.game.pagination;
 import com.google.common.annotations.VisibleForTesting;
 import net.kyori.adventure.text.BuildableComponent;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.ComponentLike;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.TranslatableComponent;
 import net.kyori.adventure.text.format.Style;
@@ -170,16 +171,16 @@ final class PaginationCalculator {
             } else if (child instanceof TranslatableComponent) {
                 final TranslatableComponent tl = (TranslatableComponent) child;
                 // Try to find a value registered from Adventure
-                final MessageFormat global = GlobalTranslator.get().translate(tl.key(), Locales.EN_US);
+                final MessageFormat global = GlobalTranslator.translator().translate(tl.key(), Locales.EN_US);
                 if (global != null) {
                     i_it = global.toPattern().codePoints().iterator();
-                    children.addAll(tl.args());
+                    children.addAll(ComponentLike.asComponents(tl.arguments()));
                 } else {
                     // If there's no adventure translation, then fall back to native
                     final String mc = Language.getInstance().getOrDefault(tl.key());
                     if (!mc.equals(tl.key())) {
                         // we found a translation, so let's include the with elements
-                        children.addAll(tl.args());
+                        children.addAll(ComponentLike.asComponents(tl.arguments()));
                     }
                     // Either way, this is the best we'll get for calculating width
                     i_it = mc.codePoints().iterator();

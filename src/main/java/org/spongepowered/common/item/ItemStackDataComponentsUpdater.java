@@ -50,6 +50,7 @@ class ItemStackDataComponentsUpdater implements DataContentUpdater {
         return Constants.ItemStack.Data.DATA_COMPONENTS;
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public DataView update(final DataView content) {
         final int count = content.getInt(Constants.ItemStack.V2.COUNT).get();

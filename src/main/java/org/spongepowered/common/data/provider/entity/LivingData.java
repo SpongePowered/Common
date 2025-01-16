@@ -25,6 +25,7 @@
 package org.spongepowered.common.data.provider.entity;
 
 import com.google.common.collect.ImmutableMap;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.LivingEntity;
@@ -164,8 +165,11 @@ public final class LivingData {
                             }
 
                             if (v == 0) {
-                                // Cause DestructEntityEvent to fire first
-                                h.hurt((DamageSource) SpongeDamageSources.IGNORED, Float.MAX_VALUE);
+                                final var ignoredSource = (DamageSource) SpongeDamageSources.IGNORED;
+                                switch (h.level()) {
+                                    case ServerLevel sl -> h.hurtServer(sl, ignoredSource, Float.MAX_VALUE);
+                                    default -> h.hurtClient(ignoredSource);
+                                }
                             }
                             h.setHealth(v.floatValue());
                             return true;

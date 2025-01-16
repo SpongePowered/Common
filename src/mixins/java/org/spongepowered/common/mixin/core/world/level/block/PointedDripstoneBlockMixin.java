@@ -45,7 +45,7 @@ public abstract class PointedDripstoneBlockMixin extends BlockMixin {
         at = @At(value = "INVOKE", target = "Lnet/minecraft/world/damagesource/DamageSources;stalagmite()Lnet/minecraft/world/damagesource/DamageSource;"))
     private DamageSource impl$spongeRedirectForFireDamage(
         final DamageSources instance, final Level level, final BlockState state,
-        final BlockPos pos,final  Entity ignored, final float distance
+        final BlockPos pos,final  Entity ignored, final double distance
     ) {
         final DamageSource source = instance.stalagmite();
         if (level.isClientSide) { // Short Circuit

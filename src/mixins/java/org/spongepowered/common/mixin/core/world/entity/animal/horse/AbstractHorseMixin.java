@@ -24,12 +24,11 @@
  */
 package org.spongepowered.common.mixin.core.world.entity.animal.horse;
 
-import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.animal.horse.AbstractHorse;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.common.bridge.world.entity.animal.horse.AbstractHorseBridge;
@@ -40,8 +39,6 @@ public abstract class AbstractHorseMixin extends AgableMobMixin implements Abstr
 
     // @formatter:off
     @Shadow protected SimpleContainer inventory;
-    @Shadow public abstract void shadow$equipSaddle(ItemStack stack, @Nullable SoundSource sound);
-    @Shadow public abstract boolean shadow$isSaddled();
     // @formatter:on
 
     @Override
@@ -52,7 +49,7 @@ public abstract class AbstractHorseMixin extends AgableMobMixin implements Abstr
     @Override
     public void bridge$setSaddled(boolean saddled) {
         if (!this.shadow$isSaddled() && saddled) {
-            this.shadow$equipSaddle(new ItemStack(Items.SADDLE), null);
+            this.shadow$setItemSlot(EquipmentSlot.SADDLE, new ItemStack(Items.SADDLE));
         } else if (this.shadow$isSaddled() && !saddled){
             this.inventory.setItem(0, ItemStack.EMPTY);
         }

@@ -44,6 +44,7 @@ public final class ItemStackSnapshotDuplicateManipulatorUpdater implements DataC
         return Constants.ItemStack.Data.REMOVED_DUPLICATE_DATA;
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public DataView update(DataView content) {
         if (content.contains(Constants.Sponge.UNSAFE_NBT)) {

@@ -24,8 +24,14 @@
  */
 package org.spongepowered.common.data.provider.entity;
 
+import net.minecraft.core.registries.Registries;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.animal.Pig;
+import net.minecraft.world.entity.animal.PigVariant;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import org.spongepowered.api.data.Keys;
+import org.spongepowered.api.data.type.PigType;
 import org.spongepowered.common.accessor.world.entity.animal.PigAccessor;
 import org.spongepowered.common.data.provider.DataProviderRegistrator;
 
@@ -42,11 +48,20 @@ public final class PigData {
                         .get(Pig::isSaddled)
                         .set((h, v) -> {
                             if (v) {
-                                h.equipSaddle(null, null);
+                                h.setItemSlot(EquipmentSlot.SADDLE, ItemStack.EMPTY);
                             } else {
-                                ((PigAccessor) h).accessor$steering().setSaddle(false);
+                                h.setItemSlot(EquipmentSlot.SADDLE, new ItemStack(Items.SADDLE));
                             }
                         })
+                    .create(Keys.PIG_TYPE)
+                        .get(p -> (PigType) p.getVariant().value())
+                        .setAnd((h, v) -> h.level().registryAccess().lookup(Registries.PIG_VARIANT)
+                            .map(r -> {
+                                var newPigType = r.wrapAsHolder((PigVariant) (Object) v);
+                                ((PigAccessor) h).invoker$setVariant(newPigType);
+                                return true;
+                            })
+                            .orElse(false))
         ;
     }
     // @formatter:on

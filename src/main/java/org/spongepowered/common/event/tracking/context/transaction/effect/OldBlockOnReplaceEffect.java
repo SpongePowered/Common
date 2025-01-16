@@ -88,7 +88,7 @@ public final class OldBlockOnReplaceEffect implements ProcessingSideEffect {
         if (hasBlockEntity && !flag.structurePlacement() && flag.performBlockPhysics()) {
             final var blockEntity = oldState.tileEntity();
             if (blockEntity != null) {
-                blockEntity.preRemoveSideEffects(pos, newState, flag.movingBlocks());
+                blockEntity.preRemoveSideEffects(pos, newState);
             }
         }
 

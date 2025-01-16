@@ -19,6 +19,7 @@
         "commands.arguments.selector.options.EntitySelectorOptions_OptionAccessor",
         "commands.arguments.selector.options.EntitySelectorOptionsAccessor",
         "core.MappedRegistryAccessor",
+        "entity.animal.frog.FrogAccessor",
         "entity.passive.AbstractChestedHorseEntityAccessor",
         "network.ConnectionAccessor",
         "network.chat.StyleAccessor",
@@ -73,10 +74,13 @@
         "world.entity.animal.AnimalAccessor",
         "world.entity.animal.CatAccessor",
         "world.entity.animal.FoxAccessor",
+        "world.entity.animal.MooshroomAccessor",
         "world.entity.animal.OcelotAccessor",
         "world.entity.animal.PandaAccessor",
+        "world.entity.animal.ParrotAccessor",
         "world.entity.animal.PigAccessor",
         "world.entity.animal.PufferfishAccessor",
+        "world.entity.animal.RabbitAccessor",
         "world.entity.animal.SheepAccessor",
         "world.entity.animal.TropicalFishAccessor",
         "world.entity.animal.TurtleAccessor",
@@ -90,6 +94,7 @@
         "world.entity.decoration.ArmorStandAccessor",
         "world.entity.decoration.HangingEntityAccessor",
         "world.entity.decoration.ItemFrameAccessor",
+        "world.entity.decoration.PaintingAccessor",
         "world.entity.item.FallingBlockEntityAccessor",
         "world.entity.item.PrimedTntAccessor",
         "world.entity.monster.BlazeAccessor",
@@ -215,5 +220,5 @@
     ],
     "server": [
         "server.dedicated.DedicatedServerAccessor"
-    ]
+  ]
 }

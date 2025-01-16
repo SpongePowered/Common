@@ -42,24 +42,14 @@ public final class TropicalFishData {
                 .asMutable(TropicalFish.class)
                     // Fish variant is: size | pattern << 8 | bodyColor << 16 | patternColor << 24
                     .create(Keys.TROPICAL_FISH_SHAPE)
-                        .get(h -> (TropicalFishShape) (Object) h.getVariant())
-                        .set((h, v) -> h.setVariant((TropicalFish.Pattern) (Object) v))
+                        .get(h -> (TropicalFishShape) (Object) h.getPattern())
+                        .set((h, v) -> ((TropicalFishAccessor) h).invoker$setPattern((TropicalFish.Pattern) (Object) v))
                     .create(Keys.DYE_COLOR)
                         .get(h -> (DyeColor) (Object) h.getBaseColor())
-                        .set((h, v) -> {
-                            final net.minecraft.world.item.DyeColor patternColor = h.getPatternColor();
-                            final TropicalFish.Pattern type = h.getVariant();
-                            final int variant = TropicalFishAccessor.invoker$packVariant(type, (net.minecraft.world.item.DyeColor) (Object) v, patternColor);
-                            ((TropicalFishAccessor) h).invoker$setPackedVariant(variant);
-                        })
+                        .set((h, v) -> ((TropicalFishAccessor) h).invoker$setBaseColor((net.minecraft.world.item.DyeColor) (Object) v))
                     .create(Keys.PATTERN_COLOR)
                         .get(h -> (DyeColor) (Object) h.getPatternColor())
-                        .set((h, v) -> {
-                            final net.minecraft.world.item.DyeColor baseColor = h.getBaseColor();
-                            final TropicalFish.Pattern type = h.getVariant();
-                            final int variant = TropicalFishAccessor.invoker$packVariant(type, baseColor, (net.minecraft.world.item.DyeColor) (Object) v);
-                            ((TropicalFishAccessor) h).invoker$setPackedVariant(variant);
-                        });
+                        .set((h, v) -> ((TropicalFishAccessor) h).invoker$setPatternColor((net.minecraft.world.item.DyeColor) (Object) v));
     }
     // @formatter:on
 

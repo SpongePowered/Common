@@ -1104,6 +1104,7 @@ public abstract class SpongeWorldManager implements WorldManager {
                 .resolve(key.value() + ".conf");
     }
 
+    @SuppressWarnings("deprecation")
     private static PrimaryLevelData.SpecialWorldProperty specialWorldProperty(final LevelStem stem) {
         //Copied from WorldDimensions#specialWorldProperty
         final ChunkGenerator $$1 = stem.generator();

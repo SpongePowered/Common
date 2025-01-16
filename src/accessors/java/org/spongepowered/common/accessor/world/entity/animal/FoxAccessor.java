@@ -54,4 +54,6 @@ public interface FoxAccessor {
 
     @Invoker("setSleeping") void invoker$setSleeping(final boolean sleeping);
 
+    @Invoker("setVariant") void invoker$setVariant(Fox.Variant v);
+
 }

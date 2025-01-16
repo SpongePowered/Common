@@ -248,12 +248,13 @@ public final class SpongeAdventure {
         return vanilla;
     }
 
+    @SuppressWarnings("deprecation")
     private static MutableComponent asVanillaMutable0(final Component component) {
         if (component instanceof TextComponent) {
             return net.minecraft.network.chat.Component.literal(((TextComponent) component).content());
         }
         if (component instanceof final TranslatableComponent $this) {
-            final List<net.minecraft.network.chat.Component> with = new ArrayList<>($this.args().size());
+            final List<net.minecraft.network.chat.Component> with = new ArrayList<>($this.arguments().size());
             for (final Component arg : $this.args()) {
                 with.add(((ComponentBridge) arg).bridge$asVanillaComponent());
             }
@@ -305,6 +306,7 @@ public final class SpongeAdventure {
         return builder.build();
     }
 
+    @SuppressWarnings("deprecation")
     private static ComponentBuilder<?, ?> asAdventureBuilder(final ComponentContents contents) {
         if (contents instanceof final PlainTextContents lc) {
             if (contents == PlainTextContents.EMPTY) {
@@ -519,7 +521,7 @@ public final class SpongeAdventure {
                     SpongeAdventure.asAdventure(value.name)
                 );
             case net.minecraft.network.chat.HoverEvent.ShowText st:
-                yield HoverEvent.showText(SpongeAdventure.asAdventure(st.text()));
+                yield HoverEvent.showText(SpongeAdventure.asAdventure(st.value()));
             default:
                 throw new IllegalStateException("Unexpected value: " + event);
         };

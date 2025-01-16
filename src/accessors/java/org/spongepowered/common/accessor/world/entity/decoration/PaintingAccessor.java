@@ -22,34 +22,17 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.spongepowered.common.adventure;
+package org.spongepowered.common.accessor.world.entity.decoration;
 
-import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
-import org.checkerframework.checker.nullness.qual.NonNull;
+import net.minecraft.core.Holder;
+import net.minecraft.world.entity.decoration.Painting;
+import net.minecraft.world.entity.decoration.PaintingVariant;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.gen.Invoker;
 
-import java.util.function.Consumer;
+@Mixin(Painting.class)
+public interface PaintingAccessor {
 
-@SuppressWarnings({"UnstableApiUsage", "deprecation"}) // permitted provider
-public final class GsonComponentSerializerProviderImpl implements GsonComponentSerializer.Provider {
-    @Override
-    public @NonNull GsonComponentSerializer gson() {
-        return GsonComponentSerializer.builder()
-            .legacyHoverEventSerializer(NbtLegacyHoverEventSerializer.INSTANCE)
-            .build();
-    }
+    @Invoker("setVariant") void invoker$setVariant(Holder<PaintingVariant> newArt);
 
-    @Override
-    public @NonNull GsonComponentSerializer gsonLegacy() {
-        return GsonComponentSerializer.builder()
-            .legacyHoverEventSerializer(NbtLegacyHoverEventSerializer.INSTANCE)
-            .downsampleColors()
-            .build();
-    }
-
-    @Override
-    public @NonNull Consumer<GsonComponentSerializer.Builder> builder() {
-        return builder -> {
-            builder.legacyHoverEventSerializer(NbtLegacyHoverEventSerializer.INSTANCE);
-        };
-    }
 }

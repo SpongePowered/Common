@@ -160,6 +160,7 @@ public class SpongeStructurePlacementBuilder implements StructurePlacement.Build
 
     // Building
 
+    @SuppressWarnings("deprecation")
     @Override
     public StructurePlacement build() {
         final FrequencyReductionMethod method = FrequencyReductionMethod.DEFAULT; // TODO expose other FrequencyReductionMethods?

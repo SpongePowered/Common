@@ -360,7 +360,7 @@ public abstract class PrimaryLevelDataMixin implements WorldData, PrimaryLevelDa
     }
 
     @Override
-    @SuppressWarnings("deprecated")
+    @SuppressWarnings({"deprecated","deprecation"})
     public void bridge$readSpongeLevelData(final Dynamic<Tag> dynamic) {
         dynamic.get(Constants.Sponge.World.UNIQUE_ID).read(UUIDUtil.CODEC).result().ifPresent(value -> this.impl$uniqueId = value);
 

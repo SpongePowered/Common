@@ -48,6 +48,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.net.URI;
 import java.net.URL;
 import java.time.Duration;
 import java.time.Instant;
@@ -218,7 +219,7 @@ public class UncachedGameProfileProvider implements GameProfileProvider {
     }
 
     private @Nullable GameProfile requestBasicProfileAt(final String name, final Instant time) throws Exception {
-        final URL url = new URL("https://api.mojang.com/user/profiles/minecraft/" + name + "?at=" + time.getEpochSecond());
+        final URL url = new URI("https://api.mojang.com/user/profiles/minecraft/" + name + "?at=" + time.getEpochSecond()).toURL();
         final HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         connection.setRequestMethod("GET");
         connection.connect();

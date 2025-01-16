@@ -24,6 +24,7 @@
  */
 package org.spongepowered.common.data.provider.entity;
 
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.boss.enderdragon.EndCrystal;
 import org.spongepowered.api.data.Keys;
@@ -50,7 +51,11 @@ public final class EnderCrystalData {
                                 return false;
                             }
                             if (v == 0) {
-                                h.hurt((DamageSource) SpongeDamageSources.IGNORED, 1000F);
+                                final var damageSource = (DamageSource) SpongeDamageSources.IGNORED;
+                                switch (h.level()) {
+                                    case ServerLevel sl -> h.hurtServer(sl, damageSource, 1000F);
+                                    default -> h.hurtClient(damageSource);
+                                }
                             } else {
                                 ((EntityAccessor) h).invoker$unsetRemoved();
                             }

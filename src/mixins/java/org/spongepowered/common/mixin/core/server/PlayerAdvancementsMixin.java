@@ -179,6 +179,7 @@ public abstract class PlayerAdvancementsMixin implements PlayerAdvancementsBridg
             at = @At(
                     value = "INVOKE",
                     target = "Lnet/minecraft/server/PlayerAdvancements;markForVisibilityUpdate(Lnet/minecraft/advancements/AdvancementHolder;)V"))
+    @SuppressWarnings("deprecation")
     private void impl$callGrantEventIfSuccessful(final AdvancementHolder advancement, final String string, final CallbackInfoReturnable<Boolean> ci) {
         if (!this.impl$wasSuccess) {
             return;

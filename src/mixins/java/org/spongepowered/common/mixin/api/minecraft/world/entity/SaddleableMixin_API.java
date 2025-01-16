@@ -24,9 +24,14 @@
  */
 package org.spongepowered.common.mixin.api.minecraft.world.entity;
 
-import org.spongepowered.api.entity.Saddleable;
+import net.minecraft.world.entity.ItemSteerable;
+import net.minecraft.world.entity.animal.horse.AbstractHorse;
 import org.spongepowered.asm.mixin.Mixin;
 
-@Mixin(net.minecraft.world.entity.Saddleable.class)
-public interface SaddleableMixin_API extends Saddleable {
+// TODO - the interface is gone, but the premise of being able to use the saddle
+//  still exists.
+@SuppressWarnings("removal")
+@Mixin({ItemSteerable.class, AbstractHorse.class})
+public interface SaddleableMixin_API extends org.spongepowered.api.entity.Saddleable {
+
 }

@@ -60,6 +60,7 @@ import net.minecraft.world.level.block.state.properties.SculkSensorPhase;
 import net.minecraft.world.level.block.state.properties.SlabType;
 import net.minecraft.world.level.block.state.properties.StairsShape;
 import net.minecraft.world.level.block.state.properties.StructureMode;
+import net.minecraft.world.level.block.state.properties.TestBlockMode;
 import net.minecraft.world.level.block.state.properties.Tilt;
 import net.minecraft.world.level.block.state.properties.WallSide;
 import org.tinylog.Logger;
@@ -148,6 +149,7 @@ public class BlockStatePropertyKeysGenerator implements Generator {
         vanillaEnumTypeMapping.put(TrialSpawnerState.class, BlockStatePropertyKeysGenerator.inDataTypePkg("TrialSpawnerState"));
         vanillaEnumTypeMapping.put(VaultState.class, BlockStatePropertyKeysGenerator.inDataTypePkg("VaultState"));
         vanillaEnumTypeMapping.put(CreakingHeartState.class, BlockStatePropertyKeysGenerator.inDataTypePkg("CreakingHeartState"));
+        vanillaEnumTypeMapping.put(TestBlockMode.class, BlockStatePropertyKeysGenerator.inDataTypePkg("TestBlockMode"));
 
         // Custom Mapping required see StateHolderMixin_API
         final ClassName portionTypeClass = BlockStatePropertyKeysGenerator.inDataTypePkg("PortionType");

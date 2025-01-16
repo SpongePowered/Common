@@ -261,7 +261,7 @@ public class InventoryEventFactory {
                 int level = 0;
                 if (merchant instanceof Villager villager) {
                     display = villager.getDisplayName();
-                    level = villager.getVillagerData().getLevel();
+                    level = villager.getVillagerData().level();
                 } else if (merchant instanceof WanderingTrader trader) {
                     display = trader.getDisplayName();
                     level = 1;

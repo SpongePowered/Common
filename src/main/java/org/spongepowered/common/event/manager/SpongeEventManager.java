@@ -322,6 +322,7 @@ public abstract class SpongeEventManager implements EventManager {
         return this;
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public SpongeEventManager registerListeners(final PluginContainer plugin, final Object listener) {
         this.registerListener(plugin, listener, null);

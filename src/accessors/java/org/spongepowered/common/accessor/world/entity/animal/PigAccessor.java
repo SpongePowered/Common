@@ -24,19 +24,15 @@
  */
 package org.spongepowered.common.accessor.world.entity.animal;
 
-import net.minecraft.network.syncher.EntityDataAccessor;
-import net.minecraft.world.entity.ItemBasedSteering;
+import net.minecraft.core.Holder;
 import net.minecraft.world.entity.animal.Pig;
+import net.minecraft.world.entity.animal.PigVariant;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.gen.Accessor;
-import org.spongepowered.common.UntransformedAccessorError;
+import org.spongepowered.asm.mixin.gen.Invoker;
 
 @Mixin(Pig.class)
 public interface PigAccessor {
 
-    @Accessor("DATA_SADDLE_ID") static EntityDataAccessor<Boolean> accessor$DATA_SADDLE_ID() {
-        throw new UntransformedAccessorError();
-    }
+    @Invoker("setVariant") void invoker$setVariant(Holder<PigVariant> $$0x);
 
-    @Accessor("steering") ItemBasedSteering accessor$steering();
 }

@@ -291,7 +291,6 @@ public final class SpongeItemStack  {
 
     @NotNull
     public static EquipmentSlotGroup asEquipmentSlotGroup(final EquipmentType equipmentType) {
-        // TODO expose EquipmentSlotGroup?
         return switch (((EquipmentSlot) (Object) equipmentType)) {
             case MAINHAND -> EquipmentSlotGroup.MAINHAND;
             case OFFHAND -> EquipmentSlotGroup.OFFHAND;
@@ -300,10 +299,11 @@ public final class SpongeItemStack  {
             case CHEST -> EquipmentSlotGroup.CHEST;
             case HEAD -> EquipmentSlotGroup.HEAD;
             case BODY -> EquipmentSlotGroup.BODY;
+            case SADDLE -> EquipmentSlotGroup.SADDLE;
         };
     }
 
-
+    @SuppressWarnings("deprecation")
     private static void cleanupOldCustomData(final net.minecraft.world.item.ItemStack stack) {
         final CompoundTag unsafe = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).getUnsafe();
         unsafe.remove(Constants.Sponge.Data.V2.SPONGE_DATA); // and its V2.CUSTOM_MANIPULATOR_TAG_LIST

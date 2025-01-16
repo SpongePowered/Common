@@ -58,6 +58,7 @@ public abstract class LevelStorageSource_LevelStorageAccessMixin {
                     target = "Lnet/minecraft/nbt/CompoundTag;put(Ljava/lang/String;Lnet/minecraft/nbt/Tag;)Lnet/minecraft/nbt/Tag;"
             )
     )
+    @SuppressWarnings("deprecation")
     private Tag impl$saveSpongeLevelData(final CompoundTag root, final String path, final Tag data, final RegistryAccess p_237288_1_,
             final WorldData levelData) {
         root.put(Constants.Sponge.Data.V2.SPONGE_DATA, ((PrimaryLevelDataBridge) levelData).bridge$writeSpongeLevelData());

@@ -41,6 +41,7 @@ public final class EntityTrackedUser extends DataFix {
         super(outputSchema, changesType);
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     protected TypeRewriteRule makeRule() {
         final Type<?> entityType = this.getInputSchema().getType(References.ENTITY);

@@ -40,7 +40,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import java.io.IOException;
 import java.util.UUID;
 
-@SuppressWarnings("PatternValidation")
+@SuppressWarnings({"PatternValidation","deprecation"})
 public final class NbtLegacyHoverEventSerializer implements LegacyHoverEventSerializer {
     public static final NbtLegacyHoverEventSerializer INSTANCE = new NbtLegacyHoverEventSerializer();
     private static final Codec<CompoundTag, String, CommandSyntaxException, RuntimeException> SNBT_CODEC = Codec.of(TagParser::parseTag, Tag::toString);

@@ -33,4 +33,5 @@ public interface LlamaAccessor {
 
     @Invoker("setStrength") void invoker$setStrength(final int strength);
 
+    @Invoker("setVariant") void invoker$setVariant(Llama.Variant v);
 }

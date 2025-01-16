@@ -260,7 +260,7 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
             // The rotation is relative so the head movement is still smooth.
             // The client thinks its current rotation is originalToRotation so the new rotation is relative to that.
             // The rotation values can be out of "valid" range so set them directly to the same value the client has.
-            this.player.absMoveTo(fromPosition.x(), fromPosition.y(), fromPosition.z());
+            this.player.absSnapTo(fromPosition.x(), fromPosition.y(), fromPosition.z());
             this.player.setXRot((float) originalToRotation.x());
             this.player.setYRot((float) originalToRotation.y());
             this.shadow$teleport(new PositionMoveRotation(
@@ -280,7 +280,7 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
             // Both are relatives so the client will keep its momentum.
             // The client thinks its current position is originalToPosition so the new position is relative to that.
             // The rotation values can be out of "valid" range so set them directly to the same value the client has.
-            this.player.absMoveTo(originalToPosition.x(), originalToPosition.y(), originalToPosition.z());
+            this.player.absSnapTo(originalToPosition.x(), originalToPosition.y(), originalToPosition.z());
             this.player.setXRot((float) originalToRotation.x());
             this.player.setYRot((float) originalToRotation.y());
             this.shadow$teleport(new PositionMoveRotation(
@@ -347,7 +347,7 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
         if (toPosition == null) {
             // no point doing all that processing, just account for a potential rotation change.
             if (!fromRotation.equals(toRotation)) {
-                rootVehicle.absMoveTo(rootVehicle.getX(), rootVehicle.getY(), rootVehicle.getZ(), (float) toRotation.y(), (float) toRotation.x());
+                rootVehicle.absSnapTo(rootVehicle.getX(), rootVehicle.getY(), rootVehicle.getZ(), (float) toRotation.y(), (float) toRotation.x());
             }
             this.connection.send(ClientboundMoveVehiclePacket.fromEntity(rootVehicle));
             ci.cancel();
@@ -356,7 +356,7 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
 
         if (!toPosition.equals(originalToPosition) || !toRotation.equals(originalToRotation)) {
             // notify the client about the new position
-            rootVehicle.absMoveTo(toPosition.x(), toPosition.y(), toPosition.z(), (float) toRotation.y(), (float) toRotation.x());
+            rootVehicle.absSnapTo(toPosition.x(), toPosition.y(), toPosition.z(), (float) toRotation.y(), (float) toRotation.x());
             this.connection.send(ClientboundMoveVehiclePacket.fromEntity(rootVehicle));
 
             // update the packet, let MC take care of the rest.
@@ -447,6 +447,7 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
 
     @Redirect(method = "removePlayerFromWorld", at = @At(value = "INVOKE",
             target = "Lnet/minecraft/server/players/PlayerList;broadcastSystemMessage(Lnet/minecraft/network/chat/Component;Z)V"))
+    @SuppressWarnings("deprecation")
     public void impl$handlePlayerDisconnect(final PlayerList instance, final net.minecraft.network.chat.Component $$0, final boolean $$1) {
         // If this happens, the connection has not been fully established yet so we've kicked them during ClientConnectionEvent.Login,
         // but FML has created this handler earlier to send their handshake. No message should be sent, no disconnection event should
@@ -533,7 +534,7 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
         }
     }
 
-    @Redirect(method = "lambda$handleChatCommand$7", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/network/ServerGamePacketListenerImpl;performUnsignedChatCommand(Ljava/lang/String;)V"))
+    @Redirect(method = "lambda$handleChatCommand$8", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/network/ServerGamePacketListenerImpl;performUnsignedChatCommand(Ljava/lang/String;)V"))
     public void impl$onPerformChatCommand(final ServerGamePacketListenerImpl instance, final String $$0) {
         try (final CauseStackManager.StackFrame frame = PhaseTracker.getCauseStackManager().pushCauseFrame()) {
             frame.pushCause(this.player);
@@ -542,7 +543,7 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
         }
     }
 
-    @Redirect(method = "lambda$handleSignedChatCommand$8", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/network/ServerGamePacketListenerImpl;performSignedChatCommand(Lnet/minecraft/network/protocol/game/ServerboundChatCommandSignedPacket;Lnet/minecraft/network/chat/LastSeenMessages;)V"))
+    @Redirect(method = "lambda$handleSignedChatCommand$9", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/network/ServerGamePacketListenerImpl;performSignedChatCommand(Lnet/minecraft/network/protocol/game/ServerboundChatCommandSignedPacket;Lnet/minecraft/network/chat/LastSeenMessages;)V"))
     public void impl$onPerformSignedChatCommand(final ServerGamePacketListenerImpl instance, final ServerboundChatCommandSignedPacket $$0, final LastSeenMessages $$1) {
         try (final CauseStackManager.StackFrame frame = PhaseTracker.getCauseStackManager().pushCauseFrame()) {
             frame.pushCause(this.player);

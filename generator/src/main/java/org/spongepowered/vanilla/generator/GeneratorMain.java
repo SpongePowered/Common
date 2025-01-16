@@ -75,6 +75,7 @@ import net.minecraft.world.level.block.state.properties.CreakingHeartState;
 import net.minecraft.world.level.block.state.properties.DripstoneThickness;
 import net.minecraft.world.level.block.state.properties.NoteBlockInstrument;
 import net.minecraft.world.level.block.state.properties.SculkSensorPhase;
+import net.minecraft.world.level.block.state.properties.TestBlockMode;
 import net.minecraft.world.level.block.state.properties.Tilt;
 import net.minecraft.world.level.material.PushReaction;
 import net.minecraft.world.scores.DisplaySlot;
@@ -260,6 +261,13 @@ public final class GeneratorMain {
                  BambooLeaves.class,
                  "getSerializedName",
                  "sponge"
+            ),
+            new EnumEntriesValidator<>(
+                "data.type",
+                "TestBlockModes",
+                TestBlockMode.class,
+                "getSerializedName",
+                "sponge"
             ),
             new EnumEntriesValidator<>(
                  "data.type",
@@ -709,6 +717,15 @@ public final class GeneratorMain {
                     context.relativeClass("world.generation.feature", "PlacementModifierType"),
                     Registries.PLACEMENT_MODIFIER_TYPE,
                     $ -> true, RegistryScope.SERVER
+            ),
+            new RegistryEntriesGenerator<>(
+                "data.type",
+                "PigTypes",
+                "PIG_TYPE",
+                context.relativeClass("data.type", "PigType"),
+                Registries.PIG_VARIANT,
+                $ -> true,
+                RegistryScope.SERVER
             ),
             new TagGenerator(
                     "BLOCK_TYPE",

@@ -31,6 +31,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.common.adventure.SpongeAdventure;
 import org.spongepowered.common.bridge.adventure.ComponentBridge;
 
+@SuppressWarnings("deprecation")
 @Mixin(AbstractComponent.class)
 public abstract class AbstractComponentMixin implements ComponentBridge {
     private MutableComponent bridge$vanillaComponent;

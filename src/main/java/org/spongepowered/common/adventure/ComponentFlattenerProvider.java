@@ -25,8 +25,10 @@
 package org.spongepowered.common.adventure;
 
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.ComponentLike;
 import net.kyori.adventure.text.KeybindComponent;
 import net.kyori.adventure.text.TranslatableComponent;
+import net.kyori.adventure.text.TranslationArgument;
 import net.kyori.adventure.text.flattener.ComponentFlattener;
 import net.kyori.adventure.translation.GlobalTranslator;
 import net.kyori.adventure.translation.TranslationRegistry;
@@ -56,7 +58,7 @@ final class ComponentFlattenerProvider {
 
         builder.complexMapper(TranslatableComponent.class, (component, consumer) -> {
             final String key = component.key();
-            for (final Translator registry : GlobalTranslator.get().sources()) {
+            for (final Translator registry : GlobalTranslator.translator().sources()) {
                 if (registry instanceof TranslationRegistry && ((TranslationRegistry) registry).contains(key)) {
                     consumer.accept(GlobalTranslator.render(component, Locale.getDefault()));
                     return;
@@ -65,7 +67,7 @@ final class ComponentFlattenerProvider {
 
             final /* @NonNull */ String translated = Language.getInstance().getOrDefault(key);
             final Matcher matcher = ComponentFlattenerProvider.LOCALIZATION_PATTERN.matcher(translated);
-            final List<Component> args = component.args();
+            final List<TranslationArgument> args = component.arguments();
             int argPosition = 0;
             int lastIdx = 0;
             while (matcher.find()) {
@@ -81,7 +83,7 @@ final class ComponentFlattenerProvider {
                     try {
                         final int idx = Integer.parseInt(argIdx);
                         if (idx < args.size()) {
-                            consumer.accept(args.get(idx));
+                            consumer.accept(ComponentLike.unbox(args.get(idx)));
                         }
                     } catch (final NumberFormatException ex) {
                         // ignore, drop the format placeholder
@@ -89,7 +91,7 @@ final class ComponentFlattenerProvider {
                 } else {
                     final int idx = argPosition++;
                     if (idx < args.size()) {
-                        consumer.accept(args.get(idx));
+                        consumer.accept(ComponentLike.unbox(args.get(idx)));
                     }
                 }
             }

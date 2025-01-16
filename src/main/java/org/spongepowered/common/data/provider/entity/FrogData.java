@@ -29,6 +29,7 @@ import net.minecraft.world.entity.animal.FrogVariant;
 import net.minecraft.world.entity.animal.frog.Frog;
 import org.spongepowered.api.data.Keys;
 import org.spongepowered.api.data.type.FrogType;
+import org.spongepowered.common.accessor.entity.animal.frog.FrogAccessor;
 import org.spongepowered.common.data.provider.DataProviderRegistrator;
 
 public final class FrogData {
@@ -42,7 +43,7 @@ public final class FrogData {
                 .asMutable(Frog.class)
                     .create(Keys.FROG_TYPE)
                         .get(h -> (FrogType) (Object) h.getVariant().value())
-                        .set((h, v) -> h.setVariant(BuiltInRegistries.FROG_VARIANT.wrapAsHolder((FrogVariant) (Object) v)));
+                        .set((h, v) -> ((FrogAccessor) h).invoker$setVariant(BuiltInRegistries.FROG_VARIANT.wrapAsHolder((FrogVariant) (Object) v)));
     }
     // @formatter:on
 }

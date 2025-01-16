@@ -186,6 +186,7 @@ public final class SpongeBasicPacketChannel extends AbstractPacketChannel implem
                     "Request packets from the client to server are currently not supported for basic packet channels.");
         }
 
+        @SuppressWarnings("deprecation")
         @Override
         public CompletableFuture<Void> sendToServer(final Packet packet) {
             throw new UnsupportedOperationException(

@@ -148,7 +148,7 @@ public final class SpongeEntityArchetype extends AbstractArchetype<EntityType, E
         compound.remove(Constants.Entity.ENTITY_UUID);
 
         final @Nullable Entity entity = net.minecraft.world.entity.EntityType.loadEntityRecursive(compound, level, EntitySpawnReason.LOAD, e -> {
-            e.moveTo(location.x(), location.y(), location.z());
+            e.snapTo(location.x(), location.y(), location.z());
             if (e instanceof Mob mobentity) {
                 mobentity.yHeadRot = mobentity.getYRot();
                 mobentity.yBodyRot = mobentity.getXRot();

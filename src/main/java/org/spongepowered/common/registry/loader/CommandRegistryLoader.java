@@ -127,7 +127,8 @@ import org.spongepowered.math.vector.Vector2d;
 import org.spongepowered.math.vector.Vector3d;
 
 import java.net.MalformedURLException;
-import java.net.URL;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -177,8 +178,8 @@ public final class CommandRegistryLoader {
             l.add(ResourceKeyedValueParameters.URL, k -> ClientNativeArgumentParser.createConverter(k, StringArgumentType.string(),
                     (reader, cause, input) -> {
                         try {
-                            return new URL(input);
-                        } catch (final MalformedURLException ex) {
+                            return new URI(input).toURL();
+                        } catch (final MalformedURLException | URISyntaxException ex) {
                             throw new SimpleCommandExceptionType(net.minecraft.network.chat.Component.literal("Could not parse " + input + " as a URL"))
                                     .createWithContext(reader);
                         }

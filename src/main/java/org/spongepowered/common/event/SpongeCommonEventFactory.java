@@ -396,9 +396,9 @@ public final class SpongeCommonEventFactory {
                             originalToPosition);
 
             if (finalPosition == null) {
-                entity.moveTo(entity.xOld, entity.yOld, entity.zOld);
+                entity.snapTo(entity.xOld, entity.yOld, entity.zOld);
             } else if (!finalPosition.equals(originalToPosition)) {
-                entity.moveTo(finalPosition.x(), finalPosition.y(), finalPosition.z());
+                entity.snapTo(finalPosition.x(), finalPosition.y(), finalPosition.z());
             }
         }
     }

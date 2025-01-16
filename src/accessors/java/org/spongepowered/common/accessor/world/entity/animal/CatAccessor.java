@@ -24,7 +24,9 @@
  */
 package org.spongepowered.common.accessor.world.entity.animal;
 
+import net.minecraft.core.Holder;
 import net.minecraft.world.entity.animal.Cat;
+import net.minecraft.world.entity.animal.CatVariant;
 import net.minecraft.world.item.DyeColor;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Invoker;
@@ -37,4 +39,7 @@ public interface CatAccessor {
     @Invoker("setRelaxStateOne") void invoker$setRelaxStateOne(boolean $$0);
 
     @Invoker("isRelaxStateOne") boolean invoker$isRelaxStateOne();
+
+    @Invoker("setVariant") void invoker$setVariant(Holder<CatVariant> $$0);
+
 }

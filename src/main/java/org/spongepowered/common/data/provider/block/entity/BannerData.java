@@ -56,22 +56,15 @@ public final class BannerData {
                             }
                             return false;
                         })
+            .asImmutable(BannerBlockEntity.class)
                     .create(Keys.DYE_COLOR)
                         .get(h -> ((BannerBlockEntityBridge) h).bridge$getBaseColor())
-                        .setAnd((h, v) -> {
-                            final Level world = h.getLevel();
-                            if (world != null && !world.isClientSide) {
-                                ((BannerBlockEntityBridge) h).bridge$setBaseColor(v);
-                                return true;
-                            }
-                            return false;
-                        });
+        ;
     }
     // @formatter:on
     private static void applyBannerPatternLayers(final BannerBlockEntity h, final List<BannerPatternLayer> v) {
         final DataComponentMap.Builder builder = DataComponentMap.builder();
         builder.addAll(h.collectComponents());
-        // TODO base color?
         builder.set(DataComponents.BANNER_PATTERNS, new BannerPatternLayers(v.stream().map(BannerPatternLayers.Layer.class::cast).toList()));
         final DataComponentMap components = builder.build();
         h.applyComponents(components, DataComponentPatch.EMPTY);

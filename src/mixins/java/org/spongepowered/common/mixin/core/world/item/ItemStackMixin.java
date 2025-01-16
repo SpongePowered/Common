@@ -88,6 +88,7 @@ public abstract class ItemStackMixin implements SpongeDataHolderBridge, DataComp
         return DataHolderProcessor.bridge$remove(this, key);
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public CompoundTag data$getCompound() {
         final @Nullable CustomData customData = this.components.get(DataComponents.CUSTOM_DATA);

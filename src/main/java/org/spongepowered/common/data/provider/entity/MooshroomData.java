@@ -27,6 +27,7 @@ package org.spongepowered.common.data.provider.entity;
 import net.minecraft.world.entity.animal.MushroomCow;
 import org.spongepowered.api.data.Keys;
 import org.spongepowered.api.data.type.MooshroomType;
+import org.spongepowered.common.accessor.world.entity.animal.MooshroomAccessor;
 import org.spongepowered.common.data.provider.DataProviderRegistrator;
 
 public final class MooshroomData {
@@ -40,7 +41,7 @@ public final class MooshroomData {
                 .asMutable(MushroomCow.class)
                     .create(Keys.MOOSHROOM_TYPE)
                         .get(h -> (MooshroomType) (Object) h.getVariant())
-                        .set((h, v) -> h.setVariant((MushroomCow.Variant) (Object) v));
+                        .set((h, v) -> ((MooshroomAccessor) h).invoker$setVariant((MushroomCow.Variant) (Object) v));
     }
     // @formatter:on
 }

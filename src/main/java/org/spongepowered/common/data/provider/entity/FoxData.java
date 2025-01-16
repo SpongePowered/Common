@@ -47,7 +47,7 @@ public final class FoxData {
                         .set((h, v) -> h.getEntityData().set(FoxAccessor.accessor$DATA_TRUSTED_ID_0(), Optional.ofNullable(v).map(EntityReference::new)))
                     .create(Keys.FOX_TYPE)
                         .get(h -> (FoxType) (Object) h.getVariant())
-                        .set((h, v) -> h.setVariant((Fox.Variant) (Object) v))
+                        .set((h, v) -> ((FoxAccessor) h ).invoker$setVariant((Fox.Variant) (Object) v))
                     .create(Keys.IS_CROUCHING)
                         .get(Fox::isCrouching)
                         .set(Fox::setIsCrouching)

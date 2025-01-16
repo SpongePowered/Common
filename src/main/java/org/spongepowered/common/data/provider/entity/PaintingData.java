@@ -37,6 +37,7 @@ import org.spongepowered.common.SpongeCommon;
 import org.spongepowered.common.accessor.server.level.ChunkMapAccessor;
 import org.spongepowered.common.accessor.server.level.ChunkMap_TrackedEntityAccessor;
 import org.spongepowered.common.accessor.world.entity.decoration.HangingEntityAccessor;
+import org.spongepowered.common.accessor.world.entity.decoration.PaintingAccessor;
 import org.spongepowered.common.data.provider.DataProviderRegistrator;
 
 public final class PaintingData {
@@ -54,10 +55,10 @@ public final class PaintingData {
                             if (!h.level().isClientSide) {
                                 final Holder<PaintingVariant> oldArt = h.getVariant();
                                 var newArt = SpongeCommon.server().registryAccess().lookupOrThrow(Registries.PAINTING_VARIANT).wrapAsHolder((PaintingVariant) (Object) v);
-                                h.setVariant(newArt);
+                                ((PaintingAccessor) h).invoker$setVariant(newArt);
                                 ((HangingEntityAccessor) h).invoker$setDirection(h.getDirection());
                                 if (!h.survives()) {
-                                    h.setVariant(oldArt);
+                                    ((PaintingAccessor) h).invoker$setVariant(oldArt);
                                     ((HangingEntityAccessor) h).invoker$setDirection(h.getDirection());
                                     return false;
                                 }

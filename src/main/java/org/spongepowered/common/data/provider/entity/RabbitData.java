@@ -27,6 +27,7 @@ package org.spongepowered.common.data.provider.entity;
 import net.minecraft.world.entity.animal.Rabbit;
 import org.spongepowered.api.data.Keys;
 import org.spongepowered.api.data.type.RabbitType;
+import org.spongepowered.common.accessor.world.entity.animal.RabbitAccessor;
 import org.spongepowered.common.data.provider.DataProviderRegistrator;
 
 public final class RabbitData {
@@ -40,7 +41,7 @@ public final class RabbitData {
                 .asMutable(Rabbit.class)
                     .create(Keys.RABBIT_TYPE)
                         .get(h -> (RabbitType) (Object) h.getVariant())
-                        .set((h, v) -> h.setVariant((Rabbit.Variant) (Object) v));
+                        .set((h, v) -> ((RabbitAccessor) h).invoker$setVariant((Rabbit.Variant) (Object) v));
     }
     // @formatter:on
 }

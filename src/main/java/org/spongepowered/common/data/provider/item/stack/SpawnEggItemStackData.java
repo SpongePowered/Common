@@ -39,7 +39,7 @@ import org.spongepowered.common.entity.SpongeEntityArchetypeBuilder;
 public final class SpawnEggItemStackData {
 
     // @formatter:off
-    @SuppressWarnings({"rawTypes", "rawtypes"})
+    @SuppressWarnings({"rawTypes", "rawtypes", "deprecation"})
     public static void register(final DataProviderRegistrator registrator) {
         registrator.asMutable(ItemStack.class)
                 .create(Keys.ENTITY_TO_SPAWN)

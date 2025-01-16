@@ -381,7 +381,7 @@ public final class SpongeViewableInventoryBuilder implements ViewableInventory.B
                 (id, i, p, vi) -> {
                     final Villager merchant = new Villager(EntityType.VILLAGER, p.level());
                     merchant.setPos(p.position());
-                    merchant.setVillagerData(merchant.getVillagerData().setLevel(5));
+                    merchant.setVillagerData(merchant.getVillagerData().withLevel(5));
                     return new MerchantMenu(id, i, vi.applyTradeOffers(merchant));
                 }));
 

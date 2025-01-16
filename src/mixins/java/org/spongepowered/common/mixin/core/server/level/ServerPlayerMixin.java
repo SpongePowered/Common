@@ -635,6 +635,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements SubjectBr
      * @reason SpongeForge requires an overwrite so we do it here instead. This handles player death events.
      */
     @Overwrite
+    @SuppressWarnings("deprecation")
     public void die(final DamageSource cause) {
         // Sponge start - Call Destruct Death Event
         final DestructEntityEvent.Death event = SpongeCommonEventFactory.callDestructEntityEventDeath((net.minecraft.server.level.ServerPlayer) (Object) this, cause,
