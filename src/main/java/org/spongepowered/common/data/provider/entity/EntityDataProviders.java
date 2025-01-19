@@ -103,6 +103,7 @@ public final class EntityDataProviders extends DataProviderRegistratorBuilder {
         PufferfishData.register(this.registrator);
         RabbitData.register(this.registrator);
         RavagerData.register(this.registrator);
+        SalmonData.register(this.registrator);
         ServerPlayerData.register(this.registrator);
         SheepData.register(this.registrator);
         ShulkerBulletData.register(this.registrator);

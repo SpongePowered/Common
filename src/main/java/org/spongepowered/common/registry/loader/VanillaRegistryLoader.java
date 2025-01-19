@@ -44,6 +44,7 @@ import net.minecraft.world.entity.animal.MushroomCow;
 import net.minecraft.world.entity.animal.Panda;
 import net.minecraft.world.entity.animal.Parrot;
 import net.minecraft.world.entity.animal.Rabbit;
+import net.minecraft.world.entity.animal.Salmon;
 import net.minecraft.world.entity.animal.TropicalFish;
 import net.minecraft.world.entity.animal.horse.Llama;
 import net.minecraft.world.entity.animal.horse.Markings;
@@ -208,6 +209,7 @@ public final class VanillaRegistryLoader {
         this.automaticName(RegistryTypes.WIRE_ATTACHMENT_TYPE, RedstoneSide.values());
         this.automaticName(RegistryTypes.ADVANCEMENT_TYPE, AdvancementType.values());
         this.automaticName(RegistryTypes.TROPICAL_FISH_SHAPE, TropicalFish.Pattern.values());
+        this.automaticName(RegistryTypes.SALMON_SIZE, Salmon.Variant.values());
         this.automaticName(RegistryTypes.HEIGHT_TYPE, Heightmap.Types.values());
         this.automaticName(RegistryTypes.ENTITY_CATEGORY, MobCategory.values());
         this.automaticName(RegistryTypes.WALL_CONNECTION_STATE, WallSide.values());
