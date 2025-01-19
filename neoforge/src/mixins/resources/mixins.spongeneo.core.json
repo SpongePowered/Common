@@ -8,6 +8,7 @@
         "api.event.block.ChangeBlockEvent_AllMixin_Neo",
         "api.event.entity.ChangeEntityWorldEvent_PreMixin_Neo",
         "api.event.entity.ChangeEventWorldEvent_PostMixin_Neo",
+        "neoforge.event.entity.item.ItemTossEventMixin_Neo",
         "commands.CommandsMixin_Neo",
         "neoforge.NeoForgeMixin_Neo",
         "neoforge.event.entity.EntityTravelToDimensionEventMixin_Neo",

@@ -11,6 +11,7 @@
         "commands.CommandsMixin_Forge",
         "minecraftforge.MinecraftForgeMixin_Forge",
         "minecraftforge.event.entity.EntityTravelToDimensionEventMixin_Forge",
+        "minecraftforge.event.entity.ItemTossEventMixin_Forge",
         "minecraftforge.event.entity.player.PlayerEvent_PlayerChangedDimensionEventMixin_Forge",
         "minecraftforge.event.world.BlockEvent_BreakEventMixin_Forge",
         "minecraftforge.event.world.BlockEventMixin_Forge",
