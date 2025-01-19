@@ -39,7 +39,7 @@ import org.spongepowered.common.event.tracking.PhaseTracker;
 import org.spongepowered.neoforge.launch.bridge.event.NeoEventBridge_Neo;
 
 @Mixin(value = PlayerEvent.PlayerChangedDimensionEvent.class, remap = false)
-public final class PlayerEvent_PlayerChangedDimensionEventMixin_Neo implements NeoEventBridge_Neo {
+public final class  PlayerEvent_PlayerChangedDimensionEventMixin_Neo implements NeoEventBridge_Neo {
 
     // @formatter:off
     @Shadow @Final private ResourceKey<Level> fromDim;

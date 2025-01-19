@@ -24,6 +24,8 @@
  */
 package org.spongepowered.common.mixin.core.world.entity;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.particles.ParticleOptions;
@@ -70,7 +72,6 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 import org.spongepowered.common.SpongeCommon;
 import org.spongepowered.common.bridge.data.VanishableBridge;
 import org.spongepowered.common.bridge.world.entity.LivingEntityBridge;
-import org.spongepowered.common.bridge.world.entity.player.PlayerBridge;
 import org.spongepowered.common.bridge.world.level.LevelBridge;
 import org.spongepowered.common.entity.living.human.HumanEntity;
 import org.spongepowered.common.event.ShouldFire;
@@ -92,7 +93,6 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
     // @formatter:off
     @Shadow protected int useItemRemaining;
     @Shadow protected boolean dead;
-    @Shadow protected int deathScore;
     @Shadow protected ItemStack useItem;
     @Shadow @Nullable private DamageSource lastDamageSource;
     @Shadow private long lastDamageStamp;
@@ -169,16 +169,15 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
         }
     }
 
-    @Redirect(method = "dropAllDeathLoot",
+    @WrapOperation(method = "dropAllDeathLoot",
             at = @At(value = "INVOKE",
                     target = "Lnet/minecraft/world/entity/LivingEntity;dropEquipment(Lnet/minecraft/server/level/ServerLevel;)V"
             )
     )
-    private void tracker$dropInventory(final LivingEntity thisEntity, final ServerLevel level) {
-        if (thisEntity instanceof PlayerBridge && ((PlayerBridge) thisEntity).bridge$keepInventory()) {
-            return;
-        }
-        this.shadow$dropEquipment(level);
+    protected void impl$dropInventoryWrapForPlayerOverride(
+        final LivingEntity instance, final ServerLevel level, final Operation<Void> original
+    ) {
+        original.call(instance, level);
     }
 
     @Inject(method = "pushEntities", at = @At("HEAD"), cancellable = true)

@@ -28,8 +28,8 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import org.spongepowered.api.entity.Entity;
-import org.spongepowered.api.event.Event;
 import org.spongepowered.api.event.SpongeEventFactory;
+import org.spongepowered.api.event.entity.ChangeEntityWorldEvent;
 import org.spongepowered.api.world.server.ServerWorld;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -39,7 +39,7 @@ import org.spongepowered.common.event.tracking.PhaseTracker;
 import org.spongepowered.forge.launch.bridge.event.ForgeEventBridge_Forge;
 
 @Mixin(value = PlayerEvent.PlayerChangedDimensionEvent.class, remap = false)
-public final class PlayerEvent_PlayerChangedDimensionEventMixin_Forge implements ForgeEventBridge_Forge {
+public final class PlayerEvent_PlayerChangedDimensionEventMixin_Forge implements ForgeEventBridge_Forge<ChangeEntityWorldEvent.Post>{
 
     // @formatter:off
     @Shadow @Final private ResourceKey<Level> fromDim;
@@ -47,18 +47,18 @@ public final class PlayerEvent_PlayerChangedDimensionEventMixin_Forge implements
     // @formatter:on
 
     @Override
-    public void bridge$syncFrom(final Event event) {
+    public void bridge$syncFrom(final ChangeEntityWorldEvent.Post event) {
         // nothing to do -- informational only
     }
 
     @Override
-    public void bridge$syncTo(final Event event) {
+    public void bridge$syncTo(final ChangeEntityWorldEvent.Post event) {
         // nothing to do -- informational only
     }
 
     @SuppressWarnings("ConstantConditions")
     @Override
-    public Event bridge$createSpongeEvent() {
+    public ChangeEntityWorldEvent.Post bridge$createSpongeEvent() {
         final PlayerEvent.PlayerChangedDimensionEvent thisEvent = (PlayerEvent.PlayerChangedDimensionEvent) (Object) this;
         return SpongeEventFactory.createChangeEntityWorldEventPost(
                 PhaseTracker.getCauseStackManager().currentCause(),

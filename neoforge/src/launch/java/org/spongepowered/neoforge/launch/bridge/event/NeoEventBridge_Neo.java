@@ -27,7 +27,7 @@ package org.spongepowered.neoforge.launch.bridge.event;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.spongepowered.api.event.Event;
 
-public interface NeoEventBridge_Neo {
+public interface NeoEventBridge_Neo<E extends Event> {
 
     /**
      * Syncs the Sponge event to this Forge event
@@ -39,7 +39,7 @@ public interface NeoEventBridge_Neo {
      *
      * @param event The Sponge event
      */
-    void bridge$syncFrom(Event event);
+    void bridge$syncFrom(E event);
 
     /**
      * Syncs the Forge event to this Sponge event
@@ -51,11 +51,11 @@ public interface NeoEventBridge_Neo {
      *
      * @param event The Sponge event
      */
-    void bridge$syncTo(Event event);
+    void bridge$syncTo(E event);
 
     /**
      * Creates a Sponge event from this Forge event
      */
-    @Nullable Event bridge$createSpongeEvent();
+    @Nullable E bridge$createSpongeEvent();
 
 }
