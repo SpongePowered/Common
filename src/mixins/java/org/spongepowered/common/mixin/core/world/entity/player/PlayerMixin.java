@@ -35,7 +35,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.stats.Stat;
 import net.minecraft.util.Unit;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -62,7 +61,6 @@ import org.spongepowered.api.service.permission.Subject;
 import org.spongepowered.api.world.server.ServerWorld;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -109,9 +107,6 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerBri
     @Shadow public abstract Scoreboard shadow$getScoreboard();
     @Shadow public abstract boolean shadow$isCreative();
     @Shadow public abstract String shadow$getScoreboardName();
-    @Shadow public abstract void shadow$awardStat(Stat<?> stat);
-    @Shadow public abstract Component shadow$getDisplayName();
-    @Shadow protected abstract void shadow$removeEntitiesOnShoulder();
     @Shadow public abstract void shadow$awardStat(ResourceLocation stat);
     @Shadow public abstract Inventory shadow$getInventory();
     @Shadow public Either<BedSleepingProblem, Unit> shadow$startSleepInBed(final BlockPos param0) {
@@ -295,19 +290,6 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerBri
         // Otherwise, if all else is ignored, or we're not throwing events, we're just going to return the
         // default value: true.
         return true;
-    }
-
-    /**
-     * @author gabizou - June 13th, 2016
-     * @author zidane - November 21st, 2020
-     * @reason Reverts the method to flow through our systems, Forge patches
-     * this to throw an ItemTossEvent, but we'll be throwing it regardless in
-     * SpongeForge's handling.
-     */
-    @Overwrite
-    @Nullable
-    public ItemEntity drop(final ItemStack itemStackIn, final boolean traceItem) {
-        return this.shadow$drop(itemStackIn, false, traceItem);
     }
 
     @Inject(method = "getFireImmuneTicks", at = @At(value = "HEAD"), cancellable = true)

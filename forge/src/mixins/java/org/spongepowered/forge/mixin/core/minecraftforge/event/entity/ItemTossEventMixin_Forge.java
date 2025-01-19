@@ -24,52 +24,62 @@
  */
 package org.spongepowered.forge.mixin.core.minecraftforge.event.entity;
 
-import net.minecraft.resources.ResourceKey;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.level.Level;
-import net.minecraftforge.event.entity.EntityEvent;
-import net.minecraftforge.event.entity.EntityTravelToDimensionEvent;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraftforge.event.entity.item.ItemEvent;
+import net.minecraftforge.event.entity.item.ItemTossEvent;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.spongepowered.api.entity.Entity;
+import org.spongepowered.api.event.EventContextKeys;
 import org.spongepowered.api.event.SpongeEventFactory;
-import org.spongepowered.api.event.entity.ChangeEntityWorldEvent;
+import org.spongepowered.api.event.cause.entity.SpawnTypes;
+import org.spongepowered.api.event.item.inventory.DropItemEvent;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.common.SpongeCommon;
 import org.spongepowered.common.event.tracking.PhaseTracker;
 import org.spongepowered.forge.launch.bridge.event.ForgeEventBridge_Forge;
 
-@Mixin(value = EntityTravelToDimensionEvent.class, remap = false)
-public abstract class EntityTravelToDimensionEventMixin_Forge extends EntityEvent implements ForgeEventBridge_Forge<ChangeEntityWorldEvent.Pre> {
+import java.util.ArrayList;
 
-    // @formatter:off
-    @Shadow @Final @Mutable private ResourceKey<Level> dimension;
-    // @formatter:on
+@Mixin(ItemTossEvent.class)
+public abstract class ItemTossEventMixin_Forge extends ItemEvent implements ForgeEventBridge_Forge<DropItemEvent.Dispense> {
 
-    private EntityTravelToDimensionEventMixin_Forge(Entity entity) {
-        super(entity);
+    //@formatter:off
+    @Shadow private @Final Player player;
+    //@formatter:on
+
+    private ItemTossEventMixin_Forge(ItemEntity itemEntity) {
+        super(itemEntity);
     }
 
     @Override
-    public void bridge$syncFrom(final ChangeEntityWorldEvent.Pre event) {
+    public void bridge$syncFrom(DropItemEvent.Dispense event) {
+        event.entities().stream()
+            .filter(e -> e instanceof ItemEntity)
+            .map(e -> (ItemEntity) e)
+            .findFirst()
+            .ifPresent(e -> this.getEntity().setItem(e.getItem()));
         this.setCanceled(event.isCancelled());
-        this.dimension = ((ServerLevel) event.destinationWorld()).dimension();
     }
 
     @Override
-    public void bridge$syncTo(final ChangeEntityWorldEvent.Pre event) {
+    public void bridge$syncTo(DropItemEvent.Dispense event) {
         event.setCancelled(this.isCanceled());
     }
 
     @Override
-    public ChangeEntityWorldEvent.@Nullable Pre bridge$createSpongeEvent() {
-        final Entity entity = this.getEntity();
-        final ServerLevel toWorld = SpongeCommon.server().getLevel(this.dimension);
-        return SpongeEventFactory.createChangeEntityWorldEventPre(PhaseTracker.getCauseStackManager().currentCause(),
-                (org.spongepowered.api.entity.Entity) entity, (org.spongepowered.api.world.server.ServerWorld) entity.getCommandSenderWorld(),
-                (org.spongepowered.api.world.server.ServerWorld) toWorld, (org.spongepowered.api.world.server.ServerWorld) toWorld);
+    public DropItemEvent.@Nullable Dispense bridge$createSpongeEvent() {
+        if (this.player.level().isClientSide()) {
+            return null;
+        }
+        try (final var frame = PhaseTracker.getInstance().pushCauseFrame()) {
+            frame.addContext(EventContextKeys.SPAWN_TYPE, SpawnTypes.DROPPED_ITEM);
+            final var cause = frame.currentCause();
+            final var toSpawn = (Entity) this.getEntity();
+            final var list = new ArrayList<Entity>();
+            list.add(toSpawn);
+            return SpongeEventFactory.createDropItemEventDispense(cause, list);
+        }
     }
-
 }

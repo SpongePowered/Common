@@ -113,9 +113,8 @@ public final class ForgeEventManager extends SpongeEventManager implements IEven
 
     @Override
     public boolean post(final Event event, final IEventBusInvokeDispatcher wrapper) {
-        if (event instanceof ForgeEventBridge_Forge) {
+        if (event instanceof ForgeEventBridge_Forge<?> forgeEvent) {
             // intercept!
-            final ForgeEventBridge_Forge forgeEvent = (ForgeEventBridge_Forge) event;
             final org.spongepowered.api.event.@Nullable Event spongeEvent = forgeEvent.bridge$createSpongeEvent();
             if (spongeEvent != null) {
                 return this.postDualBus(spongeEvent, Collections.singleton(event), wrapper);
@@ -150,8 +149,10 @@ public final class ForgeEventManager extends SpongeEventManager implements IEven
 
     // Implementation
 
-    private boolean postDualBus(final org.spongepowered.api.event.Event spongeEvent, final Collection<? extends Event> forgeEvents,
-            final IEventBusInvokeDispatcher dispatcher) {
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private boolean postDualBus(
+        final org.spongepowered.api.event.Event spongeEvent, final Collection<? extends Event> forgeEvents,
+        final IEventBusInvokeDispatcher dispatcher) {
         try (final NoExceptionClosable ignored = this.preparePost(spongeEvent)) {
             final RegisteredListener.Cache listeners = this.getHandlerCache(spongeEvent);
             final List<RegisteredListener<?>> beforeModifications = listeners.beforeModifications();

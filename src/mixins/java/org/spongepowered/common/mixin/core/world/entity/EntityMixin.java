@@ -169,8 +169,6 @@ public abstract class EntityMixin implements EntityBridge, PlatformEntityBridge,
     @Shadow @Nullable public abstract Entity shadow$getVehicle();
     @Shadow public abstract AABB shadow$getBoundingBox();
     @Shadow @Nullable public abstract PlayerTeam shadow$getTeam();
-    @Shadow public abstract void shadow$clearFire();
-    @Shadow protected abstract void shadow$setSharedFlag(int flag, boolean set);
     @Shadow public abstract SynchedEntityData shadow$getEntityData();
     @Shadow public abstract net.minecraft.world.phys.Vec3 shadow$getDeltaMovement();
     @Shadow public abstract void shadow$setDeltaMovement(net.minecraft.world.phys.Vec3 motion);
