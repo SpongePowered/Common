@@ -664,7 +664,7 @@ public final class SpongeCommonEventFactory {
      * @param frame
      * @return The item if it is to be spawned, null if to be ignored
      */
-    public static @Nullable ItemStack throwDropItemAndConstructEvent(final net.minecraft.world.entity.Entity entity, final double posX, final double posY,
+    public static ItemStack throwDropItemAndConstructEvent(final net.minecraft.world.entity.Entity entity, final double posX, final double posY,
         final double posZ, final ItemStackSnapshot snapshot, final List<ItemStackSnapshot> original, final CauseStackManager.StackFrame frame) {
         final ItemStack item;
 
@@ -675,10 +675,10 @@ public final class SpongeCommonEventFactory {
             ImmutableList.of(snapshot), original);
         SpongeCommon.post(dropEvent);
         if (dropEvent.isCancelled()) {
-            return null;
+            return ItemStack.EMPTY;
         }
         if (dropEvent.droppedItems().isEmpty()) {
-            return null;
+            return ItemStack.EMPTY;
         }
 
         // SECOND throw the ConstructEntityEvent
@@ -687,12 +687,12 @@ public final class SpongeCommonEventFactory {
         frame.removeContext(EventContextKeys.SPAWN_TYPE);
         SpongeCommon.post(event);
         if (event.isCancelled()) {
-            return null;
+            return ItemStack.EMPTY;
         }
 
-        item = event.isCancelled() ? null : ItemStackUtil.fromSnapshotToNative(dropEvent.droppedItems().get(0));
+        item = event.isCancelled() ? ItemStack.EMPTY : ItemStackUtil.fromSnapshotToNative(dropEvent.droppedItems().get(0));
         if (item == null) {
-            return null;
+            return ItemStack.EMPTY;
         }
         return item;
     }
