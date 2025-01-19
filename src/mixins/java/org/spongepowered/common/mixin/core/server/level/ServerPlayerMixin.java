@@ -25,24 +25,24 @@
 package org.spongepowered.common.mixin.core.server.level;
 
 import com.google.common.collect.ImmutableSet;
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.llamalad7.mixinextras.sugar.Share;
+import com.llamalad7.mixinextras.sugar.ref.LocalRef;
 import com.mojang.datafixers.util.Either;
 import io.netty.channel.Channel;
-import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
-import net.minecraft.ChatFormatting;
 import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.PacketSendListener;
 import net.minecraft.network.chat.ChatType;
-import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.network.chat.OutgoingChatMessage;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundChangeDifficultyPacket;
 import net.minecraft.network.protocol.game.ClientboundGameEventPacket;
 import net.minecraft.network.protocol.game.ClientboundPlayerAbilitiesPacket;
-import net.minecraft.network.protocol.game.ClientboundPlayerCombatKillPacket;
 import net.minecraft.network.protocol.game.ClientboundRespawnPacket;
 import net.minecraft.network.protocol.game.ClientboundSetEntityLinkPacket;
 import net.minecraft.resources.ResourceKey;
@@ -53,7 +53,6 @@ import net.minecraft.server.level.ServerPlayerGameMode;
 import net.minecraft.server.level.TicketType;
 import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import net.minecraft.server.players.PlayerList;
-import net.minecraft.stats.Stat;
 import net.minecraft.stats.Stats;
 import net.minecraft.util.Unit;
 import net.minecraft.world.InteractionHand;
@@ -75,8 +74,6 @@ import net.minecraft.world.level.portal.DimensionTransition;
 import net.minecraft.world.level.storage.LevelData;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.scores.PlayerTeam;
-import net.minecraft.world.scores.Team;
-import net.minecraft.world.scores.criteria.ObjectiveCriteria;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.adventure.Audiences;
@@ -114,10 +111,12 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.Slice;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.common.SpongeCommon;
@@ -172,8 +171,6 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements SubjectBr
     @Shadow private int lastSentFood;
 
     @Shadow public abstract ServerLevel shadow$serverLevel();
-    @Shadow public abstract void shadow$resetStat(final Stat<?> statistic);
-    @Shadow protected abstract void shadow$tellNeutralMobsThatIDied();
     @Shadow protected abstract void shadow$triggerDimensionChangeTriggers(ServerLevel serverworld);
     @Shadow public abstract void shadow$doCloseContainer();
     @Shadow public abstract boolean shadow$setGameMode(GameType param0);
@@ -182,7 +179,11 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements SubjectBr
     private net.minecraft.network.chat.@Nullable Component impl$connectionMessage;
     private Locale impl$language = Locales.DEFAULT;
     private Scoreboard impl$scoreboard = Sponge.game().server().serverScoreboard().get();
-    @Nullable private Boolean impl$keepInventory = null;
+    // Note that this field cannot be reset until the player has been respawned because
+    // after death, the server player will remain in the death state, and only when the player
+    // is actually respawned, will their inventory be transferred to the new player instance.
+    @Nullable
+    private Boolean impl$keepInventory = null;
     // Used to restore original item received in a packet after canceling an event
     private int impl$viewDistance;
     private int impl$skinPartMask;
@@ -190,7 +191,8 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements SubjectBr
     private final PlayerOwnBorderListener impl$borderListener = new PlayerOwnBorderListener((net.minecraft.server.level.ServerPlayer) (Object) this);
     private boolean impl$sleepingIgnored;
     private boolean impl$noGameModeEvent;
-    @Nullable private WorldBorder impl$worldBorder;
+    @Nullable
+    private WorldBorder impl$worldBorder;
     private ServerLevel impl$respawnLevel;
 
     @Override
@@ -236,7 +238,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements SubjectBr
             this.connection.resetPosition();
         } else {
             this.bridge$changeDimension(new DimensionTransition(level, VecHelper.toVanillaVector3d(pos), thisPlayer.getKnownMovement(),
-                    this.shadow$getYRot(), this.shadow$getXRot(), DimensionTransition.DO_NOTHING));
+                this.shadow$getYRot(), this.shadow$getXRot(), DimensionTransition.DO_NOTHING));
         }
         return true;
     }
@@ -254,7 +256,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements SubjectBr
                 message,
                 message,
                 (ServerPlayer) this
-                );
+            );
             if (Sponge.eventManager().post(kickEvent)) {
                 return false;
             }
@@ -310,17 +312,23 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements SubjectBr
     public void bridge$replaceScoreboard(@org.checkerframework.checker.nullness.qual.Nullable Scoreboard scoreboard) {
         if (scoreboard == null) {
             scoreboard = Sponge.game().server().serverScoreboard()
-                    .orElseThrow(() -> new IllegalStateException("Server does not have a valid scoreboard"));
+                .orElseThrow(() -> new IllegalStateException("Server does not have a valid scoreboard"));
         }
         this.impl$scoreboard = scoreboard;
     }
 
     @Override
     public boolean bridge$keepInventory() {
-        if (this.impl$keepInventory == null) {
-            return this.shadow$level().getGameRules().getBoolean(GameRules.RULE_KEEPINVENTORY);
+        return Objects.requireNonNullElseGet(this.impl$keepInventory, () -> this.shadow$level().getGameRules().getBoolean(GameRules.RULE_KEEPINVENTORY));
+    }
+
+    @Override
+    protected void impl$dropInventoryWrapForPlayerOverride(
+        final LivingEntity instance, final Operation<Void> original
+    ) {
+        if (this.impl$keepInventory == null || !this.impl$keepInventory) {
+            original.call(instance);
         }
-        return this.impl$keepInventory;
     }
 
     @Override
@@ -341,9 +349,9 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements SubjectBr
         final int mask = this.shadow$getEntityData().get(DATA_PLAYER_MODE_CUSTOMISATION);
         if (this.impl$skinPartMask != mask) {
             this.impl$skinParts = Sponge.game().registry(RegistryTypes.SKIN_PART).stream()
-                    .map(part -> (SpongeSkinPart) part)
-                    .filter(part -> part.test(mask))
-                    .collect(ImmutableSet.toImmutableSet());
+                .map(part -> (SpongeSkinPart) part)
+                .filter(part -> part.test(mask))
+                .collect(ImmutableSet.toImmutableSet());
             this.impl$skinPartMask = mask;
         }
 
@@ -412,7 +420,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements SubjectBr
 
             final var thisPlayer = (net.minecraft.server.level.ServerPlayer) (Object) this;
             this.bridge$changeDimension(new DimensionTransition(world, new Vec3(x, y, z), Vec3.ZERO, yaw, pitch,
-                    e -> world.getChunkSource().addRegionTicket(TicketType.POST_TELEPORT, e.chunkPosition(), 1, thisPlayer.getId())));
+                e -> world.getChunkSource().addRegionTicket(TicketType.POST_TELEPORT, e.chunkPosition(), 1, thisPlayer.getId())));
         }
     }
 
@@ -449,8 +457,8 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements SubjectBr
         // Sponge End
 
         if (newLevel.dimension() == oldLevel.dimension()) { // actually no dimension change
-             this.connection.teleport(transition.pos().x, transition.pos().y, transition.pos().z, transition.yRot(), transition.xRot());
-             this.connection.resetPosition();
+            this.connection.teleport(transition.pos().x, transition.pos().y, transition.pos().z, transition.yRot(), transition.xRot());
+            this.connection.resetPosition();
             transition.postDimensionTransition().onTransition(thisPlayer);
             // TODO setYHeadRot after would rotate event result
             return thisPlayer;
@@ -490,30 +498,33 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements SubjectBr
         this.lastSentFood = -1;
         // Sponge Start TODO cause/context like in impl$fireDimensionTransitionEvents
         Sponge.eventManager().post(
-                SpongeEventFactory.createChangeEntityWorldEventPost(
-                        PhaseTracker.getCauseStackManager().currentCause(),
-                        (org.spongepowered.api.entity.Entity) this,
-                        (ServerWorld) oldLevel,
-                        (ServerWorld) newLevel,
-                        (ServerWorld) originalNewLevel
-                )
+            SpongeEventFactory.createChangeEntityWorldEventPost(
+                PhaseTracker.getCauseStackManager().currentCause(),
+                (org.spongepowered.api.entity.Entity) this,
+                (ServerWorld) oldLevel,
+                (ServerWorld) newLevel,
+                (ServerWorld) originalNewLevel
+            )
         );
         // Sponge End
         return thisPlayer;
     }
 
+    @Unique
     @Nullable
-    private DimensionTransition impl$fireDimensionTransitionEvents(final DimensionTransition originalTransition,
-            final net.minecraft.server.level.ServerPlayer thisPlayer) {
+    private DimensionTransition impl$fireDimensionTransitionEvents(
+        final DimensionTransition originalTransition,
+        final net.minecraft.server.level.ServerPlayer thisPlayer
+    ) {
         var transition = originalTransition;
         var isDimensionChange = transition.newLevel() != thisPlayer.serverLevel();
 
         if (!this.impl$moveEventsFired) {
             final var contextToSwitchTo = EntityPhase.State.PORTAL_DIMENSION_CHANGE.createPhaseContext(PhaseTracker.getInstance()).worldChange()
-                    .player();
+                .player();
             final boolean hasMovementContext = PhaseTracker.SERVER.currentContext().containsKey(EventContextKeys.MOVEMENT_TYPE);
             try (final TeleportContext context = contextToSwitchTo.buildAndSwitch();
-                    final CauseStackManager.StackFrame frame = PhaseTracker.getCauseStackManager().pushCauseFrame()) {
+                 final CauseStackManager.StackFrame frame = PhaseTracker.getCauseStackManager().pushCauseFrame()) {
                 frame.pushCause(thisPlayer);
                 if (!hasMovementContext) {
                     // TODO we should be able to detect normal plugin code though
@@ -532,11 +543,11 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements SubjectBr
                         }
                         if (preEvent.destinationWorld() != preEvent.originalDestinationWorld()) {
                             transition = new DimensionTransition((ServerLevel) preEvent.destinationWorld(),
-                                    transition.pos(),
-                                    transition.speed(),
-                                    transition.yRot(), transition.xRot(),
-                                    transition.missingRespawnBlock(),
-                                    transition.postDimensionTransition());
+                                transition.pos(),
+                                transition.speed(),
+                                transition.yRot(), transition.xRot(),
+                                transition.missingRespawnBlock(),
+                                transition.postDimensionTransition());
                         }
                     }
 
@@ -558,11 +569,11 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements SubjectBr
                 if (newDest != originalDest) {
                     // if changed override the DimensionTransition
                     transition = new DimensionTransition(transition.newLevel(),
-                            VecHelper.toVanillaVector3d(newDest),
-                            transition.speed(),
-                            transition.yRot(), transition.xRot(),
-                            transition.missingRespawnBlock(),
-                            transition.postDimensionTransition());
+                        VecHelper.toVanillaVector3d(newDest),
+                        transition.speed(),
+                        transition.yRot(), transition.xRot(),
+                        transition.missingRespawnBlock(),
+                        transition.postDimensionTransition());
                 }
 
                 final Vector3d toRot = new Vector3d(transition.xRot(), transition.yRot(), 0);
@@ -574,11 +585,11 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements SubjectBr
                 }
                 if (toRot != newToRot) {
                     transition = new DimensionTransition(transition.newLevel(),
-                            transition.pos(),
-                            transition.speed(),
-                            (float) newToRot.y(), (float) newToRot.x(),
-                            transition.missingRespawnBlock(),
-                            transition.postDimensionTransition());
+                        transition.pos(),
+                        transition.speed(),
+                        (float) newToRot.y(), (float) newToRot.x(),
+                        transition.missingRespawnBlock(),
+                        transition.postDimensionTransition());
                 }
 
             }
@@ -595,107 +606,121 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements SubjectBr
     }
 
     @Redirect(
-            method = {"openMenu", "openHorseInventory"},
-            at = @At(
-                    value = "INVOKE",
-                    target = "Lnet/minecraft/server/level/ServerPlayer;closeContainer()V"
-            )
+        method = {"openMenu", "openHorseInventory"},
+        at = @At(
+            value = "INVOKE",
+            target = "Lnet/minecraft/server/level/ServerPlayer;closeContainer()V"
+        )
     )
     private void impl$closePreviousContainer(final net.minecraft.server.level.ServerPlayer self) {
         this.shadow$doCloseContainer();
     }
 
-    /**
-     * @author blood - May 12th, 2016
-     * @author gabizou - June 3rd, 2016
-     * @author gabizou - February 22nd, 2020 - Minecraft 1.14.3
-     * @reason SpongeForge requires an overwrite so we do it here instead. This handles player death events.
-     */
-    @Overwrite
-    public void die(final DamageSource cause) {
-        // Sponge start - Call Destruct Death Event
-        if (PlatformHooks.INSTANCE.getEventHooks().callPlayerDestruction((net.minecraft.server.level.ServerPlayer) (Object) this, cause)) {
-            return;
+    @Inject(
+        method = "die",
+        at = @At("HEAD"),
+        cancellable = true
+    )
+    private void impl$fireDestructEntityEvent(
+        final DamageSource cause, final CallbackInfo ci,
+        @Share("sponge-event") LocalRef<DestructEntityEvent.@Nullable Death> event
+    ) {
+        event.set(SpongeCommonEventFactory.callDestructEntityEventDeath(
+            (net.minecraft.server.level.ServerPlayer) (Object) this,
+            cause,
+            Audiences.server()
+        ));
+        if (event.get().isCancelled()) {
+            ci.cancel();
         }
-        final DestructEntityEvent.Death event = SpongeCommonEventFactory.callDestructEntityEventDeath((net.minecraft.server.level.ServerPlayer) (Object) this, cause,
-                Audiences.server());
-        if (event.isCancelled()) {
-            return;
-        }
-        // Sponge end
-
-        final var level = this.shadow$level();
-        final boolean flag = level.getGameRules().getBoolean(GameRules.RULE_SHOWDEATHMESSAGES) && !event.isMessageCancelled();
-        if (flag) {
-            final net.minecraft.network.chat.Component component = this.shadow$getCombatTracker().getDeathMessage();
-            final ClientboundPlayerCombatKillPacket packet = new ClientboundPlayerCombatKillPacket(this.shadow$getId(), component);
-            this.connection.send(packet, PacketSendListener.exceptionallySend(() -> {
-                final String s = component.getString(256);
-                final net.minecraft.network.chat.Component itextcomponent1 = net.minecraft.network.chat.Component.translatable("death.attack.message_too_long", net.minecraft.network.chat.Component.literal(s).withStyle(ChatFormatting.YELLOW));
-                final net.minecraft.network.chat.Component itextcomponent2 = net.minecraft.network.chat.Component.translatable("death.attack.even_more_magic", this.shadow$getDisplayName())
-                        .withStyle((p_212357_1_) -> p_212357_1_.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, itextcomponent1)));
-                return new ClientboundPlayerCombatKillPacket(this.shadow$getId(), itextcomponent2);
-            }));
-            final Team team = this.shadow$getTeam();
-            if (team != null && team.getDeathMessageVisibility() != Team.Visibility.ALWAYS) {
-                if (team.getDeathMessageVisibility() == Team.Visibility.HIDE_FOR_OTHER_TEAMS) {
-                    this.server.getPlayerList().broadcastSystemToTeam(
-                            (net.minecraft.server.level.ServerPlayer) (Object) this, component);
-                } else if (team.getDeathMessageVisibility() == Team.Visibility.HIDE_FOR_OWN_TEAM) {
-                    this.server.getPlayerList().broadcastSystemToAllExceptTeam(
-                            (net.minecraft.server.level.ServerPlayer) (Object) this, component);
-                }
-            } else {
-                final Component message = event.message();
-                // Sponge start - use the event audience
-                if (message != Component.empty()) {
-                    event.audience().ifPresent(eventChannel -> eventChannel.sendMessage(Identity.nil(), message));
-                }
-                // Sponge end
-                // this.server.getPlayerList().sendMessage(itextcomponent);
-            }
-        } else {
-            this.connection.send(
-                    new ClientboundPlayerCombatKillPacket(this.shadow$getId(), net.minecraft.network.chat.Component.empty()));
-        }
-
-        this.shadow$removeEntitiesOnShoulder();
-        if (level.getGameRules().getBoolean(GameRules.RULE_FORGIVE_DEAD_PLAYERS)) {
-            this.shadow$tellNeutralMobsThatIDied();
-        }
-
-        // Sponge Start - update the keep inventory flag for dropping inventory
-        // during the death update ticks
-        this.impl$keepInventory = event.keepInventory();
-
-        if (!this.shadow$isSpectator() && level instanceof ServerLevel sLevel) {
-            this.shadow$dropAllDeathLoot(sLevel, cause);
-        }
-        // Sponge End
-
-        this.shadow$getScoreboard().forAllObjectives(
-                ObjectiveCriteria.DEATH_COUNT, (net.minecraft.server.level.ServerPlayer) (Object) this, sa -> sa.set(sa.get() + 1));
-        final LivingEntity livingentity = this.shadow$getKillCredit();
-        if (livingentity != null) {
-            this.shadow$awardStat(Stats.ENTITY_KILLED_BY.get(livingentity.getType()));
-            livingentity.awardKillScore((net.minecraft.server.level.ServerPlayer) (Object) this, this.deathScore, cause);
-            this.shadow$createWitherRose(livingentity);
-        }
-
-        level.broadcastEntityEvent((net.minecraft.server.level.ServerPlayer) (Object) this, (byte) 3);
-        this.shadow$awardStat(Stats.DEATHS);
-        this.shadow$resetStat(Stats.CUSTOM.get(Stats.TIME_SINCE_DEATH));
-        this.shadow$resetStat(Stats.CUSTOM.get(Stats.TIME_SINCE_REST));
-        this.shadow$clearFire();
-        this.shadow$setSharedFlag(0, false);
-        this.shadow$getCombatTracker().recheckStatus();
     }
 
-    @Redirect(method = "restoreFrom(Lnet/minecraft/server/level/ServerPlayer;Z)V",
-            at = @At(value = "INVOKE",
-                    target = "Lnet/minecraft/world/level/GameRules;getBoolean(Lnet/minecraft/world/level/GameRules$Key;)Z"))
-    private boolean tracker$useKeepFromBridge(final GameRules gameRules, final GameRules.Key<?> key,
-            final net.minecraft.server.level.ServerPlayer corpse, final boolean keepEverything) {
+    @ModifyExpressionValue(
+        method = "die",
+        at = @At(
+            value = "INVOKE", target = "Lnet/minecraft/world/level/GameRules;getBoolean(Lnet/minecraft/world/level/GameRules$Key;)Z"
+        ),
+        slice = @Slice(
+            from = @At("HEAD"),
+            to = @At(value = "INVOKE", target = "Lnet/minecraft/world/damagesource/CombatTracker;getDeathMessage()Lnet/minecraft/network/chat/Component;")
+        )
+    )
+    private boolean impl$onlySendMessageIfEventCallsForIt(
+        boolean gameRules,
+        @Share("sponge-event") LocalRef<DestructEntityEvent.@Nullable Death> event
+    ) {
+        final var spongeEvent = event.get();
+        return gameRules && (spongeEvent == null || !spongeEvent.isMessageCancelled());
+    }
+
+    @ModifyExpressionValue(
+        method = "die",
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/damagesource/CombatTracker;getDeathMessage()Lnet/minecraft/network/chat/Component;")
+    )
+    private net.minecraft.network.chat.Component impl$useEventMessageIfUnset(
+        final net.minecraft.network.chat.Component original,
+        @Share("sponge-event") LocalRef<DestructEntityEvent.@Nullable Death> event
+    ) {
+        final var spongeEvent = event.get();
+        if (spongeEvent == null) {
+            return original;
+        }
+        if (Component.IS_NOT_EMPTY.test(spongeEvent.message())) {
+            return SpongeAdventure.asVanilla(spongeEvent.message());
+        }
+
+        return original;
+    }
+
+    @WrapOperation(
+        method = "die",
+        at = @At(
+            value = "INVOKE",
+            target = "Lnet/minecraft/server/players/PlayerList;broadcastSystemMessage(Lnet/minecraft/network/chat/Component;Z)V"
+        )
+    )
+    private void impl$useEventAudienceToSendServerMessage(
+        final PlayerList serverList, final net.minecraft.network.chat.Component message,
+        final boolean isSystem, final Operation<Void> original,
+        final @Share("sponge-event") LocalRef<DestructEntityEvent.@Nullable Death> event
+    ) {
+        final var spongeEvent = event.get();
+        if (spongeEvent == null) {
+            // If we don't have a sponge event, just call the original
+            original.call(serverList, message, isSystem);
+            return;
+        }
+        // Otherwise, we will use our event's prescribed audience to send the message that has
+        // been modified by the event listeners.
+        final Component eventMessage = spongeEvent.message();
+        if (eventMessage != Component.empty()) {
+            spongeEvent.audience().ifPresent(eventChannel -> eventChannel.sendMessage(eventMessage));
+        }
+    }
+
+    @Inject(
+        method = "die",
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerPlayer;isSpectator()Z")
+    )
+    private void impl$setKeepInventoryFromEvent(
+        final DamageSource source, final CallbackInfo ci,
+        final @Share("sponge-event") LocalRef<DestructEntityEvent.@Nullable Death> event
+    ) {
+        if (event.get() == null) {
+            return;
+        }
+        this.impl$keepInventory = event.get().keepInventory();
+    }
+
+    @ModifyExpressionValue(
+        method = "restoreFrom",
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/GameRules;getBoolean(Lnet/minecraft/world/level/GameRules$Key;)Z")
+    )
+    private boolean tracker$useKeepFromBridge(
+        boolean original,
+        net.minecraft.server.level.ServerPlayer corpse,
+        boolean wonGame
+    ) {
         final boolean keep = ((PlayerBridge) corpse).bridge$keepInventory(); // Override Keep Inventory GameRule?
         if (!keep) {
             // Copy corpse inventory to respawned player
@@ -709,11 +734,10 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements SubjectBr
     @Inject(method = "restoreFrom(Lnet/minecraft/server/level/ServerPlayer;Z)V", at = @At("HEAD"))
     private void impl$copyDataOnRespawn(final net.minecraft.server.level.ServerPlayer oldPlayer, final boolean respawnFromEnd, final CallbackInfo ci) {
         // Copy Sponge data
-        if (oldPlayer instanceof DataCompoundHolder) {
-            final DataCompoundHolder oldEntity = (DataCompoundHolder) oldPlayer;
+        if (oldPlayer instanceof DataCompoundHolder oldEntity) {
             DataUtil.syncDataToTag(oldEntity);
             final CompoundTag compound = oldEntity.data$getCompound();
-            ((DataCompoundHolder) this).data$setCompound(compound);
+            this.data$setCompound(compound);
             DataUtil.syncTagToData(this);
         }
 
@@ -737,22 +761,22 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements SubjectBr
         final Locale newLocale = LocaleCache.getLocale(info.language());
 
         final ImmutableSet<SkinPart> skinParts = Sponge.game().registry(RegistryTypes.SKIN_PART).stream()
-                .map(part -> (SpongeSkinPart) part)
-                .filter(part -> part.test(info.modelCustomisation()))
-                .collect(ImmutableSet.toImmutableSet());
+            .map(part -> (SpongeSkinPart) part)
+            .filter(part -> part.test(info.modelCustomisation()))
+            .collect(ImmutableSet.toImmutableSet());
         final int viewDistance = info.viewDistance();
 
         // Post before the player values are updated
         try (final CauseStackManager.StackFrame frame = PhaseTracker.getCauseStackManager().pushCauseFrame()) {
             final ChatVisibility visibility = (ChatVisibility) (Object) info.chatVisibility();
             final PlayerChangeClientSettingsEvent event = SpongeEventFactory.createPlayerChangeClientSettingsEvent(
-                    frame.currentCause(),
-                    visibility,
-                    skinParts,
-                    newLocale,
-                    (ServerPlayer) this,
-                    info.chatColors(),
-                    viewDistance);
+                frame.currentCause(),
+                visibility,
+                skinParts,
+                newLocale,
+                (ServerPlayer) this,
+                info.chatColors(),
+                viewDistance);
             SpongeCommon.post(event);
         }
     }
@@ -773,7 +797,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements SubjectBr
     }
 
     @Inject(method = "sendSystemMessage(Lnet/minecraft/network/chat/Component;Z)V",
-            cancellable = true, at = @At("HEAD"))
+        cancellable = true, at = @At("HEAD"))
     public void sendMessage(final net.minecraft.network.chat.Component $$0, final boolean $$1, final CallbackInfo ci) {
         if (this.impl$isFake) {
             // Don't bother sending messages to fake players
@@ -800,7 +824,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements SubjectBr
     ) {
         final ItemStack itemInHand = this.shadow$getItemInHand(hand);
         final InteractEntityEvent.Secondary event = SpongeCommonEventFactory.callInteractEntityEventSecondary((net.minecraft.server.level.ServerPlayer) (Object) this,
-                itemInHand, entityToInteractOn, hand, null);
+            itemInHand, entityToInteractOn, hand, null);
         if (event.isCancelled()) {
             this.containerMenu.sendAllDataToRemote();
             if (itemInHand.getItem() == Items.LEAD && entityToInteractOn instanceof Mob) {
@@ -860,14 +884,14 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements SubjectBr
         }
 
         final DataTransactionResult transaction = DataTransactionResult.builder()
-                .replace(Value.immutableOf(Keys.GAME_MODE, (GameMode) (Object) this.gameMode.getGameModeForPlayer()))
-                .success(Value.immutableOf(Keys.GAME_MODE, (GameMode) (Object) value))
-                .result(DataTransactionResult.Type.SUCCESS)
-                .build();
+            .replace(Value.immutableOf(Keys.GAME_MODE, (GameMode) (Object) this.gameMode.getGameModeForPlayer()))
+            .success(Value.immutableOf(Keys.GAME_MODE, (GameMode) (Object) value))
+            .result(DataTransactionResult.Type.SUCCESS)
+            .build();
 
         final ChangeDataHolderEvent.ValueChange
-                event =
-                SpongeEventFactory.createChangeDataHolderEventValueChange(PhaseTracker.getCauseStackManager().currentCause(), transaction, (DataHolder.Mutable) this);
+            event =
+            SpongeEventFactory.createChangeDataHolderEventValueChange(PhaseTracker.getCauseStackManager().currentCause(), transaction, (DataHolder.Mutable) this);
 
         Sponge.eventManager().post(event);
 
@@ -876,8 +900,8 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements SubjectBr
         }
 
         return (GameType) (Object) event.endResult().successfulValue(Keys.GAME_MODE)
-                .map(Value::get)
-                .orElse((GameMode) (Object) value);
+            .map(Value::get)
+            .orElse((GameMode) (Object) value);
     }
 
     @Override
@@ -906,9 +930,9 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements SubjectBr
     }
 
     /**
+     * @return True if PVP allowed
      * @author Zidane
      * @reason Have PVP check if the world allows it or not
-     * @return True if PVP allowed
      */
     @Overwrite
     private boolean isPvpAllowed() {
@@ -925,12 +949,12 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements SubjectBr
         var playerRespawnDestination = this.server.getLevel(player.getRespawnDimension());
         if (playerRespawnDestination == null) {
             SpongeCommon.logger().warn("The player '{}' respawn location was located in a world that isn't loaded or doesn't exist. This is not safe so "
-                + "the player will be moved to the spawn of the default world.", player.getGameProfile().getName());
+                                       + "the player will be moved to the spawn of the default world.", player.getGameProfile().getName());
             playerRespawnDestination = player.server.overworld();
         }
 
         final RespawnPlayerEvent.SelectWorld event = SpongeEventFactory.createRespawnPlayerEventSelectWorld(PhaseTracker.getCauseStackManager().currentCause(),
-                (ServerWorld) playerRespawnDestination, (ServerWorld) player.serverLevel(), (ServerWorld) playerRespawnDestination, (ServerPlayer) player);
+            (ServerWorld) playerRespawnDestination, (ServerWorld) player.serverLevel(), (ServerWorld) playerRespawnDestination, (ServerPlayer) player);
         SpongeCommon.post(event);
 
         this.impl$respawnLevel = (ServerLevel) event.destinationWorld();
