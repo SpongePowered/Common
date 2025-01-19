@@ -31,7 +31,6 @@ import net.minecraft.world.level.Level;
 import net.minecraftforge.event.entity.EntityEvent;
 import net.minecraftforge.event.entity.EntityTravelToDimensionEvent;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.spongepowered.api.event.Event;
 import org.spongepowered.api.event.SpongeEventFactory;
 import org.spongepowered.api.event.entity.ChangeEntityWorldEvent;
 import org.spongepowered.asm.mixin.Final;
@@ -43,30 +42,30 @@ import org.spongepowered.common.event.tracking.PhaseTracker;
 import org.spongepowered.forge.launch.bridge.event.ForgeEventBridge_Forge;
 
 @Mixin(value = EntityTravelToDimensionEvent.class, remap = false)
-public abstract class EntityTravelToDimensionEventMixin_Forge implements ForgeEventBridge_Forge {
+public abstract class EntityTravelToDimensionEventMixin_Forge extends EntityEvent implements ForgeEventBridge_Forge<ChangeEntityWorldEvent.Pre> {
 
     // @formatter:off
     @Shadow @Final @Mutable private ResourceKey<Level> dimension;
     // @formatter:on
 
-    @Override
-    public void bridge$syncFrom(final Event event) {
-        if (event instanceof ChangeEntityWorldEvent.Pre) {
-            ((net.minecraftforge.eventbus.api.Event) (Object) this).setCanceled(((ChangeEntityWorldEvent.Pre) event).isCancelled());
-            this.dimension = ((ServerLevel) ((ChangeEntityWorldEvent.Pre) event).destinationWorld()).dimension();
-        }
+    private EntityTravelToDimensionEventMixin_Forge(Entity entity) {
+        super(entity);
     }
 
     @Override
-    public void bridge$syncTo(final Event event) {
-        if (event instanceof ChangeEntityWorldEvent.Pre) {
-            ((ChangeEntityWorldEvent.Pre) event).setCancelled(((net.minecraftforge.eventbus.api.Event) (Object) this).isCanceled());
-        }
+    public void bridge$syncFrom(final ChangeEntityWorldEvent.Pre event) {
+        this.setCanceled(event.isCancelled());
+        this.dimension = ((ServerLevel) event.destinationWorld()).dimension();
     }
 
     @Override
-    public @Nullable Event bridge$createSpongeEvent() {
-        final Entity entity = ((EntityEvent) (Object) this).getEntity();
+    public void bridge$syncTo(final ChangeEntityWorldEvent.Pre event) {
+        event.setCancelled(this.isCanceled());
+    }
+
+    @Override
+    public ChangeEntityWorldEvent.@Nullable Pre bridge$createSpongeEvent() {
+        final Entity entity = this.getEntity();
         final ServerLevel toWorld = SpongeCommon.server().getLevel(this.dimension);
         return SpongeEventFactory.createChangeEntityWorldEventPre(PhaseTracker.getCauseStackManager().currentCause(),
                 (org.spongepowered.api.entity.Entity) entity, (org.spongepowered.api.world.server.ServerWorld) entity.getCommandSenderWorld(),

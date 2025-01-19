@@ -32,7 +32,6 @@ import org.spongepowered.api.block.BlockState;
 import org.spongepowered.api.block.BlockTypes;
 import org.spongepowered.api.block.transaction.BlockTransaction;
 import org.spongepowered.api.block.transaction.Operations;
-import org.spongepowered.api.event.Event;
 import org.spongepowered.api.event.SpongeEventFactory;
 import org.spongepowered.api.event.block.ChangeBlockEvent;
 import org.spongepowered.api.world.server.ServerWorld;
@@ -46,37 +45,34 @@ import org.spongepowered.neoforge.launch.bridge.event.NeoEventBridge_Neo;
 import java.util.Collections;
 
 @Mixin(value = BlockEvent.BreakEvent.class, remap = false)
-public abstract class BlockEvent_BreakEventMixin_Neo extends BlockEventMixin_Neo implements NeoEventBridge_Neo {
+public abstract class BlockEvent_BreakEventMixin_Neo extends BlockEventMixin_Neo implements NeoEventBridge_Neo<ChangeBlockEvent.All>, ICancellableEvent {
 
     @Override
-    public void bridge$syncFrom(final Event event) {
-        if (event instanceof ChangeBlockEvent.All) {
-            final ChangeBlockEvent.All changeBlockEventAll = (ChangeBlockEvent.All) event;
-            final Vector3i pos = VecHelper.toVector3i(this.shadow$getPos());
-            if (changeBlockEventAll.isCancelled() ||
-                    changeBlockEventAll.transactions()
-                            .stream()
-                            .filter(x -> x.original().position().equals(pos))
-                            .anyMatch(x -> !x.isValid() || x.operation() != Operations.BREAK.get() || x.custom().isPresent())) {
-                ((ICancellableEvent) this).setCanceled(true);
-            }
+    public void bridge$syncFrom(final ChangeBlockEvent.All event) {
+        final Vector3i pos = VecHelper.toVector3i(this.shadow$getPos());
+        if (event.isCancelled() ||
+            event.transactions()
+                .stream()
+                .filter(x -> x.original().position().equals(pos))
+                .anyMatch(x -> !x.isValid() || x.operation() != Operations.BREAK.get() || x.custom().isPresent())) {
+            this.setCanceled(true);
         }
     }
 
     @Override
-    public void bridge$syncTo(final Event event) {
-        if (event instanceof ChangeBlockEvent.All && ((ICancellableEvent) this).isCanceled()) {
+    public void bridge$syncTo(final ChangeBlockEvent.All event) {
+        if (this.isCanceled()) {
             final Vector3i pos = VecHelper.toVector3i(this.shadow$getPos());
-            ((ChangeBlockEvent.All) event).transactions(Operations.BREAK.get()).filter(x -> x.original().position().equals(pos))
-                    .forEach(x -> x.setValid(false));
+            event.transactions(Operations.BREAK.get())
+                .filter(x -> x.original().position().equals(pos))
+                .forEach(x -> x.setValid(false));
         }
     }
 
     @Override
-    public @Nullable Event bridge$createSpongeEvent() {
+    public ChangeBlockEvent.@Nullable All bridge$createSpongeEvent() {
         final LevelAccessor accessor = this.shadow$getLevel();
-        if (accessor instanceof ServerWorld) {
-            final ServerWorld serverWorld = (ServerWorld) accessor;
+        if (accessor instanceof ServerWorld serverWorld) {
             final BlockTransaction transaction = new BlockTransaction(
                     SpongeBlockSnapshot.BuilderImpl
                             .pooled()

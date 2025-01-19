@@ -28,11 +28,12 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.event.level.BlockEvent;
+import net.minecraftforge.eventbus.api.Event;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
 @Mixin(value = BlockEvent.class, remap = false)
-public abstract class BlockEventMixin_Forge {
+public abstract class BlockEventMixin_Forge extends Event {
 
     // @formatter:off
     @Shadow public abstract LevelAccessor shadow$getLevel();

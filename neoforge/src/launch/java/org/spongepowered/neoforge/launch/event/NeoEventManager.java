@@ -102,10 +102,9 @@ public final class NeoEventManager extends SpongeEventManager implements IEventB
 
     @Override
     public <T extends Event> T post(T event) {
-        if (event instanceof NeoEventBridge_Neo) {
+        if (event instanceof NeoEventBridge_Neo bridgeEvent) {
             // intercept!
-            final NeoEventBridge_Neo forgeEvent = (NeoEventBridge_Neo) event;
-            final org.spongepowered.api.event.@Nullable Event spongeEvent = forgeEvent.bridge$createSpongeEvent();
+            final org.spongepowered.api.event.@Nullable Event spongeEvent = bridgeEvent.bridge$createSpongeEvent();
             if (spongeEvent != null) {
                 this.postDualBus(spongeEvent, Collections.singleton(event));
                 return event;
@@ -141,6 +140,7 @@ public final class NeoEventManager extends SpongeEventManager implements IEventB
 
     // Implementation
 
+    @SuppressWarnings({"unchecked", "rawtypes"})
     private boolean postDualBus(final org.spongepowered.api.event.Event spongeEvent, final Collection<? extends Event> forgeEvents) {
         try (final NoExceptionClosable ignored = this.preparePost(spongeEvent)) {
             final RegisteredListener.Cache listeners = this.getHandlerCache(spongeEvent);
