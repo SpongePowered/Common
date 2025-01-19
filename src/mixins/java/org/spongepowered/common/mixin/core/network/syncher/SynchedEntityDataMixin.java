@@ -24,6 +24,10 @@
  */
 package org.spongepowered.common.mixin.core.network.syncher;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.llamalad7.mixinextras.sugar.Share;
+import com.llamalad7.mixinextras.sugar.ref.LocalRef;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.SyncedDataHolder;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -36,8 +40,10 @@ import org.spongepowered.api.event.SpongeEventFactory;
 import org.spongepowered.api.event.data.ChangeDataHolderEvent;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.common.bridge.network.syncher.EntityDataAccessorBridge;
 import org.spongepowered.common.bridge.world.entity.EntityBridge;
 import org.spongepowered.common.data.datasync.DataParameterConverter;
@@ -48,65 +54,103 @@ import java.util.Optional;
 @Mixin(SynchedEntityData.class)
 public abstract class SynchedEntityDataMixin {
 
+    //@formatter:off
     @Shadow @Final private SyncedDataHolder entity;
-    @Shadow private boolean isDirty;
 
     @Shadow protected abstract <T> SynchedEntityData.DataItem<T> getItem(final EntityDataAccessor<T> key);
+    //@formatter:on
 
-    /**
-     * @author gabizou December 27th, 2017
-     * @reason Inject ChangeValueEvent for entities by utilizing keys. Keys are registered
-     *     based on the entity of which they belong to. This is to make the events more streamlined
-     *     with regards to "when" they are being changed.
-     * @param key The parameter key
-     * @param value The value
-     * @param <T> The type of value
-     */
     @SuppressWarnings({"unchecked", "rawtypes"})
-    @Overwrite
-    public <T> void set(final EntityDataAccessor<T> key, T value) {
-        final SynchedEntityData.DataItem<T> dataentry = this.<T>getItem(key);
+    @WrapOperation(
+        method = "set(Lnet/minecraft/network/syncher/EntityDataAccessor;Ljava/lang/Object;Z)V",
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/network/syncher/SynchedEntityData;getItem(Lnet/minecraft/network/syncher/EntityDataAccessor;)Lnet/minecraft/network/syncher/SynchedEntityData$DataItem;")
+    )
+    public <T> SynchedEntityData.DataItem<T> impl$callTransactionOnGet(
+        final SynchedEntityData instance, final EntityDataAccessor<T> accessor,
+        final Operation<SynchedEntityData.DataItem<T>> original,
+        final EntityDataAccessor<T> second, final T newValue, final boolean isServer,
+        @Share("data-event") LocalRef<ChangeDataHolderEvent.ValueChange> eventHolder,
+        @Share("data-converter") LocalRef<DataParameterConverter<T>> converterRef
+    ) {
+        final SynchedEntityData.DataItem<T> dataentry = original.call(instance, accessor);
 
         // Sponge Start - set up the current value, so we don't have to retrieve it multiple times
         final T currentValue = dataentry.getValue();
-        final T incomingValue = value;
-        if (ObjectUtils.notEqual(value, currentValue)) { // Sponge - change dataentry.getValue() to use local variable
-            // Sponge Start - retrieve the associated key, if available
-            // Client side can have an entity, because reasons.......
-            // Really silly reasons......
-            // I don't know, ask Grum....
-            if (this.entity != null && ((Entity) this.entity).level() != null && !((Entity) this.entity).level().isClientSide && !((EntityBridge) this.entity).bridge$isConstructing()) { // We only want to spam the server world ;)
-                final Optional<DataParameterConverter<T>> converter = ((EntityDataAccessorBridge) (Object) key).bridge$getDataConverter();
-                // At this point it is changing
-                if (converter.isPresent()) {
-                    // Ok, we have a key ready to use the converter
-                    final Optional<DataTransactionResult> optional = converter.get().createTransaction(((Entity) this.entity), currentValue, value);
-                    if (optional.isPresent()) {
-                        // Only need to make a transaction if there are actual changes necessary.
-                        final DataTransactionResult transaction = optional.get();
-                        final ChangeDataHolderEvent.ValueChange
-                            event =
-                            SpongeEventFactory.createChangeDataHolderEventValueChange(PhaseTracker.getCauseStackManager().currentCause(), transaction,
-                                (DataHolder.Mutable) this.entity);
-                        Sponge.eventManager().post(event);
-                        if (event.isCancelled()) {
-                            //If the event is cancelled, well, don't change the underlying value.
-                            return;
-                        }
-                        try {
-                            value = converter.get().getValueFromEvent(currentValue, event.endResult());
-                        } catch (final Exception e) {
-                            // Worst case scenario, we don't want to cause an issue, so we just set the value
-                            value = incomingValue;
-                        }
-                    }
-                }
+        final T incomingValue = newValue;
+        if (isServer || ObjectUtils.notEqual(newValue, currentValue)) {
+            if (this.entity == null) {
+                return dataentry;
             }
-            // Sponge End
-            dataentry.setValue(value);
-            this.entity.onSyncedDataUpdated(key);
-            dataentry.setDirty(true);
-            this.isDirty = true;
+
+            final var thisEntity = (Entity) this.entity;
+
+            if (thisEntity.level() == null || thisEntity.level().isClientSide || ((EntityBridge) this.entity).bridge$isConstructing()) {
+                return dataentry;
+            }
+            final Optional<DataParameterConverter<T>> converter = ((EntityDataAccessorBridge) (Object) accessor).bridge$getDataConverter();
+            // At this point it is changing
+            if (converter.isPresent()) {
+                converterRef.set(converter.get());
+                // Ok, we have a key ready to use the converter
+                final Optional<DataTransactionResult> optional = converter.get().createTransaction(thisEntity, currentValue, incomingValue);
+                if (optional.isEmpty()) {
+                    return dataentry;
+                }
+                // Only need to make a transaction if there are actual changes necessary.
+                final DataTransactionResult transaction = optional.get();
+                final ChangeDataHolderEvent.ValueChange
+                    event =
+                    SpongeEventFactory.createChangeDataHolderEventValueChange(PhaseTracker.getCauseStackManager().currentCause(), transaction,
+                        (DataHolder.Mutable) this.entity);
+                Sponge.eventManager().post(event);
+                eventHolder.set(event);
+                if (event.isCancelled()) {
+                    //If the event is cancelled, well, don't change the underlying value.
+                    return dataentry;
+                }
+
+            }
+        }
+        return dataentry;
+    }
+
+    @Inject(method = "set(Lnet/minecraft/network/syncher/EntityDataAccessor;Ljava/lang/Object;Z)V",
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/network/syncher/SynchedEntityData$DataItem;setValue(Ljava/lang/Object;)V"),
+        cancellable = true
+    )
+    private <T> void impl$useChangeHolderEvent(
+        final EntityDataAccessor<T> accessor, final T incoming, final boolean isServer, final CallbackInfo ci,
+        @Share("data-event") LocalRef<ChangeDataHolderEvent.ValueChange> eventHolder
+    ) {
+        if (eventHolder.get() == null) {
+            return;
+        }
+        final var event = eventHolder.get();
+        if (event.isCancelled()) {
+            ci.cancel();
         }
     }
+
+    @WrapOperation(
+        method = "set(Lnet/minecraft/network/syncher/EntityDataAccessor;Ljava/lang/Object;Z)V",
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/network/syncher/SynchedEntityData$DataItem;setValue(Ljava/lang/Object;)V")
+    )
+    private <T> void impl$useEventValue(
+        final SynchedEntityData.DataItem<T> instance,
+        final T $$0, final Operation<Void> original, final EntityDataAccessor<T> key, final T incoming,
+        final boolean isServer,
+        final @Share("data-event") LocalRef<ChangeDataHolderEvent.ValueChange> eventHolder,
+        final @Share("data-converter") LocalRef<DataParameterConverter<T>> converterRef
+    ) {
+        if (eventHolder.get() == null) {
+            original.call(instance, $$0);
+            return;
+        }
+        final var event = eventHolder.get();
+        final var converter = converterRef.get();
+        final var newValue = converter.getValueFromEvent(instance.getValue(), event.endResult());
+
+        original.call(instance, newValue);
+    }
+
 }

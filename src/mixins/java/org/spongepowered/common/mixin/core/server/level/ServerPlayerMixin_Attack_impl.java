@@ -24,6 +24,7 @@
  */
 package org.spongepowered.common.mixin.core.server.level;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
@@ -52,8 +53,10 @@ public abstract class ServerPlayerMixin_Attack_impl extends PlayerMixin_Attack_I
     }
 
     @Override
-    protected double attackImpl$beforeSweepHurt(Player instance, Entity sweepTarget) {
-        final var distanceToSqr = instance.distanceToSqr(sweepTarget);
+    protected double attackImpl$beforeSweepHurt(
+        final Player instance, final Entity sweepTarget, final Operation<Double> original
+    ) {
+        final var distanceToSqr = original.call(instance, sweepTarget);
         if (!(distanceToSqr < 9.0)) {
             return distanceToSqr; // Too far - no event
         }

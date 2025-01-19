@@ -24,6 +24,8 @@
  */
 package org.spongepowered.common.mixin.core.world.entity.player;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -231,11 +233,11 @@ public abstract class PlayerMixin_Attack_Impl extends LivingEntityMixin_Attack_I
     /**
      * Call Sweep Attack Events
      */
-    @Redirect(method = "attack",
+    @WrapOperation(method = "attack",
         slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;getEntitiesOfClass(Ljava/lang/Class;Lnet/minecraft/world/phys/AABB;)Ljava/util/List;")),
         at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;distanceToSqr(Lnet/minecraft/world/entity/Entity;)D"))
-    protected double attackImpl$beforeSweepHurt(final Player instance, final Entity sweepTarget) {
-        return instance.distanceToSqr(sweepTarget);
+    protected double attackImpl$beforeSweepHurt(final Player instance, final Entity entity, final Operation<Double> original) {
+        return original.call(instance, entity);
     }
 
     /**
