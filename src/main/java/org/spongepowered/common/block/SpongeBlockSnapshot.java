@@ -194,7 +194,7 @@ public final class SpongeBlockSnapshot implements BlockSnapshot, SpongeImmutable
             if (!current.is(((net.minecraft.world.level.block.state.BlockState) this.blockState).getBlock())) {
                 world.removeBlockEntity(pos);
             }
-            world.setBlock(pos, replaced, BlockChangeFlagManager.andNotifyClients(flag).getRawFlag());
+            world.setBlock(pos, replaced, BlockChangeFlagManager.andNotifyClients(flag).rawFlag());
             if (this.compound != null) {
                 @Nullable BlockEntity te = world.getBlockEntity(pos);
                 if (te != null) {

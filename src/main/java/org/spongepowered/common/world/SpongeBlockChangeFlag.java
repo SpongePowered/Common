@@ -35,61 +35,36 @@ import java.util.StringJoiner;
  * interactions, such as notifying neighboring blocks, performing block physics
  * on placement, etc.
  */
-public record SpongeBlockChangeFlag(int rawFlag) implements BlockChangeFlag {
+public record SpongeBlockChangeFlag(
+    boolean updateNeighbors,
+    boolean notifyClients,
+    boolean ignoreRender,
+    boolean forceClientRerender,
+    boolean updateNeighboringShapes,
+    boolean neighborDropsAllowed,
+    boolean movingBlocks,
+    boolean updateLighting,
+    boolean performBlockPhysics,
+    boolean notifyPathfinding,
+    boolean performBlockDestruction,
+    int rawFlag
+) implements BlockChangeFlag {
 
-    @Override
-    public boolean updateNeighbors() {
-        return (this.rawFlag & Constants.BlockChangeFlags.BLOCK_UPDATED) != 0; // 1;
-    }
-
-    @Override
-    public boolean notifyClients() {
-        return (this.rawFlag & Constants.BlockChangeFlags.NOTIFY_CLIENTS) != 0; // 2;
-    }
-
-    @Override
-    public boolean performBlockPhysics() {
-        return (this.rawFlag & Constants.BlockChangeFlags.PHYSICS_MASK) == 0; // sponge
-    }
-
-    @Override
-    public boolean updateNeighboringShapes() {
-        return (this.rawFlag & Constants.BlockChangeFlags.DENY_NEIGHBOR_SHAPE_UPDATE) == 0; // 16
-    }
-
-    @Override
-    public boolean updateLighting() {
-        return (this.rawFlag & Constants.BlockChangeFlags.LIGHTING_UPDATES) == 0; // 128 vanilla check
-    }
-
-    @Override
-    public boolean notifyPathfinding() {
-        return (this.rawFlag & Constants.BlockChangeFlags.PATHFINDING_UPDATES) == 0; // sponge
-    }
-
-    @Override
-    public boolean ignoreRender() {
-        return (this.rawFlag & Constants.BlockChangeFlags.IGNORE_RENDER) != 0; // 4
-    }
-
-    @Override
-    public boolean forceClientRerender() {
-        return (this.rawFlag & Constants.BlockChangeFlags.FORCE_RE_RENDER) != 0; // 8
-    }
-
-    @Override
-    public boolean movingBlocks() {
-        return (this.rawFlag & Constants.BlockChangeFlags.BLOCK_MOVING) != 0; // 64
-    }
-
-    @Override
-    public boolean neighborDropsAllowed() {
-        return (this.rawFlag & Constants.BlockChangeFlags.NEIGHBOR_DROPS) == 0; // 32
-    }
-
-    @Override
-    public boolean performBlockDestruction() {
-        return (this.rawFlag & Constants.BlockChangeFlags.PERFORM_BLOCK_DESTRUCTION) == 0; // sponge
+    public SpongeBlockChangeFlag(int rawFlag) {
+        this(
+            (rawFlag & Constants.BlockChangeFlags.BLOCK_UPDATED) != 0,  // updateNeighbors
+            (rawFlag & Constants.BlockChangeFlags.NOTIFY_CLIENTS) != 0, // notifyClients
+            (rawFlag & Constants.BlockChangeFlags.IGNORE_RENDER) != 0, // forceClientRerender
+            (rawFlag & Constants.BlockChangeFlags.FORCE_RE_RENDER) != 0, // neighborDropsAllowed
+            (rawFlag & Constants.BlockChangeFlags.DENY_NEIGHBOR_SHAPE_UPDATE) == 0, // updateNeighboringShapes
+            (rawFlag & Constants.BlockChangeFlags.NEIGHBOR_DROPS) == 0, // neighborDrops
+            (rawFlag & Constants.BlockChangeFlags.BLOCK_MOVING) != 0, // block moving
+            (rawFlag & Constants.BlockChangeFlags.LIGHTING_UPDATES) == 0, // updateLighting
+            (rawFlag & Constants.BlockChangeFlags.PHYSICS_MASK) == 0, // performBlockPhysics
+            (rawFlag & Constants.BlockChangeFlags.PATHFINDING_UPDATES) == 0, // pathfindingUpdates
+            (rawFlag & Constants.BlockChangeFlags.PERFORM_BLOCK_DESTRUCTION) == 0, // performBlockDestruction
+            rawFlag
+        );
     }
 
     @Override
@@ -217,28 +192,6 @@ public record SpongeBlockChangeFlag(int rawFlag) implements BlockChangeFlag {
     public SpongeBlockChangeFlag andNotFlag(final BlockChangeFlag flag) {
         final SpongeBlockChangeFlag o = (SpongeBlockChangeFlag) flag;
         return BlockChangeFlagManager.fromNativeInt(this.rawFlag & ~o.rawFlag);
-    }
-
-    public int getRawFlag() {
-        return this.rawFlag;
-    }
-
-    @Override
-    public String toString() {
-        return new StringJoiner(", ", SpongeBlockChangeFlag.class.getSimpleName() + "[", "]")
-                .add("rawFlag=" + this.rawFlag)
-                .add("notifyNeighbors=" + this.updateNeighbors())
-                .add("notifyClients=" + this.notifyClients())
-                .add("performBlockPhysics=" + this.performBlockPhysics())
-                .add("updateNeighboringShapes=" + this.updateNeighboringShapes())
-                .add("updateLighting=" + this.updateLighting())
-                .add("notifyPathfinding=" + this.notifyPathfinding())
-                .add("ignoreRender=" + this.ignoreRender())
-                .add("forceClientRerender=" + this.forceClientRerender())
-                .add("movingBlocks=" + this.movingBlocks())
-                .add("neighborDropsAllowed=" + this.neighborDropsAllowed())
-                .add("performBlockDestruction=" + this.performBlockDestruction())
-                .toString();
     }
 
     public SpongeBlockChangeFlag asNestedNeighborUpdates() {

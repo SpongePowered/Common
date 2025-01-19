@@ -59,7 +59,7 @@ public final class NotifyClientEffect implements ProcessingSideEffect<BlockPipel
         // if ((flags & 2) != 0 && (!this.isClientSide || (flags & 4) == 0) && (this.isClientSide || chunk.getLocationType() != null && chunk.getLocationType().isAtLeast(ChunkHolder.LocationType.TICKING))) {
         if (flag.notifyClients() && (chunk.getFullStatus().isOrAfter(FullChunkStatus.BLOCK_TICKING))) {
             // this.notifyBlockUpdate(pos, blockstate, newWorldState, flags);
-            world.sendBlockUpdated(oldState.pos(), oldState.state(), newState, flag.getRawFlag());
+            world.sendBlockUpdated(oldState.pos(), oldState.state(), newState, flag.rawFlag());
         }
         return EffectResult.nullPass();
     }

@@ -54,7 +54,7 @@ public final class BlockChangeFlagManager {
     }
 
     public static SpongeBlockChangeFlag andNotifyClients(final BlockChangeFlag flag) {
-        final int rawFlag = ((SpongeBlockChangeFlag) flag).getRawFlag();
+        final int rawFlag = ((SpongeBlockChangeFlag) flag).rawFlag();
         if ((rawFlag & Constants.BlockChangeFlags.NOTIFY_CLIENTS) != 0){
             return (SpongeBlockChangeFlag) flag; // We don't need to rerun the flag
         }
@@ -65,7 +65,7 @@ public final class BlockChangeFlagManager {
         // basically run through all possible permutations to our custom flags
         for (int i = 0; i < (1 << 9 + 1); i++) {
             final SpongeBlockChangeFlag flag = new SpongeBlockChangeFlag(i);
-            this.maskedFlags.put(flag.getRawFlag(), flag);
+            this.maskedFlags.put(flag.rawFlag(), flag);
         }
     }
 
