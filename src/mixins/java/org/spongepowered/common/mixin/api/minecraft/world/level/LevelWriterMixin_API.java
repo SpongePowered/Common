@@ -47,7 +47,7 @@ public interface LevelWriterMixin_API extends MutableGameVolume {
 
     @Override
     default boolean setBlock(final int x, final int y, final int z, final org.spongepowered.api.block.BlockState state, final BlockChangeFlag flag) {
-        return this.shadow$setBlock(new BlockPos(x, y, z), (BlockState) state, ((SpongeBlockChangeFlag) flag).getRawFlag());
+        return this.shadow$setBlock(new BlockPos(x, y, z), (BlockState) state, ((SpongeBlockChangeFlag) flag).rawFlag());
     }
 
     @Override

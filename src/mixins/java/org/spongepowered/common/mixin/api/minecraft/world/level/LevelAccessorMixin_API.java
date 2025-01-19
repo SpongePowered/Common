@@ -175,7 +175,7 @@ public interface LevelAccessorMixin_API<P extends WorldLike<P>> extends WorldLik
             if (context != null) {
                 context.buildAndSwitch();
             }
-            return ((LevelAccessor) this).setBlock(new BlockPos(x, y, z), (BlockState) blockState, ((SpongeBlockChangeFlag) flag).getRawFlag());
+            return ((LevelAccessor) this).setBlock(new BlockPos(x, y, z), (BlockState) blockState, ((SpongeBlockChangeFlag) flag).rawFlag());
         }
     }
 

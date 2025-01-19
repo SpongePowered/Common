@@ -279,8 +279,8 @@ class BlockChangeFlagManagerTest {
     void verifyNestedNeighborPhysics() {
         final SpongeBlockChangeFlag flag = BlockChangeFlagManagerTest.createDefaultFlag();
         assertTrue(flag.updateNeighboringShapes()); // 16
-        assertTrue(flag.getRawFlag() != 0);
-        assertEquals((flag.getRawFlag() & 32), 0);
+        assertTrue(flag.rawFlag() != 0);
+        assertEquals((flag.rawFlag() & 32), 0);
         assertTrue(flag.neighborDropsAllowed());
         final SpongeBlockChangeFlag nestedNeighbor = flag.asNestedNeighborUpdates();
         assertFalse(nestedNeighbor.updateNeighbors());
@@ -294,7 +294,7 @@ class BlockChangeFlagManagerTest {
         assertTrue(nestedNeighbor.performBlockPhysics());
         assertTrue(nestedNeighbor.notifyPathfinding());
         assertTrue(nestedNeighbor.performBlockDestruction());
-        assertEquals(3 & -34, nestedNeighbor.getRawFlag());
+        assertEquals(3 & -34, nestedNeighbor.rawFlag());
 
         final int overloadedFlag =
             Constants.BlockChangeFlags.BLOCK_UPDATED
@@ -308,7 +308,7 @@ class BlockChangeFlagManagerTest {
             | Constants.BlockChangeFlags.PATHFINDING_UPDATES;
         final SpongeBlockChangeFlag otherFlag = BlockChangeFlagManager.fromNativeInt(overloadedFlag);
         assertTrue(otherFlag.updateNeighboringShapes()); // 16
-        assertTrue(otherFlag.getRawFlag() != 0);
+        assertTrue(otherFlag.rawFlag() != 0);
         assertFalse(otherFlag.neighborDropsAllowed());
         final SpongeBlockChangeFlag nestedOther = otherFlag.asNestedNeighborUpdates();
         assertFalse(nestedOther.updateNeighbors()); // 1
@@ -324,7 +324,7 @@ class BlockChangeFlagManagerTest {
         assertTrue(nestedOther.performBlockDestruction());
 
         // Finally, verify that with mojang's flag logic, we're still abiding by it.
-        assertEquals(overloadedFlag & -34, nestedOther.getRawFlag());
+        assertEquals(overloadedFlag & -34, nestedOther.rawFlag());
 
 
     }

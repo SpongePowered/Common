@@ -54,7 +54,7 @@ public final class UpdateConnectingBlocksEffect implements ProcessingSideEffect<
         final var limit = args.limit();
         if (flag.updateNeighboringShapes() && limit > 0) {
             // int i = p_241211_3_ & -34; // Vanilla negates 34 to flip neighbor notification and and "state drops"
-            final int withoutNeighborDropsAndNestedNeighborUpdates = flag.asNestedNeighborUpdates().getRawFlag();
+            final int withoutNeighborDropsAndNestedNeighborUpdates = flag.asNestedNeighborUpdates().rawFlag();
             // blockstate.updateIndirectNeighbourShapes(this, p_241211_1_, i, p_241211_4_ - 1);
             oldState.state().updateIndirectNeighbourShapes(world, pos, withoutNeighborDropsAndNestedNeighborUpdates, limit - 1);
             // p_241211_2_.updateNeighbourShapes(this, p_241211_1_, i, p_241211_4_ - 1);
