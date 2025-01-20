@@ -41,18 +41,19 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentBuilder;
 import net.kyori.adventure.text.EntityNBTComponent;
 import net.kyori.adventure.text.KeybindComponent;
-import net.kyori.adventure.text.NBTComponent;
 import net.kyori.adventure.text.NBTComponentBuilder;
 import net.kyori.adventure.text.ScoreComponent;
 import net.kyori.adventure.text.SelectorComponent;
 import net.kyori.adventure.text.StorageNBTComponent;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.TranslatableComponent;
+import net.kyori.adventure.text.VirtualComponent;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.DataComponentValue;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.flattener.ComponentFlattener;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.ShadowColor;
 import net.kyori.adventure.text.format.Style;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
@@ -248,43 +249,32 @@ public final class SpongeAdventure {
     }
 
     private static MutableComponent asVanillaMutable0(final Component component) {
-        if (component instanceof TextComponent) {
-            return net.minecraft.network.chat.Component.literal(((TextComponent) component).content());
-        }
-        if (component instanceof final TranslatableComponent $this) {
-            final List<net.minecraft.network.chat.Component> with = new ArrayList<>($this.args().size());
-            for (final Component arg : $this.args()) {
-                with.add(((ComponentBridge) arg).bridge$asVanillaComponent());
+        return switch (component) {
+            case VirtualComponent virtual -> net.minecraft.network.chat.Component.literal(virtual.content());
+            case TextComponent text -> net.minecraft.network.chat.Component.literal(text.content());
+            case TranslatableComponent translatable -> {
+                final List<net.minecraft.network.chat.Component> with = new ArrayList<>(translatable.args().size());
+                for (final Component arg : translatable.args()) {
+                    with.add(((ComponentBridge) arg).bridge$asVanillaComponent());
+                }
+                yield net.minecraft.network.chat.Component.translatable(translatable.key(), with.toArray(new Object[0]));
             }
-            return net.minecraft.network.chat.Component.translatable($this.key(), with.toArray(new Object[0]));
-        }
-        if (component instanceof KeybindComponent) {
-            return net.minecraft.network.chat.Component.keybind(((KeybindComponent) component).keybind());
-        }
-        if (component instanceof final ScoreComponent $this) {
-            return net.minecraft.network.chat.Component.score($this.name(), $this.objective());
-        }
-        if (component instanceof final SelectorComponent $this) {
-            return net.minecraft.network.chat.Component.selector(SelectorPattern.parse($this.pattern()).getOrThrow(), SpongeAdventure.asVanillaOpt($this.separator()));
-        }
-        if (component instanceof NBTComponent<?, ?>) {
-            if (component instanceof final BlockNBTComponent $this) {
-                return net.minecraft.network.chat.Component.nbt($this.nbtPath(), $this.interpret(),
-                        SpongeAdventure.asVanillaOpt($this.separator()),
-                        new BlockDataSource($this.pos().asString()));
-            }
-            if (component instanceof final EntityNBTComponent $this) {
-                return net.minecraft.network.chat.Component.nbt($this.nbtPath(), $this.interpret(),
-                        SpongeAdventure.asVanillaOpt($this.separator()),
-                        new EntityDataSource($this.selector()));
-            }
-            if (component instanceof final StorageNBTComponent $this) {
-                return net.minecraft.network.chat.Component.nbt($this.nbtPath(), $this.interpret(),
-                        SpongeAdventure.asVanillaOpt($this.separator()),
-                        new StorageDataSource(SpongeAdventure.asVanilla($this.storage())));
-            }
-        }
-        throw new UnsupportedOperationException("Cannot convert Component of type " + component.getClass());
+            case KeybindComponent keybind -> net.minecraft.network.chat.Component.keybind(keybind.keybind());
+            case ScoreComponent score -> net.minecraft.network.chat.Component.score(score.name(), score.objective());
+            case SelectorComponent selector -> net.minecraft.network.chat.Component.selector(
+                SelectorPattern.parse(selector.pattern()).getOrThrow(), SpongeAdventure.asVanillaOpt(selector.separator())
+            );
+            case BlockNBTComponent block -> net.minecraft.network.chat.Component.nbt(block.nbtPath(), block.interpret(),
+                SpongeAdventure.asVanillaOpt(block.separator()),
+                new BlockDataSource(block.pos().asString()));
+            case EntityNBTComponent entity -> net.minecraft.network.chat.Component.nbt(entity.nbtPath(), entity.interpret(),
+                SpongeAdventure.asVanillaOpt(entity.separator()),
+                new EntityDataSource(entity.selector()));
+            case StorageNBTComponent storage -> net.minecraft.network.chat.Component.nbt(storage.nbtPath(), storage.interpret(),
+                SpongeAdventure.asVanillaOpt(storage.separator()),
+                new StorageDataSource(SpongeAdventure.asVanilla(storage.storage())));
+            default -> throw new UnsupportedOperationException("Cannot convert Component of type " + component.getClass());
+        };
     }
 
     // no caching
@@ -750,6 +740,14 @@ public final class SpongeAdventure {
             map.put(SpongeAdventure.asAdventure(key), new SpongeDataComponentValue<>(entry.getValue()));
         });
         return map;
+    }
+
+    public static @Nullable Integer asVanillaNullable(@Nullable ShadowColor shadowColor) {
+        if (shadowColor == null) {
+            return null;
+        }
+
+        return shadowColor.value();
     }
 
     private record SpongeDataComponentValue<T>(Optional<T> value) implements DataComponentValue {
