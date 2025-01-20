@@ -47,8 +47,8 @@ public final class NetworkUtil {
      * @return The string representation of the host
      */
     public static String getHostString(final SocketAddress address) {
-        if (address instanceof InetSocketAddress) {
-            return ((InetSocketAddress) address).getHostString();
+        if (address instanceof InetSocketAddress isa) {
+            return isa.getHostString();
         } else if (address instanceof LocalAddress) {
             return NetworkUtil.LOCAL_ADDRESS;
         }

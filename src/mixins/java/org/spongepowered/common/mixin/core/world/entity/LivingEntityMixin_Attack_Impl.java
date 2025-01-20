@@ -24,11 +24,12 @@
  */
 package org.spongepowered.common.mixin.core.world.entity;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.stats.Stats;
 import net.minecraft.tags.DamageTypeTags;
-import net.minecraft.world.damagesource.CombatRules;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -279,14 +280,14 @@ public abstract class LivingEntityMixin_Attack_Impl extends EntityMixin implemen
     /**
      * Captures the damage protection as a function
      */
-    @Redirect(method = "getDamageAfterMagicAbsorb",
+    @WrapOperation(method = "getDamageAfterMagicAbsorb",
         at = @At(value = "INVOKE", target = "Lnet/minecraft/world/damagesource/CombatRules;getDamageAfterMagicAbsorb(FF)F"))
-    protected float attackImpl$onDetDamageProtection(final float damage, final float protection) {
+    protected float attackImpl$onDetDamageProtection(float damage, float protection, Operation<Float> original) {
         if (this.attackImpl$actuallyHurt != null) {
             var func = DamageEventUtil.createEnchantmentModifiers(this.attackImpl$actuallyHurt.entity(), protection);
             this.attackImpl$actuallyHurt.functions().add(func);
         }
-        return CombatRules.getDamageAfterMagicAbsorb(damage, protection);
+        return original.call(damage, protection);
     }
 
     /**
