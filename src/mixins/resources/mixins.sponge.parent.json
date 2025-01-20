@@ -1,7 +1,7 @@
 {
     "minVersion": "0.8",
     "target": "@env(DEFAULT)",
-    "compatibilityLevel": "JAVA_18",
+    "compatibilityLevel": "JAVA_21",
     "injectors": {
         "defaultRequire": 1
     }
