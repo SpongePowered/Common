@@ -33,6 +33,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.obfuscate.DontObfuscate;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.ReloadableServerRegistries;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.packs.repository.PackRepository;
 import net.minecraft.server.players.GameProfileCache;
@@ -61,6 +62,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Coerce;
 import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
@@ -82,6 +84,7 @@ import org.spongepowered.common.config.inheritable.InheritableConfigHandle;
 import org.spongepowered.common.config.inheritable.WorldConfig;
 import org.spongepowered.common.datapack.SpongeDataPackManager;
 import org.spongepowered.common.event.tracking.PhaseTracker;
+import org.spongepowered.common.registry.SpongeRegistryHolder;
 import org.spongepowered.common.service.server.SpongeServerScopedServiceProvider;
 
 import java.io.IOException;
@@ -115,6 +118,7 @@ public abstract class MinecraftServerMixin implements SpongeServer, MinecraftSer
     @Shadow public abstract WorldData shadow$getWorldData();
     @Shadow protected abstract void loadLevel(); // has overrides!
     @Shadow public abstract boolean shadow$haveTime();
+    @Shadow public abstract ReloadableServerRegistries.Holder shadow$reloadableRegistries();
     @Shadow private volatile boolean isSaving;
     // @formatter:on
 
@@ -389,6 +393,13 @@ public abstract class MinecraftServerMixin implements SpongeServer, MinecraftSer
         final List<String> reloadablePacks = ((SpongeDataPackManager) this.dataPackManager()).registerPacks();
         datapacksToLoad.addAll(reloadablePacks);
         this.shadow$getPackRepository().reload();
+    }
+
+    // Targets lambda where ReloadableResources is set to server because at
+    // this point reloaded resources become "valid" in terms of registries
+    @Inject(method = "lambda$reloadResources$29", at = @At(value = "TAIL"))
+    private void impl$handleRegistriesReload(final Collection<String> $$0x, final @Coerce Object reloadableResources, final CallbackInfo ci) {
+        ((SpongeRegistryHolder) this).registryHolder().reload(this.shadow$reloadableRegistries().get());
     }
 
     @Override

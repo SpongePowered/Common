@@ -175,7 +175,6 @@ public final class GeneratorMain {
         );
 
 
-        final RegistryAccess.Frozen compositeRegistries = withDimensions.getAccessForLoading(RegistryLayer.RELOADABLE);
         final var resourcesFuture = ReloadableServerResources.loadResources(
             resourceManager,
             withDimensions,
@@ -207,7 +206,7 @@ public final class GeneratorMain {
         Logger.info("Datapack load complete");
 
         return Pair.of(
-            compositeRegistries,
+            resources.fullRegistries().get(),
             resources
         );
     }

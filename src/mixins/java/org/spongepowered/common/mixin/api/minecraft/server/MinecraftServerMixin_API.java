@@ -170,7 +170,7 @@ public abstract class MinecraftServerMixin_API implements SpongeServer, SpongeRe
         this.api$playerDataHandler = new SpongePlayerDataManager(this);
         this.api$teleportHelper = new SpongeTeleportHelper();
         this.api$mapStorage = new SpongeMapStorage();
-        this.api$registryHolder = new RegistryHolderLogic($$3.registries().compositeAccess());
+        this.api$registryHolder = new RegistryHolderLogic($$3.dataPackResources().fullRegistries().get());
         this.api$userManager = new SpongeUserManager((MinecraftServer) (Object) this);
 
         this.api$dataPackManager = new SpongeDataPackManager((MinecraftServer) (Object) this, this.storageSource.getLevelPath(LevelResource.DATAPACK_DIR));

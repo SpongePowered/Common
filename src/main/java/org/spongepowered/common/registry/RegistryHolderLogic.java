@@ -217,4 +217,15 @@ public final class RegistryHolderLogic implements RegistryHolder {
     public void freezeSpongeDynamicRegistries() {
         this.roots.get(RegistryRoots.SPONGE).forEach(net.minecraft.core.Registry::freeze);
     }
+
+    public void reload(final RegistryAccess access) {
+        final WritableRegistry root = new MappedRegistry<>(
+            net.minecraft.resources.ResourceKey.createRegistryKey((ResourceLocation) (Object) RegistryRoots.MINECRAFT),
+            Lifecycle.experimental()
+        );
+
+        access.registries().forEach(entry -> root.register(entry.key(), entry.value(), RegistrationInfo.BUILT_IN));
+        root.freeze();
+        this.roots.put((ResourceKey) (Object) ResourceLocation.withDefaultNamespace("root"), root);
+    }
 }
