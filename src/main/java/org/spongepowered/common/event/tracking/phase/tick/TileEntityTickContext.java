@@ -36,8 +36,7 @@ public class TileEntityTickContext extends LocationBasedTickContext<TileEntityTi
     @Override
     public TileEntityTickContext source(final Object owner) {
         super.source(owner);
-        if (owner instanceof TrackableBridge) {
-            final TrackableBridge mixinTileentity = (TrackableBridge) owner;
+        if (owner instanceof TrackableBridge mixinTileentity) {
             this.setBlockEvents(mixinTileentity.bridge$allowsBlockEventCreation())
                 .setBulkBlockCaptures(mixinTileentity.bridge$allowsBlockBulkCaptures())
                 .setEntitySpawnEvents(mixinTileentity.bridge$allowsEntityEventCreation())

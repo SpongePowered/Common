@@ -30,11 +30,9 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.entity.TickingBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.material.FluidState;
-import net.minecraft.world.level.storage.WritableLevelData;
 import net.minecraft.world.phys.AABB;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.spongepowered.asm.mixin.Final;
@@ -43,7 +41,6 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Coerce;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.common.bridge.world.level.LevelBridge;
 import org.spongepowered.common.event.ShouldFire;
@@ -58,7 +55,6 @@ public abstract class LevelMixin_Tracker implements LevelBridge, LevelAccessor {
 
     // @formatter:off
     @Shadow @Final public RandomSource random;
-    @Shadow @Final protected WritableLevelData levelData;
 
     @Shadow public abstract LevelChunk shadow$getChunkAt(BlockPos pos);
     @Override
@@ -73,21 +69,6 @@ public abstract class LevelMixin_Tracker implements LevelBridge, LevelAccessor {
     @Shadow public abstract FluidState shadow$getFluidState(BlockPos p_204610_1_);
     // @formatter:on
 
-
-    /**
-     * We introduce the protected method to be overridden in
-     * {@code org.spongepowered.common.mixin.core.world.server.ServerWorldMixin#tracker$wrapTileEntityTick(ITickableTileEntity)}
-     * to appropriately wrap where needed.
-     *
-     * @param tileEntity The tile entity
-     * @author gabizou - January 10th, 2020 - Minecraft 1.14.3
-     */
-    @Redirect(method = "tickBlockEntities",
-        at = @At(value = "INVOKE",
-            target = "Lnet/minecraft/world/level/block/entity/TickingBlockEntity;tick()V"))
-    protected void tracker$wrapBlockEntityTick(final TickingBlockEntity tileEntity) {
-        tileEntity.tick();
-    }
 
     @Inject(method = {
         "getEntities(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/phys/AABB;Ljava/util/function/Predicate;)Ljava/util/List;",
